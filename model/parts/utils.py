@@ -5,6 +5,7 @@ import uuid
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from model.escrow import Escrow
 
 # Initialization
 def new_agent(st: float, prob: float) -> dict:
@@ -17,13 +18,12 @@ def generate_agents(mean_st: float,std_st: float, count: int) -> Dict[str, dict]
     initial_agents = {}
     st_distrib = np.random.normal(mean_st, std_st, count)
     for amount in st_distrib:
-        created_agent = new_agent(amount, random.random())
+        created_agent = new_agent(amount, random.random()/10)
         initial_agents[uuid.uuid4()] = created_agent
     return initial_agents
 
-def new_escrow() -> dict:
-    escrow = {'lockedSt': 0,
-             'isRage': False}
+def new_escrow() -> Escrow:
+    escrow = Escrow()
     return escrow
 
 def new_proposal(timestep: int) -> dict:

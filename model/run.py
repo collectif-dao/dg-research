@@ -41,14 +41,29 @@ def postprocessingNew(df):
     # Get the ABM results
     agent_ds = df.agents
     proposals_ds = df.proposals
+    escrow_ds = df.escrow
     timesteps = df.timestep
 
     proposals_count = proposals_ds.map(lambda s: sum([1 for proposal in s.values()]))
 
+    st_at_agents = agent_ds.map(
+        lambda s: sum(
+            [agent["st_amount"] for agent in s.values()]
+        )
+    )
+
+    st_in_escrow = escrow_ds.map(
+        lambda s: sum(
+            [agent for agent in s.staked.values()]
+        )
+    )
+
     # Create an analysis dataset
     data = (pd.DataFrame({'timestep': timesteps,
                           'run': df.run,
-                          'proposals_count': proposals_count})       
+                          'proposals_count': proposals_count,
+                          'st_at_agents':st_at_agents,
+                          'st_in_escrow':st_in_escrow})       
            )
     
     return data

@@ -2,38 +2,28 @@ from .utils import *
 import random
 from uuid import uuid4
 
-
 # Behaviors
-def generate_proposal(params, substep, state_history, prev_state):
-    if (random.random() > 0.98):
-        proposal = new_proposal(prev_state['timestep'])
-        return {'proposal_create': proposal}
-    else:
-        return {'proposal_create': None}
-
-def proposal_expire(params, substep, state_history, prev_state):
-    """
-    Remove proposals which are expire.
-    """
+def stake_st(params, substep, state_history, prev_state):
     proposals = prev_state['proposals']
-    proposals_to_remove = []
-    for proposal_label, proposal_properties in proposals.items():
-        to_remove = prev_state['timestep'] - proposal_properties['timestep'] >= 10
-        if to_remove:
-            proposals_to_remove.append(proposal_label)
-    return {'remove_proposals': proposals_to_remove}
-
-
+    agents = prev_state['agents']
+    staked = {}
+    for agent_label, agent_property in agents.items():
+        if agent_property['st_amount'] <= 0:
+            continue
+        prob = random.random()
+        for proposal_label, proposal_property in proposals.items():
+            if proposal_property['prob']*agent_property['prob'] > prob:
+                staked[agent_label] = agent_property['st_amount']
+                break
+    return {'agent_delta_staked': staked}
 # Mechanisms
-def add_proposal(params, substep, state_history, prev_state, policy_input):
-    updated_proposals = prev_state['proposals'].copy()
-    if policy_input['proposal_create'] is not None:
-        updated_proposals[uuid4()] = policy_input['proposal_create']
-    return ('proposals', updated_proposals)
+def agent_stake(params, substep, state_history, prev_state, policy_input):
+    delta_staked_by_agent = policy_input['agent_delta_staked']
+    agents = prev_state['agents']
 
-def proposal_remove(params, substep, state_history, prev_state, policy_input):
-    proposals_to_remove = policy_input["remove_proposals"]
-    surviving_proposals = {
-        k: v for k, v in prev_state["proposals"].items() if k not in proposals_to_remove
-    }
-    return ("proposals", surviving_proposals)
+    updated_agents = prev_state['agents'].copy()
+
+    for agent, delta_staked in delta_staked_by_agent.items():
+        updated_agents[agent]['st_amount'] -= delta_staked
+
+    return ("agents", updated_agents)

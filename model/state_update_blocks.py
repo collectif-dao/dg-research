@@ -1,5 +1,6 @@
-from .parts.environment import *
+from .parts.dg import *
 from .parts.agents import *
+from .parts.proposals import *
 import random
 
 
@@ -13,7 +14,7 @@ def initialize_seed(params, substep, state_history, prev_state):
 
 state_update_blocks = [
     {
-         # agents.py
+        # proposals.py
          'policies': {
              'generate_proposal': generate_proposal
          },
@@ -22,12 +23,22 @@ state_update_blocks = [
          }
     },
     {
-         # agents.py
+         # proposals.py
          'policies': {
              'proposal_expire': proposal_expire
          },
          'variables': {
              'proposals': proposal_remove
+         }
+    },
+    {
+         # agents.py
+         'policies': {
+             'stake_st': stake_st
+         },
+         'variables': {
+             'agents': agent_stake,
+             'escrow': update_escrow
          }
     }
 ]
