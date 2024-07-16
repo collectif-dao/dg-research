@@ -34,6 +34,24 @@ def run():
 
     return df
 
+def postprocessingNew(df):
+    # subset to last substep
+    df = df[df['substep'] == df.substep.max()]
+
+    # Get the ABM results
+    agent_ds = df.agents
+    proposals_ds = df.proposals
+    timesteps = df.timestep
+
+    proposals_count = proposals_ds.map(lambda s: sum([1 for proposal in s.values()]))
+
+    # Create an analysis dataset
+    data = (pd.DataFrame({'timestep': timesteps,
+                          'run': df.run,
+                          'proposals_count': proposals_count})       
+           )
+    
+    return data
 
 def postprocessing(df):
     """

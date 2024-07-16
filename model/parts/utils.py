@@ -7,91 +7,28 @@ import pandas as pd
 
 
 # Initialization
-def new_agent(
-    agent_type: str, location: Tuple[int, int], food: int = 10, age: int = 0
-) -> dict:
-    agent = {"type": agent_type, "location": location, "food": food, "age": age}
+def new_agent(st: float, prob: float) -> dict:
+    agent = {'st_amount': st,
+             'prob': prob,
+            }
     return agent
 
-
-def generate_agents(
-    N: int, M: int, initial_sites: int, n_predators: int, n_prey: int
-) -> Dict[str, dict]:
-    available_locations = [(n, m) for n in range(N) for m in range(M)]
+def generate_agents(mean_st: float,std_st: float, count: int) -> Dict[str, dict]:
     initial_agents = {}
-    type_queue = ["prey"] * n_prey
-    type_queue += ["predator"] * n_predators
-    random.shuffle(type_queue)
-    for agent_type in type_queue:
-        location = random.choice(available_locations)
-        available_locations.remove(location)
-        created_agent = new_agent(agent_type, location)
+    st_distrib = np.random.normal(mean_st, std_st, count)
+    for amount in st_distrib:
+        created_agent = new_agent(amount, random.random())
         initial_agents[uuid.uuid4()] = created_agent
     return initial_agents
 
+def new_escrow() -> dict:
+    escrow = {'lockedSt': 0,
+             'isRage': False}
+    return escrow
 
-# Environment
-@np.vectorize
-def calculate_increment(value, growth_rate, max_value):
-    new_value = value + growth_rate if value + growth_rate < max_value else max_value
-    return new_value
-
-
-# Location heper
-def check_location(
-    position: tuple, all_sites: np.matrix, busy_locations: List[tuple]
-) -> List[tuple]:
-    """
-    Returns an list of available location tuples neighboring an given
-    position location.
-    """
-    N, M = all_sites.shape
-    potential_sites = [
-        (position[0], position[1] + 1),
-        (position[0], position[1] - 1),
-        (position[0] + 1, position[1]),
-        (position[0] - 1, position[1]),
-    ]
-    potential_sites = [(site[0] % N, site[1] % M) for site in potential_sites]
-    valid_sites = [site for site in potential_sites if site not in busy_locations]
-    return valid_sites
-
-
-def get_free_location(
-    position: tuple, all_sites: np.matrix, used_sites: List[tuple]
-) -> tuple:
-    """
-    Gets an random free location neighboring an position. Returns False if
-    there aren't any location available.
-    """
-    available_locations = check_location(position, all_sites, used_sites)
-    if len(available_locations) > 0:
-        return random.choice(available_locations)
-    else:
-        return False
-
-
-def nearby_agents(location: tuple, agents: Dict[str, dict]) -> Dict[str, dict]:
-    """
-    Filter the non-nearby agents.
-    """
-    neighbors = {
-        label: agent
-        for label, agent in agents.items()
-        if is_neighbor(agent["location"], location)
-    }
-    return neighbors
-
-
-def is_neighbor(location_1: tuple, location_2: tuple) -> bool:
-    dx = np.abs(location_1[0] - location_2[0])
-    dy = location_1[1] - location_2[0]
-    distance = dx + dy
-    if distance == 1:
-        return True
-    else:
-        return False
-
+def new_proposal(timestep: int) -> dict:
+    proposal = {'prob': random.random(), 'timestep':timestep}
+    return proposal
 
 # plotting
 def aggregate_runs(df, aggregate_dimension):
