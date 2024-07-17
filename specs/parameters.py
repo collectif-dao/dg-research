@@ -1,0 +1,16 @@
+system_parameters = {
+    "min_withdrawal_batch_size": 8,
+    "max_withdrawal_batch_size": 128,
+    "first_seal_rage_quit_support": 3,
+    "second_seal_rage_quit_support": 15,
+    "dynamic_timelock_min_duration": 3,
+    "dynamic_timelock_max_duration": 5,
+    "veto_signalling_min_active_duration": 5,
+    "veto_signalling_deactivation_max_duration": 5,
+    "veto_cooldown_duration": 4,
+    "rage_quit_extension_delay": 7,
+    "rage_quit_eth_withdrawals_min_timelock": 60,
+    "rage_quit_eth_withdrawals_timelock_growth_start_seq_number": 2,
+    "rage_quit_eth_withdrawals_timelock_growth_coeffs": [0, 0, 0],
+    "tie_break_activation_timeout": 365,
+}
