@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 
-from utils import ether_base
+from ..utils import ether_base
 
 from .errors import Errors
 

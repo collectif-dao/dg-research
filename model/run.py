@@ -53,9 +53,7 @@ def postprocessingNew(df):
     )
 
     st_in_escrow = escrow_ds.map(
-        lambda s: sum(
-            [agent for agent in s.staked.values()]
-        )
+        lambda s: s.staked_stETH
     )
 
     # Create an analysis dataset
