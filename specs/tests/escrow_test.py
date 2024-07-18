@@ -1,9 +1,9 @@
-from escrow.escrow import Escrow, EscrowState
+from specs.escrow.escrow import Escrow, EscrowState
 from hypothesis import assume, given
 from hypothesis import strategies as st
-from utils import ether_base
+from specs.utils import ether_base
 
-from tests.log import setup_logger
+from specs.tests.log import setup_logger
 
 from .utils import sample_stETH_total_supply, test_escrow_address
 

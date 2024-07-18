@@ -1,5 +1,5 @@
-from escrow.escrow import Escrow
-from utils import ether_base
+from specs.escrow.escrow import Escrow
+from specs.utils import ether_base
 
 test_escrow_address: str = "0x1234567890"
 sample_stETH_total_supply: int = 1_000_000

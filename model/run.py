@@ -1,9 +1,9 @@
 import pandas as pd
-from .parts.utils import *
-from radcad import Model, Simulation, Experiment
+from radcad import Model, Simulation
 
-from .state_variables import initial_state
+from .parts.utils import *
 from .state_update_blocks import state_update_blocks
+from .state_variables import initial_state
 from .sys_params import sys_params
 
 
@@ -34,9 +34,10 @@ def run():
 
     return df
 
+
 def postprocessingNew(df):
     # subset to last substep
-    df = df[df['substep'] == df.substep.max()]
+    df = df[df["substep"] == df.substep.max()]
 
     # Get the ABM results
     agent_ds = df.agents
@@ -46,25 +47,23 @@ def postprocessingNew(df):
 
     proposals_count = proposals_ds.map(lambda s: sum([1 for proposal in s.values()]))
 
-    st_at_agents = agent_ds.map(
-        lambda s: sum(
-            [agent["st_amount"] for agent in s.values()]
-        )
-    )
+    st_at_agents = agent_ds.map(lambda s: sum([agent["st_amount"] for agent in s.values()]))
 
-    st_in_escrow = escrow_ds.map(
-        lambda s: s.staked_stETH
-    )
+    st_in_escrow = escrow_ds.map(lambda s: s.staked_stETH)
 
     # Create an analysis dataset
-    data = (pd.DataFrame({'timestep': timesteps,
-                          'run': df.run,
-                          'proposals_count': proposals_count,
-                          'st_at_agents':st_at_agents,
-                          'st_in_escrow':st_in_escrow})       
-           )
-    
+    data = pd.DataFrame(
+        {
+            "timestep": timesteps,
+            "run": df.run,
+            "proposals_count": proposals_count,
+            "st_at_agents": st_at_agents,
+            "st_in_escrow": st_in_escrow,
+        }
+    )
+
     return data
+
 
 def postprocessing(df):
     """
@@ -85,49 +84,31 @@ def postprocessing(df):
     # Get metrics
 
     ## Agent quantity
-    prey_count = agent_ds.map(
-        lambda s: sum([1 for agent in s.values() if agent["type"] == "prey"])
-    )
-    predator_count = agent_ds.map(
-        lambda s: sum([1 for agent in s.values() if agent["type"] == "predator"])
-    )
+    prey_count = agent_ds.map(lambda s: sum([1 for agent in s.values() if agent["type"] == "prey"]))
+    predator_count = agent_ds.map(lambda s: sum([1 for agent in s.values() if agent["type"] == "predator"]))
 
     ## Food quantity
     food_at_sites = site_ds.map(lambda s: s.sum())
-    food_at_prey = agent_ds.map(
-        lambda s: sum(
-            [agent["food"] for agent in s.values() if agent["type"] == "prey"]
-        )
-    )
+    food_at_prey = agent_ds.map(lambda s: sum([agent["food"] for agent in s.values() if agent["type"] == "prey"]))
     food_at_predators = agent_ds.map(
-        lambda s: sum(
-            [agent["food"] for agent in s.values() if agent["type"] == "predator"]
-        )
+        lambda s: sum([agent["food"] for agent in s.values() if agent["type"] == "predator"])
     )
 
     ## Food metrics
     median_site_food = site_ds.map(lambda s: np.median(s))
     median_prey_food = agent_ds.map(
-        lambda s: np.median(
-            [agent["food"] for agent in s.values() if agent["type"] == "prey"]
-        )
+        lambda s: np.median([agent["food"] for agent in s.values() if agent["type"] == "prey"])
     )
     median_predator_food = agent_ds.map(
-        lambda s: np.median(
-            [agent["food"] for agent in s.values() if agent["type"] == "predator"]
-        )
+        lambda s: np.median([agent["food"] for agent in s.values() if agent["type"] == "predator"])
     )
 
     ## Age metrics
     prey_median_age = agent_ds.map(
-        lambda s: np.median(
-            [agent["age"] for agent in s.values() if agent["type"] == "prey"]
-        )
+        lambda s: np.median([agent["age"] for agent in s.values() if agent["type"] == "prey"])
     )
     predator_median_age = agent_ds.map(
-        lambda s: np.median(
-            [agent["age"] for agent in s.values() if agent["type"] == "predator"]
-        )
+        lambda s: np.median([agent["age"] for agent in s.values() if agent["type"] == "predator"])
     )
 
     # Create an analysis dataset

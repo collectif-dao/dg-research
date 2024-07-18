@@ -1,6 +1,7 @@
 import uuid
 
-class Escrow():
+
+class Escrow:
     id: uuid.UUID
     staked: dict
     isRage: bool
@@ -9,7 +10,8 @@ class Escrow():
         self.id = uuid.uuid4()
         self.staked = {}
         self.isRage = False
+
     def GetTotalStaked(self) -> float:
         amount = 0
         for label, params in self.staked.items():
-            amount = amount + params['amount']
+            amount = amount + params["amount"]

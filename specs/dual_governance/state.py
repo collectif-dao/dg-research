@@ -2,8 +2,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 
-from escrow.escrow import Escrow
-from utils import ether_base
+from specs.escrow.escrow import Escrow
+from specs.utils import ether_base
 
 from .config import DualGovernanceConfig
 from .errors import Errors
@@ -28,10 +28,12 @@ class DualGovernanceState:
     last_adoptable_state_exited_at: datetime = field(default_factory=lambda: datetime.min)
     rage_quit_escrow: Escrow = None
     rage_quit_round: int = 0
+    current_time: datetime = field(default_factory=lambda: datetime.min)
 
-    def initialize(self, escrow_master_copy, stETH_total_supply):
+    def initialize(self, escrow_master_copy, stETH_total_supply, current_time):
         if self.signalling_escrow is not None:
             raise Errors.AlreadyInitialized
+        self.current_time = current_time
         self._deploy_new_signalling_escrow(escrow_master_copy, stETH_total_supply)
 
     def activate_next_state(self):
@@ -96,7 +98,7 @@ class DualGovernanceState:
         if self.is_proposals_adoption_allowed():
             return False
 
-        if datetime.now() >= self.config.tie_break_activation_timeout + self.last_adoptable_state_exited_at:
+        if self.current_time >= self.config.tie_break_activation_timeout + self.last_adoptable_state_exited_at:
             return True
 
         if self.state != State.RageQuit:
@@ -172,7 +174,7 @@ class DualGovernanceState:
         )
 
     def _handle_state_transition_side_effects(self, old_state, new_state):
-        timestamp = datetime.now()
+        timestamp = self.current_time
         self.entered_at = timestamp
         if old_state == State.Normal or old_state == State.VetoCooldown:
             self.last_adoptable_state_exited_at = timestamp
@@ -203,20 +205,20 @@ class DualGovernanceState:
         return rage_quit_support > self.config.second_seal_rage_quit_support
 
     def _is_dynamic_timelock_max_duration_passed(self):
-        return datetime.now() > self.config.dynamic_timelock_max_duration + self.veto_signalling_activation_time
+        return self.current_time > self.config.dynamic_timelock_max_duration + self.veto_signalling_activation_time
 
     def _is_dynamic_timelock_duration_passed(self, rage_quit_support):
         dynamic_timelock = self._calc_dynamic_timelock_duration(rage_quit_support)
-        return datetime.now() > dynamic_timelock + self.veto_signalling_activation_time
+        return self.current_time > dynamic_timelock + self.veto_signalling_activation_time
 
     def _is_veto_signalling_reactivation_duration_passed(self):
-        return datetime.now() > self.config.veto_signalling_min_active_duration + self.veto_signalling_reactivation_time
+        return self.current_time > self.config.veto_signalling_min_active_duration + self.veto_signalling_reactivation_time
 
     def _is_veto_signalling_deactivation_max_duration_passed(self):
-        return datetime.now() > self.config.veto_signalling_deactivation_max_duration + self.entered_at
+        return self.current_time > self.config.veto_signalling_deactivation_max_duration + self.entered_at
 
     def _is_veto_cooldown_duration_passed(self):
-        return datetime.now() > self.config.veto_cooldown_duration + self.entered_at
+        return self.current_time > self.config.veto_cooldown_duration + self.entered_at
 
     def _deploy_new_signalling_escrow(self, escrow_master_copy, stETH_total_supply):
         clone = Escrow(escrow_master_copy)
@@ -254,3 +256,6 @@ class DualGovernanceState:
                 / (second_seal_rage_quit_support - first_seal_rage_quit_support)
             )
         )
+
+    def shift_current_time(self, delta: timedelta):
+        self.current_time = self.current_time + delta

@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 from datetime import timedelta
 
-from parameters import system_parameters
-from utils import default, percent_base
+from specs.parameters import system_parameters
+from specs.utils import default, percent_base
 
 
 @dataclass

@@ -1,14 +1,14 @@
 from datetime import datetime, timedelta
 
 import pytest
-from dual_governance.errors import Errors
-from dual_governance.state import DualGovernanceConfig, DualGovernanceState, State
-from escrow.escrow import Escrow, EscrowState
+from specs.dual_governance.errors import Errors
+from specs.dual_governance.state import DualGovernanceConfig, DualGovernanceState, State
+from specs.escrow.escrow import Escrow, EscrowState
 from freezegun import freeze_time
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from tests.log import setup_logger
+from specs.tests.log import setup_logger
 
 from .utils import calc_rage_quit_support, sample_stETH_total_supply, test_escrow_address
 
@@ -24,7 +24,7 @@ def add_time_and_move_to(time_now: datetime, time_to_add: timedelta):
 def test_initialize():
     config = DualGovernanceConfig()
     dgState = DualGovernanceState(config)
-    dgState.initialize(test_escrow_address, sample_stETH_total_supply)
+    dgState.initialize(test_escrow_address, sample_stETH_total_supply, datetime.now())
 
     assert dgState.state == State.Normal
     assert dgState.entered_at == datetime.min
@@ -44,15 +44,13 @@ def test_initialize():
     assert escrow.rage_quit_extension_delay == 0
     assert escrow.rage_quit_withdrawals_timelock == 0
 
-    return dgState
-
 
 @given(st.integers(min_value=1, max_value=155_000))
 @settings(deadline=None)
 def test_state_transitions(lock):
     config = DualGovernanceConfig()
     dgState = DualGovernanceState(config)
-    dgState.initialize(test_escrow_address, sample_stETH_total_supply)
+    dgState.initialize(test_escrow_address, sample_stETH_total_supply, datetime.now())
 
     with pytest.raises(Errors.ResealIsNotAllowedInNormalState):
         dgState.check_reseal_state()
@@ -79,24 +77,27 @@ def test_state_transitions(lock):
 
         timelock_duration = dgState._calc_dynamic_timelock_duration(rage_quit_support)
 
-        prevTime = datetime.now()
+        prevTime = dgState.current_time
 
-        freezer = add_time_and_move_to(prevTime, (timelock_duration - timedelta(minutes=1)))
-        freezer.start()
+        #freezer = add_time_and_move_to(prevTime, (timelock_duration - timedelta(minutes=1)))
+        #freezer.start()
+
+        dgState.shift_current_time(timelock_duration - timedelta(minutes=1))
 
         dgState.activate_next_state()
 
-        prevTime = datetime.now()
+        prevTime = dgState.current_time
 
         # Still Veto Signaling state
         assert dgState.state == State.VetoSignalling
 
         # Increase time up to VetoSignalingDeactivation
-        freezer = add_time_and_move_to(prevTime, timedelta(minutes=2))
-        freezer.start()
+        #freezer = add_time_and_move_to(prevTime, timedelta(minutes=2))
+        #freezer.start()
+        dgState.shift_current_time(timedelta(minutes=2))
         dgState.activate_next_state()
 
-        prevTime = datetime.now()
+        prevTime = dgState.current_time
 
         if rage_quit_support < dgState.config.second_seal_rage_quit_support:
             assert dgState.state == State.VetoSignallingDeactivation
@@ -107,11 +108,12 @@ def test_state_transitions(lock):
                 dgState.check_proposals_adoption_allowed()
 
             # Increase time up to Veto Cooldown state
-            freezer = add_time_and_move_to(
-                prevTime, dgState.config.veto_signalling_deactivation_max_duration + timedelta(minutes=1)
-            )
-            freezer.start()
-            prevTime = datetime.now()
+            #freezer = add_time_and_move_to(
+            #    prevTime, dgState.config.veto_signalling_deactivation_max_duration + timedelta(minutes=1)
+            #)
+            #freezer.start()
+            dgState.shift_current_time(dgState.config.veto_signalling_deactivation_max_duration + timedelta(minutes=1))
+            prevTime = dgState.current_time
 
             dgState.activate_next_state()
 
@@ -120,18 +122,20 @@ def test_state_transitions(lock):
                 dgState.check_proposals_creation_allowed()
 
             # Increase some time but stay within Veto Cooldown
-            freezer = add_time_and_move_to(prevTime, dgState.config.veto_cooldown_duration - timedelta(hours=1))
-            freezer.start()
-            prevTime = datetime.now()
+            #freezer = add_time_and_move_to(prevTime, dgState.config.veto_cooldown_duration - timedelta(hours=1))
+            #freezer.start()
+            dgState.shift_current_time(dgState.config.veto_cooldown_duration - timedelta(hours=1))
+            prevTime = dgState.current_time
 
             dgState.activate_next_state()
 
             assert dgState.state == State.VetoCooldown
 
             # Increase some time but stay within Veto Cooldown
-            freezer = add_time_and_move_to(prevTime, timedelta(hours=2))
-            freezer.start()
-            prevTime = datetime.now()
+            #freezer = add_time_and_move_to(prevTime, timedelta(hours=2))
+            #freezer.start()
+            dgState.shift_current_time(timedelta(hours=2))
+            prevTime = dgState.current_time
 
             dgState.activate_next_state()
 
@@ -142,7 +146,7 @@ def test_state_transitions(lock):
 
         elif rage_quit_support > dgState.config.second_seal_rage_quit_support:
             assert dgState.state == State.RageQuit
-            assert dgState.entered_at.replace(microsecond=0) == datetime.now().replace(microsecond=0)
+            assert dgState.entered_at.replace(microsecond=0) == prevTime.replace(microsecond=0)
 
             # with pytest.raises(Errors.NotTie): # TODO: add sealableWithdrawalBlockers into DG State Config
             #     dgState.check_tiebreak()

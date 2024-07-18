@@ -1,35 +1,41 @@
-import numpy as np
 import random
-from typing import *
 import uuid
+from typing import *
+
 import matplotlib.pyplot as plt
-import pandas as pd
+import numpy as np
 
 from specs.escrow.escrow import Escrow
 
+
 # Initialization
 def new_agent(st: float, prob: float) -> dict:
-    agent = {'st_amount': st,
-             'prob': prob,
-            }
+    agent = {
+        "st_amount": st,
+        "prob": prob,
+    }
     return agent
 
-def generate_agents(mean_st: float,std_st: float, count: int) -> Dict[str, dict]:
+
+def generate_agents(mean_st: float, std_st: float, count: int) -> Dict[str, dict]:
     initial_agents = {}
     st_distrib = np.random.normal(mean_st, std_st, count)
     for amount in st_distrib:
-        created_agent = new_agent(amount, random.random()/10)
+        created_agent = new_agent(amount, random.random() / 10)
         initial_agents[uuid.uuid4()] = created_agent
     return initial_agents
+
 
 def new_escrow(total_suply) -> Escrow:
     escrow = Escrow()
     escrow.initialize("", total_suply)
     return escrow
 
+
 def new_proposal(timestep: int) -> dict:
-    proposal = {'prob': random.random(), 'timestep':timestep}
+    proposal = {"prob": random.random(), "timestep": timestep}
     return proposal
+
 
 # plotting
 def aggregate_runs(df, aggregate_dimension):
