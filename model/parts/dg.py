@@ -1,16 +1,29 @@
 from .utils import *
 
+
 # Behaviors
+def add_deltatime_to_dg(params, substep, state_history, prev_state):
+    delta = params["timedelta_tick"]
+    return {"timedelta_tick": delta}
 
 
 # Mechanisms
 def update_escrow(params, substep, state_history, prev_state, policy_input):
     delta_staked_by_agent = policy_input["agent_delta_staked"]
-    escrow = prev_state["escrow"]
-
-    updated_escrow = prev_state["escrow"]
+    dg = prev_state["dg"]
 
     for agent, delta_staked in delta_staked_by_agent.items():
-        updated_escrow.stake_stETH(delta_staked)
+        dg.signalling_escrow.stake_stETH(delta_staked)
 
-    return ("escrow", updated_escrow)
+    return ("dg", dg)
+
+
+def update_state(params, substep, state_history, prev_state, policy_input):
+    delta = policy_input["timedelta_tick"]
+    dg = prev_state["dg"]
+
+    dg.shift_current_time(delta)
+
+    dg.activate_next_state()
+
+    return ("dg", dg)

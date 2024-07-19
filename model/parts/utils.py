@@ -1,10 +1,13 @@
 import random
 import uuid
+from datetime import datetime
 from typing import *
 
 import matplotlib.pyplot as plt
 import numpy as np
 
+from specs.dual_governance.config import DualGovernanceConfig
+from specs.dual_governance.state import DualGovernanceState
 from specs.escrow.escrow import Escrow
 
 
@@ -30,6 +33,13 @@ def new_escrow(total_suply) -> Escrow:
     escrow = Escrow()
     escrow.initialize("", total_suply)
     return escrow
+
+
+def new_dg(total_suply) -> DualGovernanceState:
+    config = DualGovernanceConfig()
+    dg = DualGovernanceState(config)
+    dg.initialize("", total_suply, datetime.now())
+    return dg
 
 
 def new_proposal(timestep: int) -> dict:

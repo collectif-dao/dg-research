@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 """
 Model parameters.
 """
@@ -11,6 +13,7 @@ initial_values = {
 }
 
 sys_params = {
+    "timedelta_tick": [timedelta(hours=1)],
     "food_growth_rate": [3],
     "maximum_food_per_site": [10],
     "reproduction_probability": [1.0],

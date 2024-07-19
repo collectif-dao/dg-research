@@ -25,6 +25,11 @@ state_update_blocks = [
     {
         # agents.py
         "policies": {"stake_st": stake_st},
-        "variables": {"agents": agent_stake, "escrow": update_escrow},
+        "variables": {"agents": agent_stake, "dg": update_escrow},
+    },
+    {
+        # agents.py
+        "policies": {"add_deltatime_to_dg": add_deltatime_to_dg},
+        "variables": {"dg": update_state},
     },
 ]
