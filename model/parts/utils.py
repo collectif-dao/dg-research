@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from specs.dual_governance.config import DualGovernanceConfig
-from specs.dual_governance.state import DualGovernanceState
+from specs.dual_governance.state import DualGovernanceState, State
 from specs.escrow.escrow import Escrow
 
 
@@ -49,21 +49,12 @@ def new_proposal(timestep: int) -> dict:
 
 # plotting
 def aggregate_runs(df, aggregate_dimension):
-    """
-    Function to aggregate the monte carlo runs along a single dimension.
-
-    Parameters:
-    df: dataframe name
-    aggregate_dimension: the dimension you would like to aggregate on, the standard one is timestep.
-
-    Example run:
-    mean_df,median_df,std_df,min_df = aggregate_runs(df,'timestep')
-    """
-
-    mean_df = df.groupby(aggregate_dimension).mean().reset_index()
-    median_df = df.groupby(aggregate_dimension).median().reset_index()
-    std_df = df.groupby(aggregate_dimension).std().reset_index()
-    min_df = df.groupby(aggregate_dimension).min().reset_index()
+    df_copy = df.copy()
+    df_copy = df_copy.drop(columns=["dg_current_time"])
+    mean_df = df_copy.groupby(aggregate_dimension).mean().reset_index()
+    median_df = df_copy.groupby(aggregate_dimension).median().reset_index()
+    std_df = df_copy.groupby(aggregate_dimension).std().reset_index()
+    min_df = df_copy.groupby(aggregate_dimension).min().reset_index()
 
     return mean_df, median_df, std_df, min_df
 
@@ -93,3 +84,15 @@ def monte_carlo_plot(df, aggregate_dimension, x, y, runs):
     plt.ylabel(y)
     title_text = "Performance of " + y + " over " + str(runs) + " Monte Carlo Runs"
     plt.title(title_text)
+
+
+def state_plot(df, x, y, run):
+    states = df[df.run == run][y].map(lambda r: State(r).name)
+    states.value_counts().plot(kind="bar").set_title("DG states time")
+    plt.figure(figsize=(10, 6))
+    plt.plot(df[df.run == run].timestep, states)
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.0)
+    plt.xlabel(x)
+    plt.ylabel(y)
+    plt.title("DG States")
+    plt.show()
