@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import timedelta
 from enum import Enum
 
@@ -23,16 +23,16 @@ class Escrow:
     MASTER_COPY: str = ""
     state: EscrowState = EscrowState.NotInitialized
 
-    staked_stETH: int = 0
-    finalized_ETH: int = 0
-    total_supply: int = 0
+    staked_stETH: int = field(default_factory=0)
+    finalized_ETH: int = field(default_factory=0)
+    total_supply: int = field(default_factory=0)
 
-    rage_quit_extension_delay: Timestamp = Timestamps.ZERO
-    rage_quit_withdrawals_timelock: Timestamp = Timestamps.ZERO
-    rage_quit_timelock_started_at: Timestamp = Timestamps.ZERO
+    rage_quit_extension_delay: Timestamp = field(default_factory=lambda: Timestamps.ZERO)
+    rage_quit_withdrawals_timelock: Timestamp = field(default_factory=lambda: Timestamps.ZERO)
+    rage_quit_timelock_started_at: Timestamp = field(default_factory=lambda: Timestamps.ZERO)
 
-    accounting: AssetsAccounting = AssetsAccounting()
-    batches_queue: WithdrawalsBatchesQueue = WithdrawalsBatchesQueue()
+    accounting: AssetsAccounting = field(default_factory=lambda: AssetsAccounting())
+    batches_queue: WithdrawalsBatchesQueue = field(default_factory=lambda: WithdrawalsBatchesQueue())
     lido: Lido = None
     dual_governance: any = None
 
@@ -42,17 +42,12 @@ class Escrow:
         self,
         address,
         supply,
-        # accounting: AssetsAccounting,
-        # queue: WithdrawalsBatchesQueue,
         lido: Lido,
         dual_governance: any,
     ):
         self.MASTER_COPY = address
         self.total_supply = supply
         self.state = EscrowState.SignallingEscrow
-
-        # self.accounting = accounting
-        # self.batches_queue = queue
 
         self.lido = lido
         self.dual_governance = dual_governance

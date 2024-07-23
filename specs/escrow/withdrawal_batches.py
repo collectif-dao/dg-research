@@ -13,25 +13,26 @@ class Status(Enum):
 
 @dataclass
 class QueueIndex:
-    batch_index: int = field(default_factory=0)
-    value_index: int = field(default_factory=0)
+    batch_index: int = 0
+    value_index: int = 0
 
 
 class InvalidWithdrawalsBatchesQueueStatus(Exception):
     pass
 
 
+@dataclass
 class State:
     status: Status = Status.Empty
-    last_claimed_unstETH_id_index: QueueIndex = QueueIndex()
-    total_unstETH_count: int = field(default_factory=0)
-    total_unstETH_claimed: int = field(default_factory=0)
-    batches: list[SequentialBatch] = []
+    last_claimed_unstETH_id_index: QueueIndex = field(default_factory=QueueIndex)
+    total_unstETH_count: int = 0
+    total_unstETH_claimed: int = 0
+    batches: list[SequentialBatch] = field(default_factory=list)
 
 
 @dataclass
 class WithdrawalsBatchesQueue:
-    state: State = State()
+    state: State = field(default_factory=lambda: State)
 
     def calc_request_amounts(self, min_request_amount: int, request_amount: int, amount: int) -> List[int]:
         requests_count = amount // request_amount

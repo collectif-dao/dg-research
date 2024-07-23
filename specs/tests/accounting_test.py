@@ -262,7 +262,9 @@ def test_accountUnstETHUnlock(holder, params):
                 else ETHValue.from_uint256(0)
             )
             total_unfinalized_shares = (
-                total_unfinalized_shares - total_shares if total_unfinalized_shares > total_shares else 0
+                total_unfinalized_shares - total_shares
+                if total_unfinalized_shares > total_shares
+                else SharesValue.from_uint256(0)
             )
 
             assert accounting.state.unstETHTotals.finalizedETH == total_finalized_eth

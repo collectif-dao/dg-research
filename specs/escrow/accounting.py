@@ -73,7 +73,7 @@ class AssetsAccountingState:
     unstETHRecords: Dict[int, UnstETHRecord] = field(default_factory=dict)
 
 
-@dataclass(frozen=True)
+@dataclass
 class AssetsAccounting:
     state: AssetsAccountingState = field(default_factory=lambda: AssetsAccountingState())
 
