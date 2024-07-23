@@ -20,12 +20,12 @@ class EscrowState(Enum):
 
 @dataclass
 class Escrow:
-    MASTER_COPY: str = ""
+    MASTER_COPY: str = field(default_factory=lambda: "")
     state: EscrowState = EscrowState.NotInitialized
 
-    staked_stETH: int = field(default_factory=0)
-    finalized_ETH: int = field(default_factory=0)
-    total_supply: int = field(default_factory=0)
+    staked_stETH: int = field(default_factory=lambda: 0)
+    finalized_ETH: int = field(default_factory=lambda: 0)
+    total_supply: int = field(default_factory=lambda: 0)
 
     rage_quit_extension_delay: Timestamp = field(default_factory=lambda: Timestamps.ZERO)
     rage_quit_withdrawals_timelock: Timestamp = field(default_factory=lambda: Timestamps.ZERO)
@@ -83,14 +83,8 @@ class Escrow:
         finalized_ETH = unstETH_totals.finalizedETH
         unfinalized_shares = stETH_totals.lockedShares + unstETH_totals.unfinalizedShares
 
-        # print("finalized_ETH is", finalized_ETH.value)
-        # print("unfinalized_shares is", unfinalized_shares.value)
-
         left = self.lido.get_pooled_eth_by_shares(unfinalized_shares.value) + finalized_ETH.value
         right = self.lido.get_total_supply() + finalized_ETH.value
-
-        # print("left side is", left)
-        # print("right side is", right)
 
         return ether_base * left / right
 
