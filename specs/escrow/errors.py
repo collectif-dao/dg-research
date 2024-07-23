@@ -31,3 +31,21 @@ class Errors:
 
     class RageQuitExtraTimelockNotStarted(Error):
         pass
+
+    class InvalidSharesValue(Error):
+        pass
+
+    class IncorrectParameters(Error):
+        pass
+
+    class InvalidUnstETHStatus(Error):
+        pass
+
+    class InvalidUnstETHHolder(Error):
+        pass
+
+    class InvalidClaimableAmount(Error):
+        pass
+
+    class AssetsUnlockDelayNotPassed(Error):
+        pass
