@@ -26,7 +26,7 @@ def test_initialize():
     time_manager.initialize()
     config = DualGovernanceConfig()
     dgState = DualGovernanceState(config)
-    dgState.initialize(test_escrow_address, sample_stETH_total_supply, time_manager, lido=lido)
+    dgState.initialize(test_escrow_address, time_manager, lido=lido)
 
     assert dgState.state == State.Normal
     assert dgState.entered_at == datetime.min
@@ -40,7 +40,6 @@ def test_initialize():
 
     assert escrow.MASTER_COPY == test_escrow_address
     assert escrow.state == EscrowState.SignallingEscrow
-    assert escrow.total_supply == sample_stETH_total_supply
     assert escrow.rage_quit_extension_delay == Timestamps.ZERO
     assert escrow.rage_quit_withdrawals_timelock == Timestamps.ZERO
 
@@ -54,7 +53,7 @@ def test_state_transitions(holder_addr, lock):
     time_manager.initialize()
     config = DualGovernanceConfig()
     dgState = DualGovernanceState(config)
-    dgState.initialize(test_escrow_address, sample_stETH_total_supply, time_manager, lido=lido)
+    dgState.initialize(test_escrow_address, time_manager, lido=lido)
 
     with pytest.raises(Errors.ResealIsNotAllowedInNormalState):
         dgState.check_reseal_state()
@@ -143,7 +142,6 @@ def test_state_transitions(holder_addr, lock):
             rqEscrow = dgState.rage_quit_escrow
             sEscrow = dgState.signalling_escrow
 
-            assert rqEscrow.total_supply == sEscrow.total_supply
             assert rqEscrow.state == EscrowState.RageQuitEscrow
             assert rqEscrow.rage_quit_extension_delay == Timestamp(config.rage_quit_extension_delay.total_seconds())
             assert rqEscrow.rage_quit_withdrawals_timelock == Timestamp(

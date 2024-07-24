@@ -24,8 +24,6 @@ class Escrow:
     MASTER_COPY: str = field(default_factory=lambda: "")
     state: EscrowState = EscrowState.NotInitialized
 
-    total_supply: int = field(default_factory=lambda: 0)
-
     rage_quit_extension_delay: Timestamp = field(default_factory=lambda: Timestamps.ZERO)
     rage_quit_withdrawals_timelock: Timestamp = field(default_factory=lambda: Timestamps.ZERO)
     rage_quit_timelock_started_at: Timestamp = field(default_factory=lambda: Timestamps.ZERO)
@@ -38,13 +36,12 @@ class Escrow:
 
     signaling_escrow_min_lock_time: timedelta = default(timedelta(hours=5))
 
-    def initialize(self, address, supply, lido: Lido, dual_governance: any, time_manager: TimeManager):
+    def initialize(self, address, lido: Lido, dual_governance: any, time_manager: TimeManager):
         accounting = AssetsAccounting()
         accounting.initialize(time_manager)
         self.accounting = accounting
 
         self.MASTER_COPY = address
-        self.total_supply = supply
         self.state = EscrowState.SignallingEscrow
 
         self.lido = lido

@@ -29,7 +29,7 @@ def test_lock_stETH(holder_addr, lock):
     time_manager.initialize()
     config = DualGovernanceConfig()
     dgState = DualGovernanceState(config)
-    dgState.initialize(test_escrow_address, sample_stETH_total_supply, time_manager, lido=lido)
+    dgState.initialize(test_escrow_address, time_manager, lido=lido)
     escrow: Escrow = dgState.signalling_escrow
 
     first_threshold = config.first_seal_rage_quit_support
@@ -63,7 +63,7 @@ def test_unlock_stETH(holder_addr, lock):
     time_manager.initialize()
     config = DualGovernanceConfig()
     dgState = DualGovernanceState(config)
-    dgState.initialize(test_escrow_address, sample_stETH_total_supply, time_manager, lido=lido)
+    dgState.initialize(test_escrow_address, time_manager, lido=lido)
     escrow: Escrow = dgState.signalling_escrow
 
     total_locked_shares = escrow.accounting.state.stETHTotals.lockedShares
@@ -92,7 +92,7 @@ def test_lock_wstETH(holder_addr, lock):
     time_manager.initialize()
     config = DualGovernanceConfig()
     dgState = DualGovernanceState(config)
-    dgState.initialize(test_escrow_address, sample_stETH_total_supply, time_manager, lido=lido)
+    dgState.initialize(test_escrow_address, time_manager, lido=lido)
     escrow: Escrow = dgState.signalling_escrow
 
     first_threshold = config.first_seal_rage_quit_support
@@ -123,7 +123,7 @@ def test_unlock_wstETH(holder_addr, lock):
     time_manager.initialize()
     config = DualGovernanceConfig()
     dgState = DualGovernanceState(config)
-    dgState.initialize(test_escrow_address, sample_stETH_total_supply, time_manager, lido=lido)
+    dgState.initialize(test_escrow_address, time_manager, lido=lido)
     escrow: Escrow = dgState.signalling_escrow
 
     total_locked_shares = escrow.accounting.state.stETHTotals.lockedShares
@@ -152,7 +152,7 @@ def test_get_rage_quit_support(holder_addr, lock):
     time_manager.initialize()
     config = DualGovernanceConfig()
     dgState = DualGovernanceState(config)
-    dgState.initialize(test_escrow_address, sample_stETH_total_supply, time_manager, lido=lido)
+    dgState.initialize(test_escrow_address, time_manager, lido=lido)
     escrow: Escrow = dgState.signalling_escrow
 
     total_locked_shares = escrow.accounting.state.stETHTotals.lockedShares
@@ -174,7 +174,7 @@ def test_start_rage_quit(delay, timelock):
     time_manager.initialize()
     config = DualGovernanceConfig()
     dgState = DualGovernanceState(config)
-    dgState.initialize(test_escrow_address, sample_stETH_total_supply, time_manager, lido=lido)
+    dgState.initialize(test_escrow_address, time_manager, lido=lido)
     escrow: Escrow = dgState.signalling_escrow
 
     assert escrow.state == EscrowState.SignallingEscrow
