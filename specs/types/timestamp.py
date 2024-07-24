@@ -11,6 +11,14 @@ class Timestamp:
         if not (0 <= self.value <= self.MAX_VALUE):
             raise ValueError("Timestamp value out of bounds")
 
+    def __add__(self, other: "Timestamp") -> "Timestamp":
+        return Timestamp.from_uint256(self.value + other.value)
+
+    def __sub__(self, other: "Timestamp") -> "Timestamp":
+        if self.value < other.value:
+            raise ValueError("Timestamp value underflow")
+        return Timestamp.from_uint256(self.value - other.value)
+
     def __lt__(self, other):
         return self.value < other.value
 
