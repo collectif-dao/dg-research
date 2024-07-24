@@ -10,6 +10,7 @@ from specs.escrow.accounting import (
     WithdrawalRequestStatus,
 )
 from specs.escrow.errors import Errors
+from specs.time_manager import TimeManager
 from specs.types.eth_value import ETHValue, ETHValueOverflow
 from specs.types.shares_value import SharesValue, SharesValueOverflow
 
@@ -47,7 +48,10 @@ def generate_unstETH_lists():
 
 @given(holder=ethereum_address_strategy(), shares=base_int_strategy())
 def test_accountStETHSharesLock(holder, shares):
+    time_manager = TimeManager()
+    time_manager.initialize()
     accounting = AssetsAccounting()
+    accounting.initialize(time_manager)
 
     total_locked_shares: SharesValue = accounting.state.stETHTotals.lockedShares
     total_holder_locked_shares: Dict[str, SharesValue] = {}
@@ -75,7 +79,10 @@ def test_accountStETHSharesLock(holder, shares):
 
 @given(holder=ethereum_address_strategy(), lock=base_int_strategy(), unlock=base_int_strategy())
 def test_accountStETHSharesUnlock(holder, lock, unlock):
+    time_manager = TimeManager()
+    time_manager.initialize()
     accounting = AssetsAccounting()
+    accounting.initialize(time_manager)
 
     total_locked_shares: SharesValue = accounting.state.stETHTotals.lockedShares
     total_holder_locked_shares: Dict[str, SharesValue] = {}
@@ -110,7 +117,10 @@ def test_accountStETHSharesUnlock(holder, lock, unlock):
 
 @given(holder=ethereum_address_strategy(), lock=base_int_strategy())
 def test_accountStETHSharesWithdraw(holder, lock):
+    time_manager = TimeManager()
+    time_manager.initialize()
     accounting = AssetsAccounting()
+    accounting.initialize(time_manager)
 
     total_locked_shares: SharesValue = accounting.state.stETHTotals.lockedShares
     total_holder_locked_shares: Dict[str, SharesValue] = {}
@@ -143,7 +153,10 @@ def test_accountStETHSharesWithdraw(holder, lock):
 
 @given(claim=base_int_strategy())
 def test_accountClaimedStETH(claim):
+    time_manager = TimeManager()
+    time_manager.initialize()
     accounting = AssetsAccounting()
+    accounting.initialize(time_manager)
     total_claimed_eth: SharesValue = accounting.state.stETHTotals.claimedETH
     claim_value = ETHValue(claim)
 
@@ -160,7 +173,10 @@ def test_accountClaimedStETH(claim):
 @given(holder=ethereum_address_strategy(), params=generate_unstETH_lists())
 def test_accountUnstETHLock(holder, params):
     repeated_ids: bool = False
+    time_manager = TimeManager()
+    time_manager.initialize()
     accounting = AssetsAccounting()
+    accounting.initialize(time_manager)
     unstETHids: List[int] = params[0]
     withdrawal_requests: List[WithdrawalRequestStatus] = params[1]
     total_shares: SharesValue = SharesValue(0)
@@ -205,7 +221,10 @@ def test_accountUnstETHLock(holder, params):
 @given(holder=ethereum_address_strategy(), params=generate_unstETH_lists())
 def test_accountUnstETHUnlock(holder, params):
     repeated_ids: bool = False
+    time_manager = TimeManager()
+    time_manager.initialize()
     accounting = AssetsAccounting()
+    accounting.initialize(time_manager)
     unstETHids: List[int] = params[0]
     withdrawal_requests: List[WithdrawalRequestStatus] = params[1]
     total_shares: SharesValue = SharesValue(0)
@@ -275,7 +294,10 @@ def test_accountUnstETHUnlock(holder, params):
 @given(holder=ethereum_address_strategy(), params=generate_unstETH_lists())
 def test_accountUnstETHFinalized(holder, params):
     repeated_ids: bool = False
+    time_manager = TimeManager()
+    time_manager.initialize()
     accounting = AssetsAccounting()
+    accounting.initialize(time_manager)
     unstETHids: List[int] = params[0]
     withdrawal_requests: List[WithdrawalRequestStatus] = params[1]
     total_shares: SharesValue = SharesValue(0)
@@ -334,7 +356,10 @@ def test_accountUnstETHFinalized(holder, params):
 @given(holder=ethereum_address_strategy(), params=generate_unstETH_lists())
 def test_accountUnstETHClaimed(holder, params):
     repeated_ids: bool = False
+    time_manager = TimeManager()
+    time_manager.initialize()
     accounting = AssetsAccounting()
+    accounting.initialize(time_manager)
     unstETHids: List[int] = params[0]
     withdrawal_requests: List[WithdrawalRequestStatus] = params[1]
     total_shares: SharesValue = SharesValue(0)
@@ -385,7 +410,10 @@ def test_accountUnstETHClaimed(holder, params):
 @given(holder=ethereum_address_strategy(), params=generate_unstETH_lists())
 def test_accountUnstETHWithdraw(holder, params):
     repeated_ids: bool = False
+    time_manager = TimeManager()
+    time_manager.initialize()
     accounting = AssetsAccounting()
+    accounting.initialize(time_manager)
     unstETHids: List[int] = params[0]
     withdrawal_requests: List[WithdrawalRequestStatus] = params[1]
     total_shares: SharesValue = SharesValue(0)

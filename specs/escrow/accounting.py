@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
-from datetime import datetime
 from enum import Enum
 from typing import Dict, List
 
+from specs.time_manager import TimeManager
 from specs.types.eth_value import ETHValue
 from specs.types.index_one import IndexOneBased
 from specs.types.shares_value import SharesValue
@@ -76,6 +76,10 @@ class AssetsAccountingState:
 @dataclass
 class AssetsAccounting:
     state: AssetsAccountingState = field(default_factory=lambda: AssetsAccountingState())
+    time_manager: TimeManager = None
+
+    def initialize(self, time_manager: TimeManager):
+        self.time_manager = time_manager
 
     def accountStETHSharesLock(self, holder: str, shares: SharesValue):
         """
@@ -94,7 +98,7 @@ class AssetsAccounting:
             self.state.assets[holder] = HolderAssets()
 
         self.state.assets[holder].stETHLockedShares += shares
-        self.state.assets[holder].lastAssetsLockTimestamp = Timestamp(int(datetime.now().timestamp()))
+        self.state.assets[holder].lastAssetsLockTimestamp = Timestamp(self.time_manager.get_current_timestamp())
 
     def accountStETHSharesUnlock(self, holder: str) -> SharesValue:
         shares = self.state.assets[holder].stETHLockedShares
@@ -143,7 +147,9 @@ class AssetsAccounting:
         if holder not in self.state.assets:
             self.state.assets[holder] = HolderAssets()
 
-        self.state.assets[holder].lastAssetsLockTimestamp = Timestamp(int(datetime.now().timestamp()))
+        self.state.assets[holder].lastAssetsLockTimestamp = Timestamp.from_uint256(
+            self.time_manager.get_current_timestamp()
+        )
         self.state.assets[holder].unstETHLockedShares += totalUnstETHLocked
         self.state.unstETHTotals.unfinalizedShares += totalUnstETHLocked
 
@@ -220,7 +226,9 @@ class AssetsAccounting:
             self.state.assets[holder].lastAssetsLockTimestamp.value + assetsUnlockDelay
         )
 
-        if Timestamp.now() <= assetsUnlockAllowedAfter:
+        time_now = Timestamp.from_uint256(self.time_manager.get_current_timestamp())
+
+        if time_now <= assetsUnlockAllowedAfter:
             raise Errors.AssetsUnlockDelayNotPassed
 
     ## ---

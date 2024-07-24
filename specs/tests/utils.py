@@ -7,8 +7,11 @@ sample_rage_quit_support: int = 3  # percent
 
 
 def calc_rage_quit_support(escrow: Escrow):
-    return (ether_base * (escrow.staked_stETH + escrow.finalized_ETH)) / (escrow.total_supply + escrow.finalized_ETH)
+    finalized_ETH = escrow.accounting.state.unstETHTotals.finalizedETH
+    unfinalized_shares = (
+        escrow.accounting.state.stETHTotals.lockedShares + escrow.accounting.state.unstETHTotals.unfinalizedShares
+    )
+    left = escrow.lido.get_pooled_eth_by_shares(unfinalized_shares.value) + finalized_ETH.value
+    right = escrow.lido.get_total_supply() + finalized_ETH.value
 
-
-# unique_unstETHid = st.integers(min_value=0, max_value=1000).map(lambda x: x * 2).filter(lambda x: x % 3 != 0)
-# unique_unstETHid2 = st.integers(min_value=0, max_value=1000).map(lambda x: x * 2).filter(lambda x: x % 3 != 0).unique()
+    return ether_base * left / right

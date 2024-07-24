@@ -16,14 +16,9 @@ class Lido:
 
     def transferShares(self, new_owner, amount):
         pass
-        # print(new_owner)
-        # print(amount)
 
     def transferSharesFrom(self, owner, new_owner, amount):
         pass
-        # print(owner)
-        # print(new_owner)
-        # print(amount)
 
     def get_shares_by_pooled_eth(self, eth_amount: int) -> int:
         return eth_amount * self.get_total_shares() / self.get_total_pooled_ether()
@@ -62,3 +57,17 @@ class Lido:
         assert self.deposited_validators >= self.consensus_layer_validators
 
         return (self.deposited_validators - self.consensus_layer_validators) * self.deposit_size
+
+    def wrap(self, stETHAmount: int) -> int:
+        wstETH_amount = self.get_shares_by_pooled_eth(stETHAmount)
+        return wstETH_amount
+
+    def unwrap(self, wstETHAmount: int) -> int:
+        stETH_amount = self.get_pooled_eth_by_shares(wstETHAmount)
+        return stETH_amount
+
+    def wstETH_transfer(self, new_owner, amount):
+        pass
+
+    def wstETH_transferFrom(self, owner, new_owner, amount):
+        pass
