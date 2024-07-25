@@ -54,11 +54,9 @@ def postprocessing(df):
 
     current_time = time_manager_ds.map(lambda s: s.current_time)
 
-    dg_current_time = dg_ds.map(lambda s: s.time_manager.current_time)
+    dg_state = dg_ds.map(lambda s: int(s.state.state.value))
 
-    dg_state = dg_ds.map(lambda s: int(s.state.value))
-
-    rqs = dg_ds.map(lambda s: int(s.signalling_escrow.get_rage_quit_support()))
+    rqs = dg_ds.map(lambda s: int(s.state.signalling_escrow.get_rage_quit_support()))
 
     # Create an analysis dataset
     data = pd.DataFrame(
@@ -70,7 +68,6 @@ def postprocessing(df):
             # "st_in_escrow": st_in_escrow,
             "dg_state": dg_state,
             "current_time": current_time,
-            "dg_current_time": dg_current_time,
             "rqs": rqs,
         }
     )

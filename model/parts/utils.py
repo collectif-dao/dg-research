@@ -5,7 +5,7 @@ from typing import *
 import matplotlib.pyplot as plt
 import numpy as np
 
-from specs.dual_governance.config import DualGovernanceConfig
+from specs.dual_governance import DualGovernance
 from specs.dual_governance.state import DualGovernanceState, State
 from specs.lido import Lido
 from specs.time_manager import TimeManager
@@ -31,13 +31,12 @@ def generate_agents(mean_st: float, std_st: float, count: int) -> Dict[str, dict
 
 
 def new_dg(total_suply, time_manager: TimeManager) -> DualGovernanceState:
-    config = DualGovernanceConfig()
-    dg = DualGovernanceState(config)
+    dg = DualGovernance()
 
     lido = Lido(total_shares=total_suply, total_supply=total_suply)
     lido.set_buffered_ether(total_suply)
 
-    dg.initialize("", total_suply, time_manager, lido)
+    dg.initialize("", time_manager, lido)
     return dg
 
 
@@ -49,12 +48,16 @@ def new_proposal(timestep: int) -> dict:
 # plotting
 def aggregate_runs(df, aggregate_dimension):
     df_copy = df.copy()
-    # df_copy = df_copy.drop(columns=["dg_current_time"])
+    df_copy = df_copy.drop(columns=["current_time"])
     mean_df = df_copy.groupby(aggregate_dimension).mean().reset_index()
     median_df = df_copy.groupby(aggregate_dimension).median().reset_index()
     std_df = df_copy.groupby(aggregate_dimension).std().reset_index()
     min_df = df_copy.groupby(aggregate_dimension).min().reset_index()
 
+    mean_df.loc[:, "current_time"] = df["current_time"]
+    median_df.loc[:, "current_time"] = df["current_time"]
+    std_df.loc[:, "current_time"] = df["current_time"]
+    min_df.loc[:, "current_time"] = df["current_time"]
     return mean_df, median_df, std_df, min_df
 
 
@@ -76,7 +79,7 @@ def monte_carlo_plot(df, aggregate_dimension, x, y, runs):
     plt.figure(figsize=(10, 6))
     for r in range(1, runs + 1):
         legend_name = "Run " + str(r)
-        plt.plot(df[df.run == r].timestep, df[df.run == r][y], label=legend_name)
+        plt.plot(df[df.run == r][x], df[df.run == r][y], label=legend_name)
     plt.plot(mean_df[x], mean_df[y], label="Mean", color="black")
     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.0)
     plt.xlabel(x)
@@ -89,8 +92,7 @@ def state_plot(df, x, y, run):
     states = df[df.run == run][y].map(lambda r: State(r).name)
     states.value_counts().plot(kind="bar").set_title("DG states time")
     plt.figure(figsize=(10, 6))
-    plt.plot(df[df.run == run].timestep, states)
-    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.0)
+    plt.plot(df[df.run == run][x], states)
     plt.xlabel(x)
     plt.ylabel(y)
     plt.title("DG States")
