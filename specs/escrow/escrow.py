@@ -119,10 +119,13 @@ class Escrow:
 
     def is_rage_quit_finalized(self):
         return (
-            self.state
-            == EscrowState.RageQuitEscrow & self.batches_queue.is_closed() & self.rage_quit_timelock_started_at
-            == Timestamps.ZERO & self.time_manager.get_current_time()
-            > (self.rage_quit_extension_delay + self.rage_quit_timelock_started_at)
+            (self.state == EscrowState.RageQuitEscrow)
+            & self.batches_queue.is_closed()
+            & (self.rage_quit_timelock_started_at == Timestamps.ZERO)
+            & (
+                self.time_manager.get_current_timestamp()
+                > (self.rage_quit_extension_delay.value + self.rage_quit_timelock_started_at.value)
+            )
         )
 
     def _activate_next_governance_state(self):
