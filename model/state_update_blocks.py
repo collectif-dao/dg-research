@@ -30,6 +30,6 @@ state_update_blocks = [
     {
         # agents.py
         "policies": {"add_deltatime_to_dg": add_deltatime_to_dg},
-        "variables": {"dg": update_state},
+        "variables": {"time_manager": update_time_manager, "dg": update_state},
     },
 ]

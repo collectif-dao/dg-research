@@ -43,17 +43,22 @@ def postprocessing(df):
     agent_ds = df.agents
     proposals_ds = df.proposals
     dg_ds = df.dg
+    time_manager_ds = df.time_manager
     timesteps = df.timestep
 
     proposals_count = proposals_ds.map(lambda s: sum([1 for proposal in s.values()]))
 
     st_at_agents = agent_ds.map(lambda s: sum([agent["st_amount"] for agent in s.values()]))
 
-    st_in_escrow = dg_ds.map(lambda s: s.signalling_escrow.staked_stETH)
+    # st_in_escrow = dg_ds.map(lambda s: s.signalling_escrow.staked_stETH)
 
-    dg_current_time = dg_ds.map(lambda s: s.current_time)
+    current_time = time_manager_ds.map(lambda s: s.current_time)
+
+    dg_current_time = dg_ds.map(lambda s: s.time_manager.current_time)
 
     dg_state = dg_ds.map(lambda s: int(s.state.value))
+
+    rqs = dg_ds.map(lambda s: int(s.signalling_escrow.get_rage_quit_support()))
 
     # Create an analysis dataset
     data = pd.DataFrame(
@@ -62,9 +67,11 @@ def postprocessing(df):
             "run": df.run,
             "proposals_count": proposals_count,
             "st_at_agents": st_at_agents,
-            "st_in_escrow": st_in_escrow,
+            # "st_in_escrow": st_in_escrow,
             "dg_state": dg_state,
+            "current_time": current_time,
             "dg_current_time": dg_current_time,
+            "rqs": rqs,
         }
     )
 

@@ -1,6 +1,5 @@
 import random
 import uuid
-from datetime import datetime
 from typing import *
 
 import matplotlib.pyplot as plt
@@ -8,13 +7,15 @@ import numpy as np
 
 from specs.dual_governance.config import DualGovernanceConfig
 from specs.dual_governance.state import DualGovernanceState, State
-from specs.escrow.escrow import Escrow
+from specs.lido import Lido
+from specs.time_manager import TimeManager
+from specs.utils import ether_base
 
 
 # Initialization
 def new_agent(st: float, prob: float) -> dict:
     agent = {
-        "st_amount": st,
+        "st_amount": st * ether_base,
         "prob": prob,
     }
     return agent
@@ -29,16 +30,14 @@ def generate_agents(mean_st: float, std_st: float, count: int) -> Dict[str, dict
     return initial_agents
 
 
-def new_escrow(total_suply) -> Escrow:
-    escrow = Escrow()
-    escrow.initialize("", total_suply)
-    return escrow
-
-
-def new_dg(total_suply) -> DualGovernanceState:
+def new_dg(total_suply, time_manager: TimeManager) -> DualGovernanceState:
     config = DualGovernanceConfig()
     dg = DualGovernanceState(config)
-    dg.initialize("", total_suply, datetime.now())
+
+    lido = Lido(total_shares=total_suply, total_supply=total_suply)
+    lido.set_buffered_ether(total_suply)
+
+    dg.initialize("", total_suply, time_manager, lido)
     return dg
 
 
@@ -50,7 +49,7 @@ def new_proposal(timestep: int) -> dict:
 # plotting
 def aggregate_runs(df, aggregate_dimension):
     df_copy = df.copy()
-    df_copy = df_copy.drop(columns=["dg_current_time"])
+    # df_copy = df_copy.drop(columns=["dg_current_time"])
     mean_df = df_copy.groupby(aggregate_dimension).mean().reset_index()
     median_df = df_copy.groupby(aggregate_dimension).median().reset_index()
     std_df = df_copy.groupby(aggregate_dimension).std().reset_index()
