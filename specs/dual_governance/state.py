@@ -32,11 +32,11 @@ class DualGovernanceState:
     rage_quit_round: int = 0
     time_manager: TimeManager = None
 
-    def initialize(self, escrow_master_copy, stETH_total_supply, time_manager: TimeManager, lido: Lido):
+    def initialize(self, escrow_master_copy, time_manager: TimeManager, lido: Lido):
         if self.signalling_escrow is not None:
             raise Errors.AlreadyInitialized
         self.time_manager = time_manager
-        self._deploy_new_signalling_escrow(escrow_master_copy, stETH_total_supply, time_manager, lido)
+        self._deploy_new_signalling_escrow(escrow_master_copy, time_manager, lido)
 
     def activate_next_state(self):
         old_state = self.state
@@ -200,9 +200,7 @@ class DualGovernanceState:
                 self._calc_rage_quit_withdrawals_timelock(self.rage_quit_round).total_seconds(),
             )
             self.rage_quit_escrow = signalling_escrow
-            self._deploy_new_signalling_escrow(
-                signalling_escrow.MASTER_COPY, signalling_escrow.total_supply, self.time_manager, signalling_escrow.lido
-            )
+            self._deploy_new_signalling_escrow(signalling_escrow.MASTER_COPY, self.time_manager, signalling_escrow.lido)
             self.rage_quit_round += 1
 
     def _is_first_seal_rage_quit_support_crossed(self, rage_quit_support):
@@ -236,11 +234,9 @@ class DualGovernanceState:
     def _is_veto_cooldown_duration_passed(self):
         return self.time_manager.get_current_time() > self.config.veto_cooldown_duration + self.entered_at
 
-    def _deploy_new_signalling_escrow(
-        self, escrow_master_copy, stETH_total_supply, time_manager: TimeManager, lido: Lido
-    ):
+    def _deploy_new_signalling_escrow(self, escrow_master_copy, time_manager: TimeManager, lido: Lido):
         clone = Escrow(escrow_master_copy)
-        clone.initialize(escrow_master_copy, stETH_total_supply, lido, self, time_manager)
+        clone.initialize(escrow_master_copy, lido, self, time_manager)
         self.signalling_escrow = clone
 
     def _calc_rage_quit_withdrawals_timelock(self, rage_quit_round):
