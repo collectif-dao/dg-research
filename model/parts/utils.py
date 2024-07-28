@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from specs.dual_governance import DualGovernance
+from specs.dual_governance.proposals import Proposals
 from specs.dual_governance.state import DualGovernanceState, State
 from specs.lido import Lido
 from specs.time_manager import TimeManager
@@ -43,6 +44,12 @@ def new_dg(total_suply, time_manager: TimeManager) -> DualGovernanceState:
 def new_proposal(timestep: int) -> dict:
     proposal = {"prob": random.random(), "timestep": timestep}
     return proposal
+
+
+def init_proposals(time_manager: TimeManager):
+    proposals = Proposals()
+    proposals.initialize(time_manager)
+    return proposals
 
 
 # plotting

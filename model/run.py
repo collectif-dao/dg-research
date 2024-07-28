@@ -1,6 +1,8 @@
 import pandas as pd
 from radcad import Model, Simulation
 
+from specs.dual_governance.proposals import ProposalStatus
+
 from .parts.utils import *
 from .state_update_blocks import state_update_blocks
 from .state_variables import initial_state
@@ -45,8 +47,12 @@ def postprocessing(df):
     dg_ds = df.dg
     time_manager_ds = df.time_manager
     timesteps = df.timestep
+    proposals_new_ds = df.proposals_new
 
     proposals_count = proposals_ds.map(lambda s: sum([1 for proposal in s.values()]))
+    proposals_new_count = proposals_new_ds.map(
+        lambda s: sum([1 for proposal in s.state.proposals if proposal.status == ProposalStatus.Submitted])
+    )
 
     st_at_agents = agent_ds.map(lambda s: sum([agent["st_amount"] for agent in s.values()]))
 
@@ -64,6 +70,7 @@ def postprocessing(df):
             "timestep": timesteps,
             "run": df.run,
             "proposals_count": proposals_count,
+            "proposals_new_count": proposals_new_count,
             "st_at_agents": st_at_agents,
             # "st_in_escrow": st_in_escrow,
             "dg_state": dg_state,

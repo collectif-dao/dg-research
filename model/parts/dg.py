@@ -39,3 +39,13 @@ def update_state(params, substep, state_history, prev_state, policy_input):
     dg.activate_next_state()
 
     return ("dg", dg)
+
+
+def update_proposals_time(params, substep, state_history, prev_state, policy_input):
+    delta = policy_input["timedelta_tick"]
+
+    proposals = prev_state["proposals_new"]
+
+    proposals.time_manager.shift_current_time(delta)
+
+    return ("proposals_new", proposals)

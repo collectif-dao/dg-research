@@ -15,12 +15,15 @@ state_update_blocks = [
     {
         # proposals.py
         "policies": {"generate_proposal": generate_proposal},
-        "variables": {"proposals": add_proposal},
+        "variables": {"proposals": add_proposal, "proposals_new": submit_proposal},
     },
     {
         # proposals.py
         "policies": {"proposal_expire": proposal_expire},
-        "variables": {"proposals": proposal_remove},
+        "variables": {
+            "proposals": proposal_remove,
+            "proposals_new": shedule_and_proposal,
+        },
     },
     {
         # agents.py
@@ -28,8 +31,7 @@ state_update_blocks = [
         "variables": {"agents": agent_stake, "dg": update_escrow},
     },
     {
-        # agents.py
         "policies": {"add_deltatime_to_dg": add_deltatime_to_dg},
-        "variables": {"time_manager": update_time_manager, "dg": update_state},
+        "variables": {"time_manager": update_time_manager, "dg": update_state, "proposals_new": update_proposals_time},
     },
 ]

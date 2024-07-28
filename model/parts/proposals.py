@@ -1,6 +1,8 @@
 import random
 from uuid import uuid4
 
+from specs.dual_governance.proposals import ExecutorCall
+
 from .utils import *
 
 
@@ -38,3 +40,33 @@ def proposal_remove(params, substep, state_history, prev_state, policy_input):
     proposals_to_remove = policy_input["remove_proposals"]
     surviving_proposals = {k: v for k, v in prev_state["proposals"].items() if k not in proposals_to_remove}
     return ("proposals", surviving_proposals)
+
+
+def submit_proposal(params, substep, state_history, prev_state, policy_input):
+    proposals = prev_state["proposals_new"]
+
+    if policy_input["proposal_create"] is not None:
+        proposals.submit("", [ExecutorCall("", "", [])])
+
+    return ("proposals_new", proposals)
+
+
+def shedule_and_proposal(params, substep, state_history, prev_state, policy_input):
+    proposals = prev_state["proposals_new"]
+
+    i = 0
+    for proposal in proposals.state.proposals:
+        try:
+            proposals.schedule(proposal.id, 5 * 60 * 60)
+        except Exception:
+            # print(error.__str__)
+            i = 1
+
+    for proposal in proposals.state.proposals:
+        try:
+            proposals.execute(proposal.id, 5 * 60 * 60)
+        except Exception:
+            # print(error.__str__)
+            i = 1
+
+    return ("proposals_new", proposals)
