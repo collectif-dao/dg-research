@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
+from specs.types.timestamp import Timestamp
+
 
 @dataclass
 class TimeManager:
@@ -12,8 +14,15 @@ class TimeManager:
     def shift_current_time(self, delta: timedelta):
         self.current_time = self.current_time + delta
 
+    def shift_current_timestamp(self, delta: Timestamp):
+        current_timestamp = self.get_current_timestamp_value()
+        self.current_time = datetime.fromtimestamp((current_timestamp + delta).value)
+
     def get_current_time(self):
         return self.current_time
+
+    def get_current_timestamp_value(self) -> Timestamp:
+        return Timestamp.from_uint256(int(self.current_time.timestamp()))
 
     def get_current_timestamp(self) -> int:
         return int(self.current_time.timestamp())

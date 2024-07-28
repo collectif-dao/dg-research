@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import Dict
 
 import pytest
 from hypothesis import given
@@ -33,15 +34,25 @@ def test_lock_stETH(holder_addr, lock):
     escrow: Escrow = dgState.signalling_escrow
 
     first_threshold = config.first_seal_rage_quit_support
+    total_holder_locked_shares: Dict[str, SharesValue] = {}
     total_locked_shares = escrow.accounting.state.stETHTotals.lockedShares
     rage_quit_support = escrow.get_rage_quit_support()
+
+    if holder_addr not in total_holder_locked_shares:
+        if holder_addr not in escrow.accounting.state.assets:
+            total_holder_locked_shares[holder_addr] = SharesValue.from_uint256(0)
+        else:
+            total_holder_locked_shares[holder_addr] = escrow.accounting.state.assets[holder_addr].stETHLockedShares
 
     if total_locked_shares.value + lock > SharesValue.MAX_VALUE:
         with pytest.raises(SharesValueOverflow):
             escrow.lock_stETH(holder_addr, lock)
     else:
         escrow.lock_stETH(holder_addr, lock)
+        total_holder_locked_shares[holder_addr] += SharesValue.from_uint256(lock)
+
         assert escrow.accounting.state.stETHTotals.lockedShares > total_locked_shares
+        assert escrow.accounting.state.assets[holder_addr].stETHLockedShares == total_holder_locked_shares[holder_addr]
 
         assert escrow.accounting.state.unstETHTotals.finalizedETH.value == 0
         assert escrow.accounting.state.unstETHTotals.unfinalizedShares.value == 0
@@ -65,6 +76,13 @@ def test_unlock_stETH(holder_addr, lock):
     dgState = DualGovernanceState(config)
     dgState.initialize(test_escrow_address, time_manager, lido=lido)
     escrow: Escrow = dgState.signalling_escrow
+    total_holder_locked_shares: Dict[str, SharesValue] = {}
+
+    if holder_addr not in total_holder_locked_shares:
+        if holder_addr not in escrow.accounting.state.assets:
+            total_holder_locked_shares[holder_addr] = SharesValue.from_uint256(0)
+        else:
+            total_holder_locked_shares[holder_addr] = escrow.accounting.state.assets[holder_addr].stETHLockedShares
 
     total_locked_shares = escrow.accounting.state.stETHTotals.lockedShares
 
@@ -73,13 +91,16 @@ def test_unlock_stETH(holder_addr, lock):
             escrow.lock_stETH(holder_addr, lock)
     else:
         escrow.lock_stETH(holder_addr, lock)
+        total_holder_locked_shares[holder_addr] += SharesValue.from_uint256(lock)
 
         with pytest.raises(Errors.AssetsUnlockDelayNotPassed):
             escrow.unlock_stETH(holder_addr)
 
         time_manager.shift_current_time(timedelta(hours=6))
         escrow.unlock_stETH(holder_addr)
+        total_holder_locked_shares[holder_addr] -= SharesValue.from_uint256(lock)
 
+        assert escrow.accounting.state.assets[holder_addr].stETHLockedShares == total_holder_locked_shares[holder_addr]
         assert escrow.accounting.state.stETHTotals.lockedShares == SharesValue(0)
 
 
@@ -179,7 +200,10 @@ def test_start_rage_quit(delay, timelock):
 
     assert escrow.state == EscrowState.SignallingEscrow
 
-    escrow.start_rage_quit(delay, timelock)
-    assert escrow.rage_quit_extension_delay == Timestamp(delay)
-    assert escrow.rage_quit_withdrawals_timelock == Timestamp(timelock)
+    delay_timestamp = Timestamp(delay)
+    timelock_timestamp = Timestamp(delay)
+
+    escrow.start_rage_quit(delay_timestamp, timelock_timestamp)
+    assert escrow.rage_quit_extension_delay == delay_timestamp
+    assert escrow.rage_quit_withdrawals_timelock == timelock_timestamp
     assert escrow.state == EscrowState.RageQuitEscrow

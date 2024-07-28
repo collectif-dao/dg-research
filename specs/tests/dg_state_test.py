@@ -29,10 +29,10 @@ def test_initialize():
     dgState.initialize(test_escrow_address, time_manager, lido=lido)
 
     assert dgState.state == State.Normal
-    assert dgState.entered_at == datetime.min
-    assert dgState.veto_signalling_activation_time == datetime.min
-    assert dgState.veto_signalling_reactivation_time == datetime.min
-    assert dgState.last_adoptable_state_exited_at == datetime.min
+    assert dgState.entered_at == Timestamps.ZERO
+    assert dgState.veto_signalling_activation_time == Timestamps.ZERO
+    assert dgState.veto_signalling_reactivation_time == Timestamps.ZERO
+    assert dgState.last_adoptable_state_exited_at == Timestamps.ZERO
     assert dgState.rage_quit_round == 0
     assert dgState.rage_quit_escrow is None
 
@@ -70,9 +70,9 @@ def test_state_transitions(holder_addr, lock):
 
     if rage_quit_support > dgState.config.first_seal_rage_quit_support:
         dgState.activate_next_state()
-        assert dgState.entered_at.replace(microsecond=0) == datetime.now().replace(microsecond=0)
+        assert dgState.entered_at == time_manager.get_current_timestamp_value()
         assert dgState.state == State.VetoSignalling
-        assert dgState.veto_signalling_activation_time.replace(microsecond=0) == datetime.now().replace(microsecond=0)
+        assert dgState.veto_signalling_activation_time == time_manager.get_current_timestamp_value()
 
         with pytest.raises(Errors.ProposalsAdoptionSuspended):
             dgState.check_can_schedule_proposal(datetime.now())
@@ -81,7 +81,9 @@ def test_state_transitions(holder_addr, lock):
 
         timelock_duration = dgState._calc_dynamic_timelock_duration(rage_quit_support)
 
-        time_manager.shift_current_time(timelock_duration - timedelta(minutes=1))
+        time_manager.shift_current_timestamp(
+            timelock_duration - Timestamp.from_uint256(int((timedelta(minutes=1).total_seconds())))
+        )
 
         dgState.activate_next_state()
 
@@ -93,7 +95,7 @@ def test_state_transitions(holder_addr, lock):
 
         if rage_quit_support < dgState.config.second_seal_rage_quit_support:
             assert dgState.state == State.VetoSignallingDeactivation
-            assert dgState.entered_at.replace(microsecond=0) == time_manager.get_current_time().replace(microsecond=0)
+            assert dgState.entered_at == time_manager.get_current_timestamp_value()
 
             with pytest.raises(Errors.ProposalsCreationSuspended):
                 dgState.check_proposals_creation_allowed()
@@ -101,8 +103,9 @@ def test_state_transitions(holder_addr, lock):
                 dgState.check_proposals_adoption_allowed()
 
             # Increase time up to Veto Cooldown state
-            time_manager.shift_current_time(
-                dgState.config.veto_signalling_deactivation_max_duration + timedelta(minutes=1)
+            time_manager.shift_current_timestamp(
+                dgState.config.veto_signalling_deactivation_max_duration
+                + Timestamp.from_uint256(int((timedelta(minutes=1).total_seconds())))
             )
 
             dgState.activate_next_state()
@@ -112,7 +115,10 @@ def test_state_transitions(holder_addr, lock):
                 dgState.check_proposals_creation_allowed()
 
             # Increase some time but stay within Veto Cooldown
-            time_manager.shift_current_time(dgState.config.veto_cooldown_duration - timedelta(hours=1))
+            time_manager.shift_current_timestamp(
+                dgState.config.veto_cooldown_duration
+                - Timestamp.from_uint256(int((timedelta(hours=1).total_seconds())))
+            )
 
             dgState.activate_next_state()
 
@@ -124,17 +130,13 @@ def test_state_transitions(holder_addr, lock):
             dgState.activate_next_state()
 
             assert dgState.state == State.VetoSignalling
-            assert dgState.entered_at.replace(microsecond=0) == time_manager.get_current_time().replace(microsecond=0)
-            assert dgState.last_adoptable_state_exited_at.replace(
-                microsecond=0
-            ) == time_manager.get_current_time().replace(microsecond=0)
-            assert dgState.veto_signalling_activation_time.replace(
-                microsecond=0
-            ) == time_manager.get_current_time().replace(microsecond=0)
+            assert dgState.entered_at == time_manager.get_current_timestamp_value()
+            assert dgState.last_adoptable_state_exited_at == time_manager.get_current_timestamp_value()
+            assert dgState.veto_signalling_activation_time == time_manager.get_current_timestamp_value()
 
         elif rage_quit_support > dgState.config.second_seal_rage_quit_support:
             assert dgState.state == State.RageQuit
-            assert dgState.entered_at.replace(microsecond=0) == time_manager.get_current_time().replace(microsecond=0)
+            assert dgState.entered_at == time_manager.get_current_timestamp_value()
 
             # with pytest.raises(Errors.NotTie): # TODO: add sealableWithdrawalBlockers into DG State Config
             #     dgState.check_tiebreak()
@@ -143,9 +145,9 @@ def test_state_transitions(holder_addr, lock):
             sEscrow = dgState.signalling_escrow
 
             assert rqEscrow.state == EscrowState.RageQuitEscrow
-            assert rqEscrow.rage_quit_extension_delay == Timestamp(config.rage_quit_extension_delay.total_seconds())
-            assert rqEscrow.rage_quit_withdrawals_timelock == Timestamp(
-                dgState._calc_rage_quit_withdrawals_timelock(dgState.rage_quit_round).total_seconds()
+            assert rqEscrow.rage_quit_extension_delay == config.rage_quit_extension_delay
+            assert rqEscrow.rage_quit_withdrawals_timelock == dgState._calc_rage_quit_withdrawals_timelock(
+                dgState.rage_quit_round
             )
 
             assert sEscrow.state == EscrowState.SignallingEscrow

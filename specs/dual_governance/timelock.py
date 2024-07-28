@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import List
 
+from specs.dual_governance.emergency_protection import EmergencyProtection, EmergencyState
 from specs.dual_governance.proposals import ExecutorCall, Proposal, Proposals, ProposalStatus
 from specs.time_manager import TimeManager
 from specs.types.timestamp import Timestamp
@@ -12,6 +13,7 @@ from specs.utils import default
 class EmergencyProtectedTimelock:
     proposals: Proposals = None
     time_manager: TimeManager = None
+    emergency_protection: EmergencyProtection = None
 
     after_submit_delay: int = default(int(timedelta(days=3).total_seconds()))
     after_schedule_delay: int = default(int(timedelta(days=2).total_seconds()))
@@ -32,6 +34,7 @@ class EmergencyProtectedTimelock:
         self.proposals.schedule(proposal_id, self.after_submit_delay)
 
     def execute(self, proposal_id: int):
+        self.emergency_protection.check_emergency_mode_status(False)
         self.proposals.execute(proposal_id, self.after_schedule_delay)
 
     def cancel_all_non_executed_proposals(self):
@@ -57,4 +60,50 @@ class EmergencyProtectedTimelock:
         return self.proposals.can_schedule(proposal_id, self.after_submit_delay)
 
     def can_execute(self, proposal_id: int) -> bool:
-        return self.proposals.can_execute(proposal_id, self.after_schedule_delay)
+        return self.emergency_protection.is_emergency_mode_activated() is not True & self.proposals.can_execute(
+            proposal_id, self.after_schedule_delay
+        )
+
+    ## ---
+    ## emergency protection
+    ## ---
+
+    def set_emergency_protection(
+        self,
+        activation_committee: str,
+        execution_committee: str,
+        protection_duration: Timestamp,
+        emergency_mode_duration: Timestamp,
+    ):
+        emergency_protection = EmergencyProtection()
+        emergency_protection.setup(
+            activation_committee, execution_committee, protection_duration, emergency_mode_duration, self.time_manager
+        )
+        self.emergency_protection = emergency_protection
+
+    def activate_emergency_mode(self, activation_committee: str):
+        self.emergency_protection.check_activation_committee(activation_committee)
+        self.emergency_protection.check_emergency_mode_status(False)
+        self.emergency_protection.activate()
+
+    def deactivate_emergency_mode(self):
+        self.emergency_protection.check_emergency_mode_status(True)
+        self.emergency_protection.deactivate()
+        self.proposals.cancel_all()
+
+    def emergency_execute(self, executor: str, proposal_id: int):
+        self.emergency_protection.check_emergency_mode_status(True)
+        self.emergency_protection.check_execution_committee(executor)
+        self.proposals.execute(proposal_id, 0)
+
+    def emergency_reset(self, executor):
+        self.emergency_protection.check_emergency_mode_status(True)
+        self.emergency_protection.check_execution_committee(executor)
+        self.emergency_protection.deactivate()
+        self.proposals.cancel_all()
+
+    def is_emergency_protection_enabled(self) -> bool:
+        return self.emergency_protection.is_emergency_protection_enabled()
+
+    def get_emergency_state(self) -> EmergencyState:
+        return self.emergency_protection.get_emergency_state()

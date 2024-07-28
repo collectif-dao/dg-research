@@ -5,6 +5,7 @@ from enum import Enum
 from specs.escrow.escrow import Escrow
 from specs.lido import Lido
 from specs.time_manager import TimeManager
+from specs.types.timestamp import Timestamp
 from specs.utils import ether_base
 
 from .config import DualGovernanceConfig
@@ -23,11 +24,11 @@ class State(Enum):
 class DualGovernanceState:
     config: DualGovernanceConfig
     state: State = State.Normal
-    entered_at: datetime = field(default_factory=lambda: datetime.min)
-    veto_signalling_activation_time: datetime = field(default_factory=lambda: datetime.min)
+    entered_at: Timestamp = field(default_factory=lambda: Timestamp(0))
+    veto_signalling_activation_time: Timestamp = field(default_factory=lambda: Timestamp(0))
     signalling_escrow: Escrow = None
-    veto_signalling_reactivation_time: datetime = field(default_factory=lambda: datetime.min)
-    last_adoptable_state_exited_at: datetime = field(default_factory=lambda: datetime.min)
+    veto_signalling_reactivation_time: Timestamp = field(default_factory=lambda: Timestamp(0))
+    last_adoptable_state_exited_at: Timestamp = field(default_factory=lambda: Timestamp(0))
     rage_quit_escrow: Escrow = None
     rage_quit_round: int = 0
     time_manager: TimeManager = None
@@ -101,7 +102,7 @@ class DualGovernanceState:
             return False
 
         if (
-            self.time_manager.get_current_time()
+            self.time_manager.get_current_timestamp_value()
             >= self.config.tie_break_activation_timeout + self.last_adoptable_state_exited_at
         ):
             return True
@@ -163,6 +164,7 @@ class DualGovernanceState:
     def _from_veto_cooldown_state(self):
         if not self._is_veto_cooldown_duration_passed():
             return State.VetoCooldown
+
         return (
             State.VetoSignalling
             if self._is_first_seal_rage_quit_support_crossed(self.signalling_escrow.get_rage_quit_support())
@@ -179,7 +181,7 @@ class DualGovernanceState:
         )
 
     def _handle_state_transition_side_effects(self, old_state, new_state):
-        timestamp = self.time_manager.get_current_time()
+        timestamp = self.time_manager.get_current_timestamp_value()
         self.entered_at = timestamp
         if old_state == State.Normal or old_state == State.VetoCooldown:
             self.last_adoptable_state_exited_at = timestamp
@@ -196,8 +198,8 @@ class DualGovernanceState:
         if new_state == State.RageQuit:
             signalling_escrow = self.signalling_escrow
             signalling_escrow.start_rage_quit(
-                self.config.rage_quit_extension_delay.total_seconds(),
-                self._calc_rage_quit_withdrawals_timelock(self.rage_quit_round).total_seconds(),
+                self.config.rage_quit_extension_delay,
+                self._calc_rage_quit_withdrawals_timelock(self.rage_quit_round),
             )
             self.rage_quit_escrow = signalling_escrow
             self._deploy_new_signalling_escrow(signalling_escrow.MASTER_COPY, self.time_manager, signalling_escrow.lido)
@@ -211,28 +213,28 @@ class DualGovernanceState:
 
     def _is_dynamic_timelock_max_duration_passed(self):
         return (
-            self.time_manager.get_current_time()
+            self.time_manager.get_current_timestamp_value()
             > self.config.dynamic_timelock_max_duration + self.veto_signalling_activation_time
         )
 
     def _is_dynamic_timelock_duration_passed(self, rage_quit_support):
         dynamic_timelock = self._calc_dynamic_timelock_duration(rage_quit_support)
-        return self.time_manager.get_current_time() > dynamic_timelock + self.veto_signalling_activation_time
+        return self.time_manager.get_current_timestamp_value() > dynamic_timelock + self.veto_signalling_activation_time
 
     def _is_veto_signalling_reactivation_duration_passed(self):
         return (
-            self.time_manager.get_current_time()
+            self.time_manager.get_current_timestamp_value()
             > self.config.veto_signalling_min_active_duration + self.veto_signalling_reactivation_time
         )
 
     def _is_veto_signalling_deactivation_max_duration_passed(self):
         return (
-            self.time_manager.get_current_time()
+            self.time_manager.get_current_timestamp_value()
             > self.config.veto_signalling_deactivation_max_duration + self.entered_at
         )
 
     def _is_veto_cooldown_duration_passed(self):
-        return self.time_manager.get_current_time() > self.config.veto_cooldown_duration + self.entered_at
+        return self.time_manager.get_current_timestamp_value() > self.config.veto_cooldown_duration + self.entered_at
 
     def _deploy_new_signalling_escrow(self, escrow_master_copy, time_manager: TimeManager, lido: Lido):
         clone = Escrow(escrow_master_copy)
@@ -242,31 +244,40 @@ class DualGovernanceState:
     def _calc_rage_quit_withdrawals_timelock(self, rage_quit_round):
         if rage_quit_round < self.config.rage_quit_eth_withdrawals_timelock_growth_start_seq_number:
             return self.config.rage_quit_eth_withdrawals_min_timelock
-        return self.config.rage_quit_eth_withdrawals_min_timelock + timedelta(
-            seconds=(
-                self.config.rage_quit_eth_withdrawals_timelock_growth_coeffs[0] * rage_quit_round * rage_quit_round
-                + self.config.rage_quit_eth_withdrawals_timelock_growth_coeffs[1] * rage_quit_round
-                + self.config.rage_quit_eth_withdrawals_timelock_growth_coeffs[2]
-            )
-            / ether_base
+
+        time = int(
+            timedelta(
+                seconds=(
+                    self.config.rage_quit_eth_withdrawals_timelock_growth_coeffs[0] * rage_quit_round * rage_quit_round
+                    + self.config.rage_quit_eth_withdrawals_timelock_growth_coeffs[1] * rage_quit_round
+                    + self.config.rage_quit_eth_withdrawals_timelock_growth_coeffs[2]
+                )
+                / ether_base
+            ).total_seconds()
         )
 
-    def _calc_dynamic_timelock_duration(self, rage_quit_support):
+        return self.config.rage_quit_eth_withdrawals_min_timelock + Timestamp.from_uint256(time)
+
+    def _calc_dynamic_timelock_duration(self, rage_quit_support) -> Timestamp:
         first_seal_rage_quit_support = self.config.first_seal_rage_quit_support
         second_seal_rage_quit_support = self.config.second_seal_rage_quit_support
         dynamic_timelock_min_duration = self.config.dynamic_timelock_min_duration
         dynamic_timelock_max_duration = self.config.dynamic_timelock_max_duration
 
         if rage_quit_support < first_seal_rage_quit_support:
-            return timedelta(0)
+            return Timestamp(0)
 
         if rage_quit_support >= second_seal_rage_quit_support:
             return dynamic_timelock_max_duration
 
-        return dynamic_timelock_min_duration + timedelta(
-            seconds=(
-                (rage_quit_support - first_seal_rage_quit_support)
-                * (dynamic_timelock_max_duration - dynamic_timelock_min_duration).total_seconds()
-                / (second_seal_rage_quit_support - first_seal_rage_quit_support)
-            )
+        time = int(
+            timedelta(
+                seconds=(
+                    (rage_quit_support - first_seal_rage_quit_support)
+                    * (dynamic_timelock_max_duration.value - dynamic_timelock_min_duration.value)
+                    / (second_seal_rage_quit_support - first_seal_rage_quit_support)
+                )
+            ).total_seconds()
         )
+
+        return dynamic_timelock_min_duration + Timestamp.from_uint256(time)

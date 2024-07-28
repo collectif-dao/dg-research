@@ -14,4 +14,4 @@ def calc_rage_quit_support(escrow: Escrow):
     left = escrow.lido.get_pooled_eth_by_shares(unfinalized_shares.value) + finalized_ETH.value
     right = escrow.lido.get_total_supply() + finalized_ETH.value
 
-    return ether_base * left / right
+    return int(ether_base * left / right)

@@ -18,10 +18,26 @@ class DualGovernance:
     timelock: EmergencyProtectedTimelock = None
     time_manager: TimeManager = None
 
-    def initialize(self, escrow_address: str, time_manager: TimeManager, lido: Lido):
+    def initialize(
+        self,
+        escrow_address: str,
+        time_manager: TimeManager,
+        lido: Lido,
+        activation_committee: str = "",
+        execution_committee: str = "",
+        protection_duration: Timestamp = Timestamp(0),
+        emergency_mode_duration: Timestamp = Timestamp(0),
+    ):
         self.time_manager = time_manager
         timelock = EmergencyProtectedTimelock()
         timelock.initialize(time_manager)
+        timelock.set_emergency_protection(
+            activation_committee,
+            execution_committee,
+            protection_duration,
+            emergency_mode_duration,
+        )
+
         self.timelock = timelock
 
         config = DualGovernanceConfig()
@@ -42,7 +58,7 @@ class DualGovernance:
     def schedule_proposal(self, proposal_id: int):
         self.state.activate_next_state()
 
-        proposal_submission_time = self.timelock.get_proposal_submission_time()
+        proposal_submission_time = self.timelock.get_proposal_submission_time(proposal_id)
         self.state.check_can_schedule_proposal(proposal_submission_time)
 
         self.timelock.schedule(proposal_id)

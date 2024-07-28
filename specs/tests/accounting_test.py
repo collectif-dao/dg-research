@@ -230,8 +230,6 @@ def test_accountUnstETHUnlock(holder, params):
     total_shares: SharesValue = SharesValue(0)
     claimable_amounts: List[int] = []
 
-    print(params)
-
     for req in withdrawal_requests:
         total_shares += SharesValue(req.amount_of_shares)
         claimable_amounts.append(req.amount_of_shares)

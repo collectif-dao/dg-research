@@ -100,11 +100,11 @@ class AssetsAccounting:
         self.state.assets[holder].stETHLockedShares += shares
         self.state.assets[holder].lastAssetsLockTimestamp = Timestamp(self.time_manager.get_current_timestamp())
 
-    def accountStETHSharesUnlock(self, holder: str) -> SharesValue:
-        shares = self.state.assets[holder].stETHLockedShares
-        self.accountStETHSharesUnlock(self, holder, shares)
+    # def accountStETHSharesUnlock(self, holder: str) -> SharesValue:
+    #     shares = self.state.assets[holder].stETHLockedShares
+    #     self.accountStETHSharesUnlock(self, holder, shares)
 
-        return shares
+    #     return shares
 
     def accountStETHSharesUnlock(self, holder: str, shares: SharesValue):
         self._checkNonZeroShares(shares)

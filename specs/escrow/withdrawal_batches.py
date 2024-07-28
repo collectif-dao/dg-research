@@ -52,8 +52,6 @@ class WithdrawalsBatchesQueue:
     def open(self):
         self._check_status(Status.Empty)
 
-        print(self.state.batches)
-
         self.state.batches.append(SequentialBatches.create(0, 1))
         self.state.status = Status.Opened
 

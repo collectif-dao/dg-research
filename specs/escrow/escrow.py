@@ -70,6 +70,8 @@ class Escrow:
         self.lido.transferShares(holder_addr, shares.value)
         self._activate_next_governance_state()
 
+        return shares
+
     ## ---
     ## wstETH token operations
     ## ---
@@ -103,19 +105,19 @@ class Escrow:
         left = self.lido.get_pooled_eth_by_shares(unfinalized_shares.value) + finalized_ETH.value
         right = self.lido.get_total_supply() + finalized_ETH.value
 
-        return ether_base * left / right
+        return int(ether_base * left / right)
 
     ## ---
     ## Escrow state update functions
     ## ---
 
-    def start_rage_quit(self, extensionDelay: int, withdrawalsTimelock: int):
+    def start_rage_quit(self, extensionDelay: Timestamp, withdrawalsTimelock: Timestamp):
         self._check_escrow_state(EscrowState.SignallingEscrow)
 
         self.batches_queue.open()
         self.state = EscrowState.RageQuitEscrow
-        self.rage_quit_extension_delay = Timestamps.from_uint256(extensionDelay)
-        self.rage_quit_withdrawals_timelock = Timestamps.from_uint256(withdrawalsTimelock)
+        self.rage_quit_extension_delay = extensionDelay
+        self.rage_quit_withdrawals_timelock = withdrawalsTimelock
 
     def is_rage_quit_finalized(self):
         return (
@@ -123,8 +125,8 @@ class Escrow:
             & self.batches_queue.is_closed()
             & (self.rage_quit_timelock_started_at == Timestamps.ZERO)
             & (
-                self.time_manager.get_current_timestamp()
-                > (self.rage_quit_extension_delay.value + self.rage_quit_timelock_started_at.value)
+                self.time_manager.get_current_timestamp_value()
+                > (self.rage_quit_extension_delay + self.rage_quit_timelock_started_at)
             )
         )
 
