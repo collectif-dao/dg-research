@@ -43,7 +43,7 @@ class HashConsensus:
     members: Dict[str, bool] = field(default_factory=dict)
     quorum: int = field(default_factory=lambda: 0)
     timelock_duration: Timestamp = field(default_factory=lambda: Timestamps.ZERO)
-    hash_states: Dict[str, HashState] = field(default_factory=dict)
+    hash_states: Dict[bytes, HashState] = field(default_factory=dict)
     approves: Dict[str, Dict[str, bool]] = field(default_factory=dict)
     time_manager: TimeManager = None
 
@@ -59,7 +59,7 @@ class HashConsensus:
 
         self.time_manager = time_manager
 
-    def vote(self, signer: str, hash: str, support: bool):
+    def vote(self, signer: str, hash: bytes, support: bool):
         if hash not in self.hash_states:
             self.hash_states[hash] = HashState()
 
@@ -76,7 +76,7 @@ class HashConsensus:
 
         self.approves.setdefault(signer, {})[hash] = support
 
-    def mark_used(self, hash: str):
+    def mark_used(self, hash: bytes):
         if self.hash_states[hash].used_at > Timestamps.ZERO:
             raise Errors.HashAlreadyUsed
 
@@ -88,7 +88,7 @@ class HashConsensus:
 
         self.hash_states[hash].used_at = self.time_manager.get_current_timestamp_value()
 
-    def get_hash_state(self, hash: str):
+    def get_hash_state(self, hash: bytes):
         support = self._get_support(hash)
         execution_quorum = self.quorum
         is_used = self.hash_states[hash].used_at > Timestamps.ZERO
@@ -135,7 +135,7 @@ class HashConsensus:
 
         self.members[new_member] = True
 
-    def _get_support(self, hash: str) -> int:
+    def _get_support(self, hash: bytes) -> int:
         support = 0
 
         for member in self.members:
