@@ -5,6 +5,8 @@ from typing import *
 import matplotlib.pyplot as plt
 import numpy as np
 
+from model.actors.actor import BaseActor
+from model.actors.st_holder_actor import StHolderActor
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.proposals import Proposals
 from specs.dual_governance.state import DualGovernanceState, State
@@ -29,6 +31,16 @@ def generate_agents(mean_st: float, std_st: float, count: int) -> Dict[str, dict
         created_agent = new_agent(amount, random.random() / 10)
         initial_agents[uuid.uuid4()] = created_agent
     return initial_agents
+
+
+def generate_actors(mean_st: float, std_st: float, count: int) -> List[BaseActor]:
+    initial_actors = []
+    st_distrib = np.random.normal(mean_st, std_st, count)
+    for amount in st_distrib:
+        created_actor = StHolderActor()
+        created_actor.initialize(0, amount * ether_base)
+        initial_actors.append(created_actor)
+    return initial_actors
 
 
 def new_dg(total_suply, time_manager: TimeManager) -> DualGovernanceState:

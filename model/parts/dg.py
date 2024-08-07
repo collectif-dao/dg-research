@@ -13,7 +13,10 @@ def update_escrow(params, substep, state_history, prev_state, policy_input):
     dg = prev_state["dg"]
 
     for agent, delta_staked in delta_staked_by_agent.items():
-        dg.state.signalling_escrow.lock_stETH("0xc0ffee254729296a45a3885639AC7E10F9d54979", delta_staked)
+        if delta_staked > 0:
+            dg.state.signalling_escrow.lock_stETH(agent, delta_staked)
+        if delta_staked < 0:
+            dg.state.signalling_escrow.unlock_stETH(agent)
 
     return ("dg", dg)
 

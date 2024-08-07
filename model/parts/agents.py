@@ -1,32 +1,30 @@
-import random
-
 from .utils import *
 
 
 # Behaviors
 def stake_st(params, substep, state_history, prev_state):
-    proposals = prev_state["proposals"]
-    agents = prev_state["agents"]
+    proposals = prev_state["proposals_new"]
+    dg = prev_state["dg"]
+    actors = prev_state["actors"]
     staked = {}
-    for agent_label, agent_property in agents.items():
-        if agent_property["st_amount"] <= 0:
-            continue
-        prob = random.random()
-        for proposal_label, proposal_property in proposals.items():
-            if proposal_property["prob"] * agent_property["prob"] > prob:
-                staked[agent_label] = agent_property["st_amount"]
-                break
+    for actor in actors:
+        amount = actor.will_change_escrow(proposals, dg)
+        if amount != 0:
+            staked[actor.address] = amount
+
     return {"agent_delta_staked": staked}
 
 
 # Mechanisms
-def agent_stake(params, substep, state_history, prev_state, policy_input):
+def actor_stake(params, substep, state_history, prev_state, policy_input):
     delta_staked_by_agent = policy_input["agent_delta_staked"]
-    agents = prev_state["agents"]
+    actors = prev_state["actors"]
 
-    updated_agents = prev_state["agents"].copy()
+    for actor in actors:
+        if actor.address in delta_staked_by_agent:
+            if delta_staked_by_agent[actor.address] > 0:
+                actor.stake_to_escrow(delta_staked_by_agent[actor.address])
+            if delta_staked_by_agent[actor.address] < 0:
+                actor.unstake_from_escrow(actor.st_eth_locked)
 
-    for agent, delta_staked in delta_staked_by_agent.items():
-        updated_agents[agent]["st_amount"] -= delta_staked
-
-    return ("agents", updated_agents)
+    return ("actors", actors)
