@@ -20,11 +20,17 @@ class Lido:
     def transferSharesFrom(self, owner, new_owner, amount):
         pass
 
+    def permit(self, address_from: str, address_to: str, value: int, deadline: int, v: int, r: str, s: str):
+        pass
+
+    def wstETH_permit(self, address_from: str, address_to: str, value: int, deadline: int, v: int, r: str, s: str):
+        pass
+
     def get_shares_by_pooled_eth(self, eth_amount: int) -> int:
-        return eth_amount * self.get_total_shares() / self.get_total_pooled_ether()
+        return eth_amount * int(self.get_total_shares() / self.get_total_pooled_ether())
 
     def get_pooled_eth_by_shares(self, shares_amount: int) -> int:
-        return shares_amount * self.get_total_pooled_ether() / self.get_total_shares()
+        return shares_amount * int(self.get_total_pooled_ether() / self.get_total_shares())
 
     def get_total_supply(self) -> int:
         return self.total_supply
