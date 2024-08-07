@@ -8,8 +8,9 @@ from specs.time_manager import TimeManager
 from specs.types.timestamp import Timestamp, Timestamps
 
 
-def limited_time_strategy():
-    return st.integers(min_value=0, max_value=30802118400)
+def limited_time_strategy(divider: int = 1):
+    max_value = int(30802118400 / divider)
+    return st.integers(min_value=0, max_value=max_value)
 
 
 @given(

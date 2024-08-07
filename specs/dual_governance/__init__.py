@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import List
 
+from specs.committees.tiebreaker_core import TiebreakerCore
 from specs.dual_governance.config import DualGovernanceConfig
 from specs.dual_governance.proposals import ExecutorCall
 from specs.dual_governance.state import DualGovernanceState, State
@@ -17,6 +18,8 @@ class DualGovernance:
     state: DualGovernanceState = None
     timelock: EmergencyProtectedTimelock = None
     time_manager: TimeManager = None
+    tiebreaker: TiebreakerCore = None
+    reseal_manager: str = None
 
     def initialize(
         self,
@@ -102,3 +105,25 @@ class DualGovernance:
 
     def is_creation_enabled(self) -> bool:
         return self.state.is_proposals_creation_allowed()
+
+    ## ---
+    ## tiebreaker section
+    ## ---
+
+    def tiebreaker_resume_sealable(self, tiebreaker: str, sealable: str):
+        self.check_tiebreaker_committee(tiebreaker)
+        self.state.check_tiebreak()
+        self.reseal_manager.resume(sealable)
+
+    def tiebreaker_schedule_proposal(self, tiebreaker: str, proposal_id: int):
+        self.check_tiebreaker_committee(tiebreaker)
+        self.state.check_tiebreak()
+        self.timelock.schedule(proposal_id)
+
+    def set_tiebreaker_protection(self, tiebreaker: TiebreakerCore, reseal_manager):
+        self.tiebreaker = tiebreaker
+        self.reseal_manager = reseal_manager
+
+    def check_tiebreaker_committee(self, tiebreaker: str):
+        if tiebreaker != self.tiebreaker.address:
+            raise Exception("NotTiebreaker")
