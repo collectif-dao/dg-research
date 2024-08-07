@@ -51,5 +51,5 @@ class BaseActor:
         self.st_eth_balance = self.st_eth_balance + amount
         self.st_eth_locked = self.st_eth_locked - amount
 
-    def will_change_escrow(self, proposals, dg):
+    def will_change_escrow(self, dg):
         return 0

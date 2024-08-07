@@ -38,6 +38,7 @@ def update_state(params, substep, state_history, prev_state, policy_input):
     dg.state.time_manager.shift_current_time(delta)
     dg.state.signalling_escrow.time_manager.shift_current_time(delta)
     dg.state.signalling_escrow.accounting.time_manager.shift_current_time(delta)
+    dg.timelock.time_manager.shift_current_time(delta)
 
     dg.activate_next_state()
 

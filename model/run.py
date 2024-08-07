@@ -42,21 +42,23 @@ def postprocessing(df):
     df = df[df["substep"] == df.substep.max()]
 
     # Get the ABM results
-    agent_ds = df.agents
-    proposals_ds = df.proposals
     dg_ds = df.dg
     time_manager_ds = df.time_manager
     timesteps = df.timestep
-    proposals_new_ds = df.proposals_new
 
-    proposals_count = proposals_ds.map(lambda s: sum([1 for proposal in s.values()]))
-    proposals_new_count = proposals_new_ds.map(
-        lambda s: sum([1 for proposal in s.state.proposals if proposal.status == ProposalStatus.Submitted])
+    proposals_submited_count = dg_ds.map(
+        lambda s: sum(
+            [1 for proposal in s.timelock.proposals.state.proposals if proposal.status == ProposalStatus.Submitted]
+        )
     )
 
-    st_at_agents = agent_ds.map(lambda s: sum([agent["st_amount"] for agent in s.values()]))
+    proposals_executed_count = dg_ds.map(
+        lambda s: sum(
+            [1 for proposal in s.timelock.proposals.state.proposals if proposal.status == ProposalStatus.Executed]
+        )
+    )
 
-    # st_in_escrow = dg_ds.map(lambda s: s.signalling_escrow.staked_stETH)
+    # st_at_agents = agent_ds.map(lambda s: sum([agent["st_amount"] for agent in s.values()]))
 
     current_time = time_manager_ds.map(lambda s: s.current_time)
 
@@ -69,9 +71,9 @@ def postprocessing(df):
         {
             "timestep": timesteps,
             "run": df.run,
-            "proposals_count": proposals_count,
-            "proposals_new_count": proposals_new_count,
-            "st_at_agents": st_at_agents,
+            "proposals_submited_count": proposals_submited_count,
+            "proposals_executed_count": proposals_executed_count,
+            # "st_at_agents": st_at_agents,
             # "st_in_escrow": st_in_escrow,
             "dg_state": dg_state,
             "current_time": current_time,

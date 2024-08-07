@@ -1,5 +1,4 @@
 import random
-from uuid import uuid4
 
 from specs.dual_governance.proposals import ExecutorCall
 
@@ -15,58 +14,36 @@ def generate_proposal(params, substep, state_history, prev_state):
         return {"proposal_create": None}
 
 
-def proposal_expire(params, substep, state_history, prev_state):
-    """
-    Remove proposals which are expire.
-    """
-    proposals = prev_state["proposals"]
-    proposals_to_remove = []
-    for proposal_label, proposal_properties in proposals.items():
-        to_remove = prev_state["timestep"] - proposal_properties["timestep"] >= 10
-        if to_remove:
-            proposals_to_remove.append(proposal_label)
-    return {"remove_proposals": proposals_to_remove}
+def update_proposals(params, substep, state_history, prev_state):
+    return {"update_proposals": None}
 
 
 # Mechanisms
-def add_proposal(params, substep, state_history, prev_state, policy_input):
-    updated_proposals = prev_state["proposals"].copy()
-    if policy_input["proposal_create"] is not None:
-        updated_proposals[uuid4()] = policy_input["proposal_create"]
-    return ("proposals", updated_proposals)
-
-
-def proposal_remove(params, substep, state_history, prev_state, policy_input):
-    proposals_to_remove = policy_input["remove_proposals"]
-    surviving_proposals = {k: v for k, v in prev_state["proposals"].items() if k not in proposals_to_remove}
-    return ("proposals", surviving_proposals)
 
 
 def submit_proposal(params, substep, state_history, prev_state, policy_input):
-    proposals = prev_state["proposals_new"]
+    dg = prev_state["dg"]
 
-    if policy_input["proposal_create"] is not None:
-        proposals.submit("", [ExecutorCall("", "", [])])
+    if policy_input["proposal_create"] is not None and dg.state.is_proposals_creation_allowed():
+        dg.submit_proposal("", [ExecutorCall("", "", [])])
 
-    return ("proposals_new", proposals)
+    return ("dg", dg)
 
 
-def shedule_and_proposal(params, substep, state_history, prev_state, policy_input):
-    proposals = prev_state["proposals_new"]
+def shedule_and_execute_proposals(params, substep, state_history, prev_state, policy_input):
+    dg = prev_state["dg"]
 
     i = 0
-    for proposal in proposals.state.proposals:
+    for proposal in dg.timelock.proposals.state.proposals:
         try:
-            proposals.schedule(proposal.id, 5 * 60 * 60)
+            dg.schedule_proposal(proposal.id)
         except Exception:
-            # print(error.__str__)
             i = 1
 
-    for proposal in proposals.state.proposals:
+    for proposal in dg.timelock.proposals.state.proposals:
         try:
-            proposals.execute(proposal.id, 5 * 60 * 60)
+            dg.execute_proposal(proposal.id)
         except Exception:
-            # print(error.__str__)
             i = 1
 
-    return ("proposals_new", proposals)
+    return ("dg", dg)

@@ -66,6 +66,10 @@ class DualGovernance:
 
         self.timelock.schedule(proposal_id)
 
+    def execute_proposal(self, proposal_id: int):
+        if self.can_execute(proposal_id):
+            self.timelock.execute(proposal_id)
+
     def cancel_all_pending_proposals(self):
         self.timelock.cancel_all_non_executed_proposals()
 

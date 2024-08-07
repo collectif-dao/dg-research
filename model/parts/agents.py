@@ -3,12 +3,11 @@ from .utils import *
 
 # Behaviors
 def stake_st(params, substep, state_history, prev_state):
-    proposals = prev_state["proposals_new"]
     dg = prev_state["dg"]
     actors = prev_state["actors"]
     staked = {}
     for actor in actors:
-        amount = actor.will_change_escrow(proposals, dg)
+        amount = actor.will_change_escrow(dg)
         if amount != 0:
             staked[actor.address] = amount
 
