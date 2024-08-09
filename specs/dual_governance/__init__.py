@@ -4,7 +4,7 @@ from typing import List
 
 from specs.committees.tiebreaker_core import TiebreakerCore
 from specs.dual_governance.config import DualGovernanceConfig
-from specs.dual_governance.proposals import ExecutorCall
+from specs.dual_governance.proposals import ExecutorCall, ProposalType
 from specs.dual_governance.state import DualGovernanceState, State
 from specs.dual_governance.timelock import EmergencyProtectedTimelock
 from specs.escrow.escrow import Escrow
@@ -52,11 +52,11 @@ class DualGovernance:
     ## proposals section
     ## ---
 
-    def submit_proposal(self, executor: str, calls: List[ExecutorCall]) -> int:
+    def submit_proposal(self, executor: str, calls: List[ExecutorCall], type: ProposalType) -> int:
         self.state.activate_next_state()
         self.state.check_proposals_creation_allowed()
 
-        return self.timelock.submit(executor, calls)
+        return self.timelock.submit(executor, calls, type)
 
     def schedule_proposal(self, proposal_id: int):
         self.state.activate_next_state()

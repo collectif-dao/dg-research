@@ -2,7 +2,8 @@ from specs.time_manager import TimeManager
 
 from .parts.utils import *
 
-actors = generate_actors(700, 200, 1000)
+# actors = generate_actors(700, 200, 1000)
+actors = read_actors()
 total_suply = sum([actor.st_eth_balance for actor in actors])
 
 time_manager = TimeManager()

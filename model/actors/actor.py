@@ -29,16 +29,23 @@ class BaseActor:
     reaction_time: ReactionTime = field(default_factory=lambda: ReactionTime.Normal)
     governance_participation: GovernanceParticipation = field(default_factory=lambda: GovernanceParticipation.Normal)
 
-    def initialize(self, ldo, st_eth):
+    def initialize(self, address, ldo, st_eth, reaction_time=ReactionTime.Normal):
         self.ldo_balance = ldo
         self.st_eth_balance = st_eth
-        self.address = generate_address()
+        self.reaction_time = reaction_time
+        if address == "":
+            self.address = generate_address()
+        else:
+            self.address = address
 
     def get_tocken_ratio(self):
         return (self.st_eth_balance + self.st_eth_locked) / self.ldo_balance
 
     def stake_to_escrow(self, amount):
         if self.st_eth_balance < amount:
+            print(self.address)
+            print(self.st_eth_balance)
+            print(amount)
             raise NotAnoughtActorBalanceExeption
 
         self.st_eth_balance = self.st_eth_balance - amount

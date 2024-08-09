@@ -1,3 +1,4 @@
+import csv
 import random
 import uuid
 from typing import *
@@ -5,10 +6,10 @@ from typing import *
 import matplotlib.pyplot as plt
 import numpy as np
 
-from model.actors.actor import BaseActor
+from model.actors.actor import BaseActor, ReactionTime
 from model.actors.st_holder_actor import StHolderActor
 from specs.dual_governance import DualGovernance
-from specs.dual_governance.proposals import Proposals
+from specs.dual_governance.proposals import Proposals, ProposalType
 from specs.dual_governance.state import DualGovernanceState, State
 from specs.lido import Lido
 from specs.time_manager import TimeManager
@@ -33,12 +34,36 @@ def generate_agents(mean_st: float, std_st: float, count: int) -> Dict[str, dict
     return initial_agents
 
 
+def read_actors() -> List[BaseActor]:
+    initial_actors = []
+    with open("model/stETH_token_distribution.csv", mode="r") as csv_file:
+        csv_reader = csv.DictReader(csv_file, delimiter=",")
+        line_count = 0
+        for row in csv_reader:
+            if line_count == 0:
+                line_count += 1
+                continue
+            created_actor = create_actor(row["address"], 0, int(float(row["total"]) * ether_base), row["type"])
+            initial_actors.append(created_actor)
+            line_count += 1
+    return initial_actors
+
+
+def create_actor(address: str, ldo: int, st_eth: int, type: str):
+    created_actor = StHolderActor()
+    reaction_time = ReactionTime.Normal
+    if type == "Contract":
+        reaction_time = ReactionTime.Slow
+    created_actor.initialize(address, ldo, st_eth, reaction_time)
+    return created_actor
+
+
 def generate_actors(mean_st: float, std_st: float, count: int) -> List[BaseActor]:
     initial_actors = []
     st_distrib = np.random.normal(mean_st, std_st, count)
     for amount in st_distrib:
         created_actor = StHolderActor()
-        created_actor.initialize(0, amount * ether_base)
+        created_actor.initialize(0, "", amount * ether_base)
         initial_actors.append(created_actor)
     return initial_actors
 
@@ -54,7 +79,7 @@ def new_dg(total_suply, time_manager: TimeManager) -> DualGovernanceState:
 
 
 def new_proposal(timestep: int) -> dict:
-    proposal = {"prob": random.random(), "timestep": timestep}
+    proposal = {"prob": random.random(), "timestep": timestep, "type": random.choice(list(ProposalType))}
     return proposal
 
 

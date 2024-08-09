@@ -23,9 +23,10 @@ def update_proposals(params, substep, state_history, prev_state):
 
 def submit_proposal(params, substep, state_history, prev_state, policy_input):
     dg = prev_state["dg"]
+    proposal = policy_input["proposal_create"]
 
-    if policy_input["proposal_create"] is not None and dg.state.is_proposals_creation_allowed():
-        dg.submit_proposal("", [ExecutorCall("", "", [])])
+    if proposal is not None and dg.state.is_proposals_creation_allowed():
+        dg.submit_proposal("", [ExecutorCall("", "", [])], proposal["type"])
 
     return ("dg", dg)
 

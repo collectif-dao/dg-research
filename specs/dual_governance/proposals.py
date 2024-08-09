@@ -48,6 +48,13 @@ class ProposalStatus(Enum):
     Cancelled = 5
 
 
+class ProposalType(Enum):
+    Positive = 1
+    Negative = 2
+    NoImpact = 3
+    Danger = 4
+
+
 @dataclass
 class Proposal:
     id: int = field(default_factory=lambda: 0)
@@ -57,6 +64,7 @@ class Proposal:
     scheduledAt: Timestamp = field(default_factory=lambda: Timestamp(0))
     executedAt: Timestamp = field(default_factory=lambda: Timestamp(0))
     calls: List[ExecutorCall] = field(default_factory=list)
+    type: ProposalType = field(default_factory=ProposalType.NoImpact)
 
 
 @dataclass
@@ -78,7 +86,7 @@ class Proposals:
     ## main proposal operations
     ## ---
 
-    def submit(self, executor: str, calls: List[ExecutorCall]) -> int:
+    def submit(self, executor: str, calls: List[ExecutorCall], type: ProposalType) -> int:
         if len(calls) == 0:
             raise ProposalErrors.EmptyCalls
 
@@ -91,6 +99,7 @@ class Proposals:
             executor=executor,
             submittedAt=Timestamp.from_uint256(self.time_manager.get_current_timestamp()),
             calls=calls,
+            type=type,
         )
 
         self.state.proposals.append(new_proposal)
