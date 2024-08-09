@@ -12,5 +12,6 @@ time_manager.initialize()
 initial_state = {
     "actors": actors,
     "dg": new_dg(total_suply, time_manager),
+    "proposals_type": {},
     "time_manager": time_manager,
 }

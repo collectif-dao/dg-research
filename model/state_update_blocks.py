@@ -15,7 +15,7 @@ state_update_blocks = [
     {
         # proposals.py
         "policies": {"generate_proposal": generate_proposal},
-        "variables": {"dg": submit_proposal},
+        "variables": {"dg": submit_proposal, "proposals_type": register_proposals_type},
     },
     {
         # proposals.py

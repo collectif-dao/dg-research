@@ -8,8 +8,9 @@ import numpy as np
 
 from model.actors.actor import BaseActor, ReactionTime
 from model.actors.st_holder_actor import StHolderActor
+from model.proposals.proposals import ProposalType
 from specs.dual_governance import DualGovernance
-from specs.dual_governance.proposals import Proposals, ProposalType
+from specs.dual_governance.proposals import Proposals
 from specs.dual_governance.state import DualGovernanceState, State
 from specs.lido import Lido
 from specs.time_manager import TimeManager
@@ -78,8 +79,8 @@ def new_dg(total_suply, time_manager: TimeManager) -> DualGovernanceState:
     return dg
 
 
-def new_proposal(timestep: int) -> dict:
-    proposal = {"prob": random.random(), "timestep": timestep, "type": random.choice(list(ProposalType))}
+def new_proposal(timestep: int, id: int) -> dict:
+    proposal = {"prob": random.random(), "timestep": timestep, "type": random.choice(list(ProposalType)), "id": id}
     return proposal
 
 

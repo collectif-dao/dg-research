@@ -7,8 +7,10 @@ from .utils import *
 
 # Behaviors
 def generate_proposal(params, substep, state_history, prev_state):
+    dg = prev_state["dg"]
+    new_proposal_id = dg.timelock.proposals.count() + dg.timelock.proposals.proposal_id_offset
     if random.random() > 0.95:
-        proposal = new_proposal(prev_state["timestep"])
+        proposal = new_proposal(prev_state["timestep"], new_proposal_id)
         return {"proposal_create": proposal}
     else:
         return {"proposal_create": None}
@@ -26,9 +28,20 @@ def submit_proposal(params, substep, state_history, prev_state, policy_input):
     proposal = policy_input["proposal_create"]
 
     if proposal is not None and dg.state.is_proposals_creation_allowed():
-        dg.submit_proposal("", [ExecutorCall("", "", [])], proposal["type"])
+        dg.submit_proposal("", [ExecutorCall("", "", [])])
 
     return ("dg", dg)
+
+
+def register_proposals_type(params, substep, state_history, prev_state, policy_input):
+    dg = prev_state["dg"]
+    proposals_type = prev_state["proposals_type"]
+    proposal = policy_input["proposal_create"]
+
+    if proposal is not None and dg.state.is_proposals_creation_allowed():
+        proposals_type[proposal["id"]] = proposal["type"]
+
+    return ("proposals_type", proposals_type)
 
 
 def shedule_and_execute_proposals(params, substep, state_history, prev_state, policy_input):
