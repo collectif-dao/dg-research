@@ -1,5 +1,5 @@
 import pytest
-from hypothesis import given
+from hypothesis import assume, given
 
 from specs.lido import Lido
 from specs.tests.accounting_test import ethereum_address_strategy
@@ -7,8 +7,8 @@ from specs.tests.utils import sample_stETH_total_supply
 from specs.tests.withdrawals.withdrawal_queue_claims_test import base_share_rate
 from specs.tests.withdrawals.withdrawal_queue_request_withdrawals_test import withdrawal_amounts_strategy
 from specs.time_manager import TimeManager
+from specs.types.address import Address
 from specs.withdrawals.nft import WithdrawalQueueERC721
-from specs.withdrawals.withdrawal_queue import Address
 
 
 @given(
@@ -18,10 +18,13 @@ from specs.withdrawals.withdrawal_queue import Address
     ethereum_address_strategy(),
 )
 def test_safeTransferFrom(queue_address, owner_address, withdrawal_amounts, address_to):
-    lido = Lido(total_shares=sample_stETH_total_supply, total_supply=sample_stETH_total_supply)
-    lido.set_buffered_ether(sample_stETH_total_supply)
+    assume(owner_address != Address.ZERO and queue_address != Address.ZERO and owner_address != queue_address)
     time_manager = TimeManager()
     time_manager.initialize()
+    lido = Lido()
+    lido.initialize(time_manager, Address.wstETH)
+    lido._mint_shares(Address.DEAD, sample_stETH_total_supply)
+    lido.set_buffered_ether(sample_stETH_total_supply)
 
     total_stETH_amount: int = 0
     for amount in withdrawal_amounts:
@@ -32,6 +35,10 @@ def test_safeTransferFrom(queue_address, owner_address, withdrawal_amounts, addr
     queue.resume()
 
     successful_transfer: bool = False
+
+    lido._mint_shares(owner_address, total_stETH_amount)
+    lido.set_buffered_ether(lido.get_buffered_ether() + total_stETH_amount)
+    lido.approve(owner_address, queue_address, total_stETH_amount)
 
     if owner_address != Address.ZERO:
         request_ids = queue.request_withdrawals(owner_address, withdrawal_amounts)
@@ -67,10 +74,13 @@ def test_safeTransferFrom(queue_address, owner_address, withdrawal_amounts, addr
     ethereum_address_strategy(),
 )
 def test_approve_and_transfer(queue_address, owner_address, withdrawal_amounts, address_to):
-    lido = Lido(total_shares=sample_stETH_total_supply, total_supply=sample_stETH_total_supply)
-    lido.set_buffered_ether(sample_stETH_total_supply)
+    assume(owner_address != Address.ZERO and queue_address != Address.ZERO and owner_address != queue_address)
     time_manager = TimeManager()
     time_manager.initialize()
+    lido = Lido()
+    lido.initialize(time_manager, Address.wstETH)
+    lido._mint_shares(Address.DEAD, sample_stETH_total_supply)
+    lido.set_buffered_ether(sample_stETH_total_supply)
 
     total_stETH_amount: int = 0
     for amount in withdrawal_amounts:
@@ -81,6 +91,10 @@ def test_approve_and_transfer(queue_address, owner_address, withdrawal_amounts, 
     queue.resume()
 
     successful_transfer: bool = False
+
+    lido._mint_shares(owner_address, total_stETH_amount)
+    lido.set_buffered_ether(lido.get_buffered_ether() + total_stETH_amount)
+    lido.approve(owner_address, queue_address, total_stETH_amount)
 
     if owner_address != Address.ZERO:
         request_ids = queue.request_withdrawals(owner_address, withdrawal_amounts)
@@ -111,10 +125,13 @@ def test_approve_and_transfer(queue_address, owner_address, withdrawal_amounts, 
     ethereum_address_strategy(),
 )
 def test_approval_for_all_and_transfer(queue_address, owner_address, withdrawal_amounts, address_to, operator):
-    lido = Lido(total_shares=sample_stETH_total_supply, total_supply=sample_stETH_total_supply)
-    lido.set_buffered_ether(sample_stETH_total_supply)
+    assume(owner_address != Address.ZERO and queue_address != Address.ZERO and owner_address != queue_address)
     time_manager = TimeManager()
     time_manager.initialize()
+    lido = Lido()
+    lido.initialize(time_manager, Address.wstETH)
+    lido._mint_shares(Address.DEAD, sample_stETH_total_supply)
+    lido.set_buffered_ether(sample_stETH_total_supply)
 
     total_stETH_amount: int = 0
     for amount in withdrawal_amounts:
@@ -125,6 +142,10 @@ def test_approval_for_all_and_transfer(queue_address, owner_address, withdrawal_
     queue.resume()
 
     successful_transfer: bool = False
+
+    lido._mint_shares(owner_address, total_stETH_amount)
+    lido.set_buffered_ether(lido.get_buffered_ether() + total_stETH_amount)
+    lido.approve(owner_address, queue_address, total_stETH_amount)
 
     if owner_address != Address.ZERO:
         request_ids = queue.request_withdrawals(owner_address, withdrawal_amounts)
@@ -151,10 +172,14 @@ def test_approval_for_all_and_transfer(queue_address, owner_address, withdrawal_
     ethereum_address_strategy(),
 )
 def test_claimed_nft_transfer_fails(queue_address, owner_address, withdrawal_amounts, address_to):
-    lido = Lido(total_shares=sample_stETH_total_supply, total_supply=sample_stETH_total_supply)
-    lido.set_buffered_ether(sample_stETH_total_supply)
+    assume(owner_address != Address.ZERO and queue_address != Address.ZERO and owner_address != queue_address)
     time_manager = TimeManager()
     time_manager.initialize()
+
+    lido = Lido()
+    lido.initialize(time_manager, Address.wstETH)
+    lido._mint_shares(Address.DEAD, sample_stETH_total_supply)
+    lido.set_buffered_ether(sample_stETH_total_supply)
 
     total_stETH_amount: int = 0
     for amount in withdrawal_amounts:
@@ -165,6 +190,10 @@ def test_claimed_nft_transfer_fails(queue_address, owner_address, withdrawal_amo
     queue.resume()
 
     hints: list[int] = []
+
+    lido._mint_shares(owner_address, total_stETH_amount)
+    lido.set_buffered_ether(lido.get_buffered_ether() + total_stETH_amount)
+    lido.approve(owner_address, queue_address, total_stETH_amount)
 
     if owner_address != Address.ZERO:
         request_ids = queue.request_withdrawals(owner_address, withdrawal_amounts)

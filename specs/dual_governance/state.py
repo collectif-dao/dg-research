@@ -202,7 +202,7 @@ class DualGovernanceState:
                 self._calc_rage_quit_withdrawals_timelock(self.rage_quit_round),
             )
             self.rage_quit_escrow = signalling_escrow
-            self._deploy_new_signalling_escrow(signalling_escrow.MASTER_COPY, self.time_manager, signalling_escrow.lido)
+            self._deploy_new_signalling_escrow(signalling_escrow.address, self.time_manager, signalling_escrow.lido)
             self.rage_quit_round += 1
 
     def _is_first_seal_rage_quit_support_crossed(self, rage_quit_support):

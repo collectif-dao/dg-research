@@ -5,7 +5,7 @@ from specs.tests.accounting_test import ethereum_address_strategy
 from specs.tests.tokens.ldo_test import token_amount_strategy
 from specs.tokens.stETH import stETH_Token
 from specs.tokens.wstETH import wstETH_Token
-from specs.withdrawals.withdrawal_queue import Address
+from specs.types.address import Address
 
 
 @given(

@@ -1,7 +1,7 @@
 from specs.escrow.escrow import Escrow
 from specs.utils import ether_base
 
-test_escrow_address: str = "0x1234567890"
+test_escrow_address: str = "0x0ec9Dcf1636E667B3Ac5fBE75AA3AD91D588adda"
 sample_stETH_total_supply: int = 1_000_000 * ether_base
 sample_rage_quit_support: int = 3  # percent
 

@@ -5,7 +5,7 @@ from hypothesis import strategies as st
 from specs.tests.accounting_test import ethereum_address_strategy
 from specs.time_manager import TimeManager
 from specs.tokens.ldo import LDO_Token
-from specs.withdrawals.withdrawal_queue import Address
+from specs.types.address import Address
 
 
 def token_amount_strategy(min_value: int = 0, max_value: int = 1_000_000 * 10**18):

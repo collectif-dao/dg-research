@@ -2,8 +2,8 @@ from dataclasses import dataclass, field
 from typing import Dict, List
 
 from specs.time_manager import TimeManager
+from specs.types.address import Address
 from specs.types.timestamp import Timestamp
-from specs.withdrawals.withdrawal_queue import Address
 
 
 @dataclass
