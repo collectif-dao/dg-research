@@ -3,7 +3,7 @@ from datetime import timedelta
 from typing import List
 
 from specs.dual_governance.emergency_protection import EmergencyProtection, EmergencyState
-from specs.dual_governance.proposals import ExecutorCall, Proposal, Proposals, ProposalStatus, ProposalType
+from specs.dual_governance.proposals import ExecutorCall, Proposal, Proposals, ProposalStatus
 from specs.time_manager import TimeManager
 from specs.types.timestamp import Timestamp
 from specs.utils import default
@@ -27,8 +27,8 @@ class EmergencyProtectedTimelock:
     ## proposals operations
     ## ---
 
-    def submit(self, executor: str, calls: List[ExecutorCall], type: ProposalType) -> int:
-        return self.proposals.submit(executor, calls, type)
+    def submit(self, executor: str, calls: List[ExecutorCall]) -> int:
+        return self.proposals.submit(executor, calls)
 
     def schedule(self, proposal_id: int):
         self.proposals.schedule(proposal_id, self.after_submit_delay)

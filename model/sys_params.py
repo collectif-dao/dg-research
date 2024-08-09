@@ -14,6 +14,9 @@ initial_values = {
 
 sys_params = {
     "timedelta_tick": [timedelta(hours=1)],
+    "slow_actor_max_delay": 604800,
+    "normal_actor_max_delay": 86400,
+    "quick_actor_max_delay": 7200,
     "food_growth_rate": [3],
     "maximum_food_per_site": [10],
     "reproduction_probability": [1.0],
