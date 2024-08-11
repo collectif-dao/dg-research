@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Dict
 
-from specs.withdrawals.withdrawal_queue import Address
+from specs.types.address import Address
 
 
 @dataclass
@@ -32,6 +32,11 @@ class TokenBase:
 
     def _spend_allowance(self, owner: str, spender: str, amount: int) -> None:
         allowance = self.allowance(owner, spender)
+
+        # print("owner: ", owner)
+        # print("spender: ", spender)
+        # print("amount: ", amount)
+        # print("allowance: ", allowance)
 
         if allowance != self.infinite_allowance:
             if allowance >= amount:

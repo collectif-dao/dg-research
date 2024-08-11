@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 import pytest
-from hypothesis import given, settings
+from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
 from specs.dual_governance.config import DualGovernanceConfig
@@ -12,6 +12,7 @@ from specs.lido import Lido
 from specs.tests.accounting_test import ethereum_address_strategy
 from specs.tests.log import setup_logger
 from specs.time_manager import TimeManager
+from specs.types.address import Address
 from specs.types.timestamp import Timestamp, Timestamps
 
 from .utils import calc_rage_quit_support, sample_stETH_total_supply, test_escrow_address
@@ -20,10 +21,14 @@ logger = setup_logger()
 
 
 def test_initialize():
-    lido = Lido(total_shares=sample_stETH_total_supply, total_supply=sample_stETH_total_supply)
-    lido.set_buffered_ether(sample_stETH_total_supply)
     time_manager = TimeManager()
     time_manager.initialize()
+
+    lido = Lido()
+    lido.initialize(time_manager, Address.wstETH)
+    lido._mint_shares(Address.DEAD, sample_stETH_total_supply)
+    lido.set_buffered_ether(sample_stETH_total_supply)
+
     config = DualGovernanceConfig()
     dgState = DualGovernanceState(config)
     dgState.initialize(test_escrow_address, time_manager, lido=lido)
@@ -38,7 +43,7 @@ def test_initialize():
 
     escrow = dgState.signalling_escrow
 
-    assert escrow.MASTER_COPY == test_escrow_address
+    assert escrow.address == test_escrow_address
     assert escrow.state == EscrowState.SignallingEscrow
     assert escrow.rage_quit_extension_delay == Timestamps.ZERO
     assert escrow.rage_quit_withdrawals_timelock == Timestamps.ZERO
@@ -47,10 +52,15 @@ def test_initialize():
 @given(ethereum_address_strategy(), st.integers(min_value=1, max_value=155_000 * 10**18))
 @settings(deadline=None)
 def test_state_transitions(holder_addr, lock):
-    lido = Lido(total_shares=sample_stETH_total_supply, total_supply=sample_stETH_total_supply)
-    lido.set_buffered_ether(sample_stETH_total_supply)
+    assume(holder_addr != Address.ZERO)
     time_manager = TimeManager()
     time_manager.initialize()
+
+    lido = Lido()
+    lido.initialize(time_manager, Address.wstETH)
+    lido._mint_shares(Address.DEAD, sample_stETH_total_supply)
+    lido.set_buffered_ether(sample_stETH_total_supply)
+
     config = DualGovernanceConfig()
     dgState = DualGovernanceState(config)
     dgState.initialize(test_escrow_address, time_manager, lido=lido)
@@ -60,6 +70,12 @@ def test_state_transitions(holder_addr, lock):
 
     escrow: Escrow = dgState.signalling_escrow
     total_locked_shares = escrow.accounting.state.stETHTotals.lockedShares
+
+    buffered_ether = lido.get_buffered_ether()
+
+    lido._mint_shares(holder_addr, lock)
+    lido.set_buffered_ether(buffered_ether + lock)
+    lido.approve(holder_addr, test_escrow_address, lock)
 
     escrow.lock_stETH(holder_addr, lock)
     assert total_locked_shares < escrow.accounting.state.stETHTotals.lockedShares

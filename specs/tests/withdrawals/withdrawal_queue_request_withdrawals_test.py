@@ -1,11 +1,12 @@
 import pytest
-from hypothesis import given
+from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from specs.lido import Lido
 from specs.tests.accounting_test import ethereum_address_strategy
 from specs.tests.utils import sample_stETH_total_supply
 from specs.time_manager import TimeManager
+from specs.types.address import Address
 from specs.types.timestamp import Timestamps
 from specs.withdrawals.errors import Errors
 from specs.withdrawals.nft import WithdrawalQueueERC721
@@ -19,10 +20,13 @@ def withdrawal_amounts_strategy(min_value: int = 1, max_value: int = 100_000 * 1
 
 @given(ethereum_address_strategy())
 def test_initialization(queue_address):
-    lido = Lido(total_shares=sample_stETH_total_supply, total_supply=sample_stETH_total_supply)
-    lido.set_buffered_ether(sample_stETH_total_supply)
     time_manager = TimeManager()
     time_manager.initialize()
+
+    lido = Lido()
+    lido.initialize(time_manager, Address.wstETH)
+    lido._mint_shares(Address.DEAD, sample_stETH_total_supply)
+    lido.set_buffered_ether(sample_stETH_total_supply)
 
     queue = WithdrawalQueueERC721()
     queue.initialize(time_manager, lido, queue_address)
@@ -35,10 +39,14 @@ def test_initialization(queue_address):
 
 @given(ethereum_address_strategy(), ethereum_address_strategy(), withdrawal_amounts_strategy())
 def test_request_withdrawals(queue_address, owner_address, withdrawal_amounts):
-    lido = Lido(total_shares=sample_stETH_total_supply, total_supply=sample_stETH_total_supply)
-    lido.set_buffered_ether(sample_stETH_total_supply)
+    assume(owner_address != Address.ZERO and queue_address != Address.ZERO and owner_address != queue_address)
     time_manager = TimeManager()
     time_manager.initialize()
+
+    lido = Lido()
+    lido.initialize(time_manager, Address.wstETH)
+    lido._mint_shares(Address.DEAD, sample_stETH_total_supply)
+    lido.set_buffered_ether(sample_stETH_total_supply)
 
     queue = WithdrawalQueueERC721()
     queue.initialize(time_manager, lido, queue_address)
@@ -52,13 +60,20 @@ def test_request_withdrawals(queue_address, owner_address, withdrawal_amounts):
     max_withdrawal: bool = False
     total_stETH_amount: int = 0
     total_shares_amount: int = 0
+    total_approve: int = 0
     request_ids: list[int] = []
 
     for amount in withdrawal_amounts:
+        total_approve += lido.get_shares_by_pooled_eth(amount)
+
         if amount < queue.MIN_STETH_WITHDRAWAL_AMOUNT:
             min_withdrawal = True
         elif amount > queue.MAX_STETH_WITHDRAWAL_AMOUNT:
             max_withdrawal = True
+
+    lido._mint_shares(owner_address, total_approve)
+    lido.set_buffered_ether(lido.get_buffered_ether() + total_approve)
+    lido.approve(owner_address, queue_address, total_approve)
 
     if min_withdrawal and not max_withdrawal:
         with pytest.raises(Errors.RequestAmountTooSmall):
@@ -98,10 +113,13 @@ def test_request_withdrawals(queue_address, owner_address, withdrawal_amounts):
 
 @given(ethereum_address_strategy(), ethereum_address_strategy(), withdrawal_amounts_strategy(100, 1000 * 10**18))
 def test_request_withdrawals_wstETH(queue_address, owner_address, wstETH_withdrawal_amounts):
-    lido = Lido(total_shares=sample_stETH_total_supply, total_supply=sample_stETH_total_supply)
-    lido.set_buffered_ether(sample_stETH_total_supply)
+    assume(owner_address != Address.ZERO and queue_address != Address.ZERO and owner_address != queue_address)
     time_manager = TimeManager()
     time_manager.initialize()
+    lido = Lido()
+    lido.initialize(time_manager, Address.wstETH)
+    lido._mint_shares(Address.DEAD, sample_stETH_total_supply)
+    lido.set_buffered_ether(sample_stETH_total_supply)
 
     queue = WithdrawalQueueERC721()
     queue.initialize(time_manager, lido, queue_address)
@@ -109,7 +127,18 @@ def test_request_withdrawals_wstETH(queue_address, owner_address, wstETH_withdra
 
     total_stETH_amount: int = 0
     total_shares_amount: int = 0
+    total_approve: int = 0
     request_ids: list[int] = []
+
+    for amount in wstETH_withdrawal_amounts:
+        total_approve += lido.get_shares_by_pooled_eth(amount)
+
+    lido._mint_shares(owner_address, total_approve)
+    lido.set_buffered_ether(lido.get_buffered_ether() + total_approve)
+    lido.approve(owner_address, Address.wstETH, total_approve)
+    lido.wrap(owner_address, total_approve)
+    lido.wstETH.approve(owner_address, queue_address, total_approve)
+
     request_ids = queue.request_withdrawals_wsteth(owner_address, wstETH_withdrawal_amounts)
 
     withdrawal_requests = queue.get_withdrawal_requests(owner_address)

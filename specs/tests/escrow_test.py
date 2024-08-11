@@ -2,7 +2,7 @@ from datetime import timedelta
 from typing import Dict
 
 import pytest
-from hypothesis import given
+from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from specs.dual_governance.config import DualGovernanceConfig
@@ -13,6 +13,7 @@ from specs.lido import Lido
 from specs.tests.accounting_test import ethereum_address_strategy
 from specs.tests.log import setup_logger
 from specs.time_manager import TimeManager
+from specs.types.address import Address
 from specs.types.shares_value import SharesValue, SharesValueOverflow
 from specs.types.timestamp import Timestamp
 
@@ -23,11 +24,15 @@ logger = setup_logger()
 
 @given(ethereum_address_strategy(), st.integers(min_value=1))
 def test_lock_stETH(holder_addr, lock):
-    lido = Lido(total_shares=sample_stETH_total_supply, total_supply=sample_stETH_total_supply)
-    lido.set_buffered_ether(sample_stETH_total_supply)
-
+    assume(holder_addr != Address.ZERO)
     time_manager = TimeManager()
     time_manager.initialize()
+
+    lido = Lido()
+    lido.initialize(time_manager, Address.wstETH)
+    lido._mint_shares(Address.DEAD, sample_stETH_total_supply)
+    lido.set_buffered_ether(sample_stETH_total_supply)
+
     config = DualGovernanceConfig()
     dgState = DualGovernanceState(config)
     dgState.initialize(test_escrow_address, time_manager, lido=lido)
@@ -37,6 +42,11 @@ def test_lock_stETH(holder_addr, lock):
     total_holder_locked_shares: Dict[str, SharesValue] = {}
     total_locked_shares = escrow.accounting.state.stETHTotals.lockedShares
     rage_quit_support = escrow.get_rage_quit_support()
+
+    buffered_ether = lido.get_buffered_ether()
+    lido._mint_shares(holder_addr, lock)
+    lido.set_buffered_ether(buffered_ether + lock)
+    lido.approve(holder_addr, test_escrow_address, lock)
 
     if holder_addr not in total_holder_locked_shares:
         if holder_addr not in escrow.accounting.state.assets:
@@ -50,6 +60,9 @@ def test_lock_stETH(holder_addr, lock):
     else:
         escrow.lock_stETH(holder_addr, lock)
         total_holder_locked_shares[holder_addr] += SharesValue.from_uint256(lock)
+
+        assert lido.balance_of(test_escrow_address) == lock
+        assert lido.balance_of(holder_addr) == 0
 
         assert escrow.accounting.state.stETHTotals.lockedShares > total_locked_shares
         assert escrow.accounting.state.assets[holder_addr].stETHLockedShares == total_holder_locked_shares[holder_addr]
@@ -67,11 +80,15 @@ def test_lock_stETH(holder_addr, lock):
 
 @given(ethereum_address_strategy(), st.integers(min_value=1))
 def test_unlock_stETH(holder_addr, lock):
-    lido = Lido(total_shares=sample_stETH_total_supply, total_supply=sample_stETH_total_supply)
-    lido.set_buffered_ether(sample_stETH_total_supply)
-
+    assume(holder_addr != Address.ZERO)
     time_manager = TimeManager()
     time_manager.initialize()
+
+    lido = Lido()
+    lido.initialize(time_manager, Address.wstETH)
+    lido._mint_shares(Address.DEAD, sample_stETH_total_supply)
+    lido.set_buffered_ether(sample_stETH_total_supply)
+
     config = DualGovernanceConfig()
     dgState = DualGovernanceState(config)
     dgState.initialize(test_escrow_address, time_manager, lido=lido)
@@ -85,6 +102,11 @@ def test_unlock_stETH(holder_addr, lock):
             total_holder_locked_shares[holder_addr] = escrow.accounting.state.assets[holder_addr].stETHLockedShares
 
     total_locked_shares = escrow.accounting.state.stETHTotals.lockedShares
+
+    buffered_ether = lido.get_buffered_ether()
+    lido._mint_shares(holder_addr, lock)
+    lido.set_buffered_ether(buffered_ether + lock)
+    lido.approve(holder_addr, test_escrow_address, lock)
 
     if total_locked_shares.value + lock > SharesValue.MAX_VALUE:
         with pytest.raises(SharesValueOverflow):
@@ -103,14 +125,19 @@ def test_unlock_stETH(holder_addr, lock):
         assert escrow.accounting.state.assets[holder_addr].stETHLockedShares == total_holder_locked_shares[holder_addr]
         assert escrow.accounting.state.stETHTotals.lockedShares == SharesValue(0)
 
+        assert lido.balance_of(test_escrow_address) == 0
+        assert lido.balance_of(holder_addr) == lock
+
 
 @given(ethereum_address_strategy(), st.integers(min_value=1))
 def test_lock_wstETH(holder_addr, lock):
-    lido = Lido(total_shares=sample_stETH_total_supply, total_supply=sample_stETH_total_supply)
-    lido.set_buffered_ether(sample_stETH_total_supply)
-
+    assume(holder_addr != Address.ZERO)
     time_manager = TimeManager()
     time_manager.initialize()
+    lido = Lido()
+    lido.initialize(time_manager, Address.wstETH)
+    lido._mint_shares(Address.DEAD, sample_stETH_total_supply)
+    lido.set_buffered_ether(sample_stETH_total_supply)
     config = DualGovernanceConfig()
     dgState = DualGovernanceState(config)
     dgState.initialize(test_escrow_address, time_manager, lido=lido)
@@ -120,12 +147,24 @@ def test_lock_wstETH(holder_addr, lock):
     total_locked_shares = escrow.accounting.state.stETHTotals.lockedShares
     rage_quit_support = escrow.get_rage_quit_support()
 
+    buffered_ether = lido.get_buffered_ether()
+    lido._mint_shares(holder_addr, lock)
+    lido.set_buffered_ether(buffered_ether + lock)
+    lido.approve(holder_addr, Address.wstETH, lock)
+    lido.wrap(holder_addr, lock)
+    lido.wstETH.approve(holder_addr, test_escrow_address, lock)
+
     if total_locked_shares.value + lock > SharesValue.MAX_VALUE:
         with pytest.raises(SharesValueOverflow):
             escrow.lock_wstETH(holder_addr, lock)
     else:
         escrow.lock_wstETH(holder_addr, lock)
         assert escrow.accounting.state.stETHTotals.lockedShares > total_locked_shares
+
+        assert lido.balance_of(test_escrow_address) == lock
+        assert lido.balance_of(holder_addr) == 0
+        assert lido.wstETH.balance_of(test_escrow_address) == 0
+        assert lido.wstETH.balance_of(holder_addr) == 0
 
         rage_quit_support = escrow.get_rage_quit_support()
 
@@ -137,17 +176,28 @@ def test_lock_wstETH(holder_addr, lock):
 
 @given(ethereum_address_strategy(), st.integers(min_value=1))
 def test_unlock_wstETH(holder_addr, lock):
-    lido = Lido(total_shares=sample_stETH_total_supply, total_supply=sample_stETH_total_supply)
-    lido.set_buffered_ether(sample_stETH_total_supply)
-
+    assume(holder_addr != Address.ZERO)
     time_manager = TimeManager()
     time_manager.initialize()
+
+    lido = Lido()
+    lido.initialize(time_manager, Address.wstETH)
+    lido._mint_shares(Address.DEAD, sample_stETH_total_supply)
+    lido.set_buffered_ether(sample_stETH_total_supply)
+
     config = DualGovernanceConfig()
     dgState = DualGovernanceState(config)
-    dgState.initialize(test_escrow_address, time_manager, lido=lido)
+    dgState.initialize(test_escrow_address, time_manager, lido)
     escrow: Escrow = dgState.signalling_escrow
 
     total_locked_shares = escrow.accounting.state.stETHTotals.lockedShares
+
+    buffered_ether = lido.get_buffered_ether()
+    lido._mint_shares(holder_addr, lock)
+    lido.set_buffered_ether(buffered_ether + lock)
+    lido.approve(holder_addr, Address.wstETH, lock)
+    lido.wrap(holder_addr, lock)
+    lido.wstETH.approve(holder_addr, test_escrow_address, lock)
 
     if total_locked_shares.value + lock > SharesValue.MAX_VALUE:
         with pytest.raises(SharesValueOverflow):
@@ -163,20 +213,32 @@ def test_unlock_wstETH(holder_addr, lock):
 
         assert escrow.accounting.state.stETHTotals.lockedShares == SharesValue(0)
 
+        assert lido.wstETH.balance_of(holder_addr) == lock
+        assert lido.wstETH.balance_of(test_escrow_address) == 0
+
 
 @given(ethereum_address_strategy(), st.integers(min_value=1, max_value=SharesValue.MAX_VALUE))
 def test_get_rage_quit_support(holder_addr, lock):
-    lido = Lido(total_shares=sample_stETH_total_supply, total_supply=sample_stETH_total_supply)
-    lido.set_buffered_ether(sample_stETH_total_supply)
-
+    assume(holder_addr != Address.ZERO)
     time_manager = TimeManager()
     time_manager.initialize()
+
+    lido = Lido()
+    lido.initialize(time_manager, Address.wstETH)
+    lido._mint_shares(Address.DEAD, sample_stETH_total_supply)
+    lido.set_buffered_ether(sample_stETH_total_supply)
+
     config = DualGovernanceConfig()
     dgState = DualGovernanceState(config)
-    dgState.initialize(test_escrow_address, time_manager, lido=lido)
+    dgState.initialize(test_escrow_address, time_manager, lido)
     escrow: Escrow = dgState.signalling_escrow
 
     total_locked_shares = escrow.accounting.state.stETHTotals.lockedShares
+
+    buffered_ether = lido.get_buffered_ether()
+    lido._mint_shares(holder_addr, lock)
+    lido.set_buffered_ether(buffered_ether + lock)
+    lido.approve(holder_addr, test_escrow_address, lock)
 
     if total_locked_shares.value + lock <= SharesValue.MAX_VALUE:
         escrow.lock_stETH(holder_addr, lock)
@@ -189,13 +251,17 @@ def test_get_rage_quit_support(holder_addr, lock):
 
 @given(st.integers(min_value=1, max_value=Timestamp.MAX_VALUE), st.integers(min_value=1, max_value=Timestamp.MAX_VALUE))
 def test_start_rage_quit(delay, timelock):
-    lido = Lido(total_shares=sample_stETH_total_supply, total_supply=sample_stETH_total_supply)
-    lido.set_buffered_ether(sample_stETH_total_supply)
     time_manager = TimeManager()
     time_manager.initialize()
+
+    lido = Lido()
+    lido.initialize(time_manager, Address.wstETH)
+    lido._mint_shares(Address.DEAD, sample_stETH_total_supply)
+    lido.set_buffered_ether(sample_stETH_total_supply)
+
     config = DualGovernanceConfig()
     dgState = DualGovernanceState(config)
-    dgState.initialize(test_escrow_address, time_manager, lido=lido)
+    dgState.initialize(test_escrow_address, time_manager, lido)
     escrow: Escrow = dgState.signalling_escrow
 
     assert escrow.state == EscrowState.SignallingEscrow

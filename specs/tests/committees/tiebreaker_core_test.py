@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from hypothesis import given
+from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from specs.committees.tiebreaker_core import TiebreakerCore
@@ -13,6 +13,7 @@ from specs.tests.committees.hash_consensus_test import hash_consensus_members_st
 from specs.tests.proposals_test import calls_strategy
 from specs.tests.utils import calc_rage_quit_support, sample_stETH_total_supply, test_escrow_address
 from specs.time_manager import TimeManager
+from specs.types.address import Address
 from specs.types.timestamp import Timestamp
 
 
@@ -28,11 +29,19 @@ from specs.types.timestamp import Timestamp
 def test_schedule_proposal_workflow(
     members, timelock_duration, tiebreaker_address, executor, calls, stETH_holder, lock
 ):
-    lido = Lido(total_shares=sample_stETH_total_supply, total_supply=sample_stETH_total_supply)
-    lido.set_buffered_ether(sample_stETH_total_supply)
-
+    assume(
+        stETH_holder != Address.ZERO
+        and stETH_holder != Address.DEAD
+        and stETH_holder != test_escrow_address
+        and stETH_holder != executor
+    )
     time_manager = TimeManager()
     time_manager.initialize()
+
+    lido = Lido()
+    lido.initialize(time_manager, Address.wstETH)
+    lido._mint_shares(Address.DEAD, sample_stETH_total_supply)
+    lido.set_buffered_ether(sample_stETH_total_supply)
 
     dual_governance = DualGovernance()
     dual_governance.initialize(test_escrow_address, time_manager, lido)
@@ -45,6 +54,13 @@ def test_schedule_proposal_workflow(
     proposal_id = dual_governance.timelock.submit(executor, calls)
 
     escrow: Escrow = dual_governance.state.signalling_escrow
+
+    buffered_ether = lido.get_buffered_ether()
+
+    lido._mint_shares(stETH_holder, lock)
+    lido.set_buffered_ether(buffered_ether + lock)
+    lido.approve(stETH_holder, test_escrow_address, lock)
+
     escrow.lock_stETH(stETH_holder, lock)
 
     rage_quit_support = calc_rage_quit_support(escrow)

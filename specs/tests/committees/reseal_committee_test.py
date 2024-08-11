@@ -10,6 +10,7 @@ from specs.tests.accounting_test import ethereum_address_strategy
 from specs.tests.committees.hash_consensus_test import hash_consensus_members_strategy
 from specs.tests.utils import sample_stETH_total_supply, test_escrow_address
 from specs.time_manager import TimeManager
+from specs.types.address import Address
 
 
 def sealables_strategy(min_size: int = 5):
@@ -23,11 +24,13 @@ def sealables_strategy(min_size: int = 5):
     sealables=sealables_strategy(),
 )
 def test_reseal_workflow(members, timelock_duration, committee_address, sealables):
-    lido = Lido(total_shares=sample_stETH_total_supply, total_supply=sample_stETH_total_supply)
-    lido.set_buffered_ether(sample_stETH_total_supply)
-
     time_manager = TimeManager()
     time_manager.initialize()
+
+    lido = Lido()
+    lido.initialize(time_manager, Address.wstETH)
+    lido._mint_shares(Address.DEAD, sample_stETH_total_supply)
+    lido.set_buffered_ether(sample_stETH_total_supply)
 
     dual_governance = DualGovernance()
     dual_governance.initialize(test_escrow_address, time_manager, lido)

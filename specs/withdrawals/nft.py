@@ -4,9 +4,10 @@ from typing import Dict, Optional
 
 from specs.lido import Lido
 from specs.time_manager import TimeManager
+from specs.types.address import Address
 from specs.withdrawals.parameters import NFT_NAME, NFT_SYMBOL, WITHDRAWAL_QUEUE_BASE_URI
 from specs.withdrawals.queue_base import WithdrawalRequest
-from specs.withdrawals.withdrawal_queue import Address, WithdrawalQueue
+from specs.withdrawals.withdrawal_queue import WithdrawalQueue
 
 
 @dataclass

@@ -21,7 +21,7 @@ class EscrowState(Enum):
 
 @dataclass
 class Escrow:
-    MASTER_COPY: str = field(default_factory=lambda: "")
+    address: str = field(default_factory=lambda: "")
     state: EscrowState = EscrowState.NotInitialized
 
     rage_quit_extension_delay: Timestamp = field(default_factory=lambda: Timestamps.ZERO)
@@ -41,12 +41,14 @@ class Escrow:
         accounting.initialize(time_manager)
         self.accounting = accounting
 
-        self.MASTER_COPY = address
+        self.address = address
         self.state = EscrowState.SignallingEscrow
 
         self.lido = lido
         self.dual_governance = dual_governance
         self.time_manager = time_manager
+
+        self.lido.approve(self.address, self.lido.wstETH.address, self.lido.wstETH.infinite_allowance)
 
     ## ---
     ## stETH token operations
@@ -57,7 +59,7 @@ class Escrow:
         shares_value: SharesValue = SharesValue.from_uint256(amount)
 
         self.accounting.accountStETHSharesLock(holder_addr, shares_value)
-        self.lido.transferSharesFrom(holder_addr, self._address_this, locked_stETH_shares)
+        self.lido.transferSharesFrom(holder_addr, self.address, self.address, locked_stETH_shares)
         self._activate_next_governance_state()
 
     def unlock_stETH(self, holder_addr: str) -> int:
@@ -67,7 +69,7 @@ class Escrow:
         shares = self.accounting.state.assets[holder_addr].stETHLockedShares
 
         self.accounting.accountStETHSharesUnlock(holder_addr, shares)
-        self.lido.transferShares(holder_addr, shares.value)
+        self.lido.transferShares(self.address, holder_addr, shares.value)
         self._activate_next_governance_state()
 
         return shares
@@ -77,8 +79,8 @@ class Escrow:
     ## ---
 
     def lock_wstETH(self, holder_addr: str, amount: int) -> int:
-        self.lido.wstETH_transferFrom(holder_addr, self._address_this, amount)
-        stETH_shares = self.lido.unwrap(amount)
+        self.lido.wstETH_transferFrom(holder_addr, self.address, self.address, amount)
+        stETH_shares = self.lido.unwrap(self.address, amount)
         locked_stETH_shares = self.lido.get_shares_by_pooled_eth(stETH_shares)
         shares_value: SharesValue = SharesValue.from_uint256(locked_stETH_shares)
 
@@ -91,8 +93,8 @@ class Escrow:
 
         shares = self.accounting.state.assets[holder_addr].stETHLockedShares
         self.accounting.accountStETHSharesUnlock(holder_addr, shares)
-        unlocked_stETH_shares = self.lido.wrap(self.lido.get_pooled_eth_by_shares(shares.value))
-        self.lido.wstETH_transfer(holder_addr, unlocked_stETH_shares)
+        unlocked_stETH_shares = self.lido.wrap(self.address, self.lido.get_pooled_eth_by_shares(shares.value))
+        self.lido.wstETH_transfer(self.address, holder_addr, unlocked_stETH_shares)
         self._activate_next_governance_state()
 
     def get_rage_quit_support(self) -> int:
@@ -136,6 +138,3 @@ class Escrow:
     def _check_escrow_state(self, expected_state: EscrowState):
         if self.state != expected_state:
             raise Errors.InvalidState
-
-    def _address_this(self) -> str:
-        return self.MASTER_COPY

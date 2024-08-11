@@ -3,14 +3,11 @@ from typing import Dict, List
 
 from specs.lido import Lido
 from specs.time_manager import TimeManager
+from specs.types.address import Address
 from specs.types.timestamp import Timestamp, Timestamps
 from specs.withdrawals.errors import Errors
 from specs.withdrawals.pausable import Pausable
 from specs.withdrawals.queue_base import WithdrawalQueueBase, WithdrawalRequestStatus
-
-
-class Address:
-    ZERO = "0x0000000000000000000000000000000000000000"
 
 
 @dataclass
@@ -187,7 +184,7 @@ class WithdrawalQueue(WithdrawalQueueBase, Pausable):
     ## ---
 
     def _request_withdrawal(self, holder_addr: str, amount_of_steth: int, owner: str) -> int:
-        self.lido.transferSharesFrom(holder_addr, self.address, amount_of_steth)
+        self.lido.transferSharesFrom(holder_addr, self.address, self.address, amount_of_steth)
 
         amount_of_shares = self.lido.get_shares_by_pooled_eth(amount_of_steth)
 
@@ -196,9 +193,9 @@ class WithdrawalQueue(WithdrawalQueueBase, Pausable):
         return request_id
 
     def _request_withdrawal_wsteth(self, holder_addr: str, amount_of_wsteth: int, owner: str) -> int:
-        self.lido.wstETH_transferFrom(holder_addr, self, amount_of_wsteth)
+        self.lido.wstETH_transferFrom(holder_addr, self.address, self.address, amount_of_wsteth)
 
-        amount_of_steth = self.lido.unwrap(amount_of_wsteth)
+        amount_of_steth = self.lido.unwrap(self.address, amount_of_wsteth)
         self._check_withdrawal_request_amount(amount_of_steth)
 
         amount_of_shares = self.lido.get_shares_by_pooled_eth(amount_of_steth)
