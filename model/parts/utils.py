@@ -7,6 +7,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from model.actors.actor import BaseActor, ReactionTime
+from model.actors.basic_active_actor import BasicActiveActor
+from model.actors.basic_passive_actor import BasicPassiveActor
+from model.actors.direct_atacker_actor import DirectAtackerActor
+from model.actors.ldo_holder_actor import LdoHolderActor
+from model.actors.side_market_actor import SideMarketActor
 from model.actors.st_holder_actor import StHolderActor
 from model.proposals.proposals import ProposalType
 from specs.dual_governance import DualGovernance
@@ -44,15 +49,30 @@ def read_actors() -> List[BaseActor]:
             if line_count == 0:
                 line_count += 1
                 continue
-            created_actor = create_actor(row["address"], 0, int(float(row["total"]) * ether_base), row["type"])
+            created_actor = create_actor(
+                line_count, row["address"], 0, int(float(row["total"]) * ether_base), row["type"]
+            )
             initial_actors.append(created_actor)
             line_count += 1
     return initial_actors
 
 
-def create_actor(address: str, ldo: int, st_eth: int, type: str):
-    created_actor = StHolderActor()
-    reaction_time = ReactionTime.Normal
+def create_actor(order: int, address: str, ldo: int, st_eth: int, type: str):
+    types_count = 6
+    if order % types_count == 1:
+        created_actor = StHolderActor()
+    elif order % types_count == 2:
+        created_actor = BasicActiveActor()
+    elif order % types_count == 3:
+        created_actor = BasicPassiveActor()
+    elif order % types_count == 4:
+        created_actor = LdoHolderActor()
+    elif order % types_count == 5:
+        created_actor = DirectAtackerActor()
+    elif order % types_count == 0:
+        created_actor = SideMarketActor()
+
+    reaction_time = random.choice([ReactionTime.Normal, ReactionTime.Quick, ReactionTime.Slow])
     if type == "Contract":
         reaction_time = ReactionTime.Slow
     created_actor.initialize(address, ldo, st_eth, reaction_time)
@@ -80,7 +100,9 @@ def new_dg(total_suply, time_manager: TimeManager) -> DualGovernanceState:
 
 
 def new_proposal(timestep: int, id: int) -> dict:
-    proposal = {"prob": random.random(), "timestep": timestep, "type": random.choice(list(ProposalType)), "id": id}
+    # proposal = {"prob": random.random(), "timestep": timestep, "type": random.choice(list(ProposalType)), "id": id}
+    proposal = {"prob": random.random(), "timestep": timestep, "type": ProposalType.Positive, "id": id}
+
     return proposal
 
 
