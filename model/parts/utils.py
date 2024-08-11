@@ -16,7 +16,7 @@ from model.actors.st_holder_actor import StHolderActor
 from model.proposals.proposals import ProposalType
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.proposals import Proposals
-from specs.dual_governance.state import DualGovernanceState, State
+from specs.dual_governance.state import State
 from specs.lido import Lido
 from specs.time_manager import TimeManager
 from specs.utils import ether_base
@@ -89,13 +89,14 @@ def generate_actors(mean_st: float, std_st: float, count: int) -> List[BaseActor
     return initial_actors
 
 
-def new_dg(total_suply, time_manager: TimeManager) -> DualGovernanceState:
+def new_dg(total_suply, time_manager: TimeManager) -> DualGovernance:
     dg = DualGovernance()
 
-    lido = Lido(total_shares=total_suply, total_supply=total_suply)
+    lido = Lido()
+    lido.initialize(time_manager, "wstETH")
     lido.set_buffered_ether(total_suply)
 
-    dg.initialize("", time_manager, lido)
+    dg.initialize("escrow_adress", time_manager, lido)
     return dg
 
 
