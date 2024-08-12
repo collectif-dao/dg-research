@@ -7,10 +7,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from model.actors.actor import BaseActor, ReactionTime
+from model.actors.basic_active_actor import BasicActiveActor
+from model.actors.basic_passive_actor import BasicPassiveActor
+from model.actors.direct_atacker_actor import DirectAtackerActor
+from model.actors.ldo_holder_actor import LdoHolderActor
+from model.actors.side_market_actor import SideMarketActor
 from model.actors.st_holder_actor import StHolderActor
+from model.proposals.proposals import ProposalType
 from specs.dual_governance import DualGovernance
-from specs.dual_governance.proposals import Proposals, ProposalType
-from specs.dual_governance.state import DualGovernanceState, State
+from specs.dual_governance.proposals import Proposals
+from specs.dual_governance.state import State
 from specs.lido import Lido
 from specs.time_manager import TimeManager
 from specs.utils import ether_base
@@ -43,15 +49,30 @@ def read_actors() -> List[BaseActor]:
             if line_count == 0:
                 line_count += 1
                 continue
-            created_actor = create_actor(row["address"], 0, int(float(row["total"]) * ether_base), row["type"])
+            created_actor = create_actor(
+                line_count, row["address"], 0, int(float(row["total"]) * ether_base), row["type"]
+            )
             initial_actors.append(created_actor)
             line_count += 1
     return initial_actors
 
 
-def create_actor(address: str, ldo: int, st_eth: int, type: str):
-    created_actor = StHolderActor()
-    reaction_time = ReactionTime.Normal
+def create_actor(order: int, address: str, ldo: int, st_eth: int, type: str):
+    types_count = 6
+    if order % types_count == 1:
+        created_actor = StHolderActor()
+    elif order % types_count == 2:
+        created_actor = BasicActiveActor()
+    elif order % types_count == 3:
+        created_actor = BasicPassiveActor()
+    elif order % types_count == 4:
+        created_actor = LdoHolderActor()
+    elif order % types_count == 5:
+        created_actor = DirectAtackerActor()
+    elif order % types_count == 0:
+        created_actor = SideMarketActor()
+
+    reaction_time = random.choice([ReactionTime.Normal, ReactionTime.Quick, ReactionTime.Slow])
     if type == "Contract":
         reaction_time = ReactionTime.Slow
     created_actor.initialize(address, ldo, st_eth, reaction_time)
@@ -68,18 +89,21 @@ def generate_actors(mean_st: float, std_st: float, count: int) -> List[BaseActor
     return initial_actors
 
 
-def new_dg(total_suply, time_manager: TimeManager) -> DualGovernanceState:
+def new_dg(total_suply, time_manager: TimeManager) -> DualGovernance:
     dg = DualGovernance()
 
-    lido = Lido(total_shares=total_suply, total_supply=total_suply)
+    lido = Lido()
+    lido.initialize(time_manager, "wstETH")
     lido.set_buffered_ether(total_suply)
 
-    dg.initialize("", time_manager, lido)
+    dg.initialize("escrow_adress", time_manager, lido)
     return dg
 
 
-def new_proposal(timestep: int) -> dict:
-    proposal = {"prob": random.random(), "timestep": timestep, "type": random.choice(list(ProposalType))}
+def new_proposal(timestep: int, id: int) -> dict:
+    # proposal = {"prob": random.random(), "timestep": timestep, "type": random.choice(list(ProposalType)), "id": id}
+    proposal = {"prob": random.random(), "timestep": timestep, "type": ProposalType.Positive, "id": id}
+
     return proposal
 
 

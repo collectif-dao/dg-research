@@ -5,9 +5,10 @@ from .utils import *
 def stake_st(params, substep, state_history, prev_state):
     dg = prev_state["dg"]
     actors = prev_state["actors"]
+    proposals_type = prev_state["proposals_type"]
     staked = {}
     for actor in actors:
-        amount = actor.will_change_escrow(dg)
+        amount = actor.will_change_escrow(dg, proposals_type)
         if amount != 0:
             staked[actor.address] = amount
 

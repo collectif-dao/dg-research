@@ -14,6 +14,7 @@ def update_escrow(params, substep, state_history, prev_state, policy_input):
 
     for agent, delta_staked in delta_staked_by_agent.items():
         if delta_staked > 0:
+            dg.state.signalling_escrow.lido.approve(agent, "escrow_adress", delta_staked)
             dg.state.signalling_escrow.lock_stETH(agent, delta_staked)
         if delta_staked < 0:
             dg.state.signalling_escrow.unlock_stETH(agent)
@@ -38,7 +39,9 @@ def update_state(params, substep, state_history, prev_state, policy_input):
     dg.state.time_manager.shift_current_time(delta)
     dg.state.signalling_escrow.time_manager.shift_current_time(delta)
     dg.state.signalling_escrow.accounting.time_manager.shift_current_time(delta)
+    dg.state.signalling_escrow.lido.time_manager.shift_current_time(delta)
     dg.timelock.time_manager.shift_current_time(delta)
+    dg.timelock.proposals.time_manager.shift_current_time(delta)
 
     dg.activate_next_state()
 

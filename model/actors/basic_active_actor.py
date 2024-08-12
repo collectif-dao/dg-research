@@ -10,7 +10,7 @@ from specs.dual_governance.proposals import ProposalStatus
 
 
 @dataclass
-class StHolderActor(BaseActor):
+class BasicActiveActor(BaseActor):
     governance_participation: GovernanceParticipation = field(default_factory=lambda: GovernanceParticipation.Full)
 
     def will_change_escrow(self, dg: DualGovernance, proposals_type: Dict[int, ProposalType]):

@@ -10,7 +10,7 @@ from specs.dual_governance.proposals import ProposalStatus
 
 
 @dataclass
-class StHolderActor(BaseActor):
+class SideMarketActor(BaseActor):
     governance_participation: GovernanceParticipation = field(default_factory=lambda: GovernanceParticipation.Full)
 
     def will_change_escrow(self, dg: DualGovernance, proposals_type: Dict[int, ProposalType]):
@@ -19,12 +19,6 @@ class StHolderActor(BaseActor):
             for p in dg.timelock.proposals.state.proposals
             if (p.status == ProposalStatus.Submitted or p.status == ProposalStatus.Scheduled)
             and proposals_type[p.id] == ProposalType.Danger
-        )
-        negative_proposals_count = sum(
-            1
-            for p in dg.timelock.proposals.state.proposals
-            if (p.status == ProposalStatus.Submitted or p.status == ProposalStatus.Scheduled)
-            and proposals_type[p.id] == ProposalType.Negative
         )
 
         danger_proposal_timestamp = 0
@@ -35,14 +29,6 @@ class StHolderActor(BaseActor):
                 if (p.status == ProposalStatus.Submitted or p.status == ProposalStatus.Scheduled)
                 and proposals_type[p.id] == ProposalType.Danger
             )
-        negative_proposal_timestamp = 0
-        if negative_proposals_count > 0:
-            negative_proposal_timestamp = min(
-                p.submittedAt.value
-                for p in dg.timelock.proposals.state.proposals
-                if (p.status == ProposalStatus.Submitted or p.status == ProposalStatus.Scheduled)
-                and proposals_type[p.id] == ProposalType.Negative
-            )
 
         if self.reaction_time == ReactionTime.Slow:
             reaction_delay = random.randint(normal_actor_max_delay, slow_actor_max_delay)
@@ -51,11 +37,8 @@ class StHolderActor(BaseActor):
         else:
             reaction_delay = random.randint(0, quick_actor_max_delay)
 
-        if danger_proposals_count > 0 or negative_proposals_count > 2:
-            if (
-                max(negative_proposal_timestamp, danger_proposal_timestamp) + reaction_delay
-                < dg.time_manager.get_current_timestamp_value().value
-            ):
+        if danger_proposals_count > 0:
+            if danger_proposal_timestamp + reaction_delay < dg.time_manager.get_current_timestamp_value().value:
                 return self.st_eth_balance
             else:
                 return 0
