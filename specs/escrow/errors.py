@@ -49,3 +49,9 @@ class Errors:
 
     class AssetsUnlockDelayNotPassed(Error):
         pass
+
+    class BatchQueueIsNotClosed(Error):
+        pass
+
+    class UnclaimedBatches(Error):
+        pass

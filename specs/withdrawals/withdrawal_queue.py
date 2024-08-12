@@ -123,12 +123,17 @@ class WithdrawalQueue(WithdrawalQueueBase, Pausable):
         for i in range(len(request_ids)):
             self._claim(request_ids[i], hints[i], _recipient)
 
-    def claim_withdrawals(self, holder_addr: str, request_ids: List[int], hints: List[int]):
+    def claim_withdrawals(self, holder_addr: str, request_ids: List[int], hints: List[int]) -> int:
         if len(request_ids) != len(hints):
             raise Errors.ArraysLengthMismatch(len(request_ids), len(hints))
 
+        total_claimed: int = 0
+
         for i in range(len(request_ids)):
-            self._claim(request_ids[i], hints[i], holder_addr)
+            claimed = self._claim(request_ids[i], hints[i], holder_addr)
+            total_claimed += claimed
+
+        return total_claimed
 
     def claim_withdrawal(self, holder_addr: str, request_id: int):
         self._claim(

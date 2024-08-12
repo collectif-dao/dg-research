@@ -14,8 +14,8 @@ from specs.withdrawals.parameters import NFT_NAME, NFT_SYMBOL, WITHDRAWAL_QUEUE_
 from specs.withdrawals.queue_base import WithdrawalRequest
 
 
-def withdrawal_amounts_strategy(min_value: int = 1, max_value: int = 100_000 * 10**18):
-    return st.lists(st.integers(min_value, max_value), min_size=1, unique=True)
+def withdrawal_amounts_strategy(min_value: int = 1, max_value: int = 100_000 * 10**18, min_size: int = 1):
+    return st.lists(st.integers(min_value, max_value), min_size=min_size, unique=True)
 
 
 @given(ethereum_address_strategy())

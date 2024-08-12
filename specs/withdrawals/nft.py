@@ -119,7 +119,7 @@ class WithdrawalQueueERC721(WithdrawalQueue):
         request.owner = to
 
         self.requests_by_owner[_from].remove(request_id)
-        self.requests_by_owner.setdefault(to, set()).add(request_id)
+        self.requests_by_owner.setdefault(to, []).append(request_id)
 
     def _existsAndNotClaimed(self, request_id: int) -> bool:
         return (

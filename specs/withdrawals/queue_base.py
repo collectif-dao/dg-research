@@ -284,7 +284,7 @@ class WithdrawalQueueBase:
 
         return min_idx
 
-    def _claim(self, request_id: int, hint: int, recipient: str):
+    def _claim(self, request_id: int, hint: int, recipient: str) -> int:
         if request_id == 0:
             raise Errors.InvalidRequestId(request_id)
 
@@ -308,6 +308,8 @@ class WithdrawalQueueBase:
 
         self.locked_ether_amount -= eth_with_discount
         self._send_value(recipient, eth_with_discount)
+
+        return eth_with_discount
 
     def _calculate_claimable_ether(self, request: WithdrawalRequest, request_id: int, hint: int) -> int:
         if hint == 0:

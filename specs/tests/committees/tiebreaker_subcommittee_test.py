@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from hypothesis import given
+from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from specs.committees.tiebreaker_core import TiebreakerCore
@@ -38,6 +38,7 @@ def test_schedule_proposal_workflow(
     stETH_holder,
     lock,
 ):
+    assume(stETH_holder != Address.ZERO and stETH_holder != test_escrow_address)
     time_manager = TimeManager()
     time_manager.initialize()
 

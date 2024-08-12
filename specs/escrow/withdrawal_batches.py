@@ -34,15 +34,17 @@ class State:
 class WithdrawalsBatchesQueue:
     state: State = field(default_factory=lambda: State())
 
-    def calc_request_amounts(self, min_request_amount: int, request_amount: int, amount: int) -> List[int]:
-        requests_count = amount // request_amount
+    def calc_request_amounts(
+        self, min_request_amount: int, max_request_amount: int, remaining_amount: int
+    ) -> List[int]:
+        requests_count = remaining_amount // max_request_amount
 
-        last_request_amount = amount - requests_count * request_amount
+        last_request_amount = remaining_amount - (requests_count * max_request_amount)
 
         if last_request_amount >= min_request_amount:
             requests_count += 1
 
-        request_amounts = [request_amount] * requests_count
+        request_amounts = [max_request_amount] * requests_count
 
         if last_request_amount >= min_request_amount:
             request_amounts[requests_count - 1] = last_request_amount
