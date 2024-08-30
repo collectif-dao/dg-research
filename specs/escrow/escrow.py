@@ -90,6 +90,7 @@ class Escrow:
     ## ---
 
     def lock_stETH(self, holder_addr: str, amount: int) -> int:
+        self._activate_next_governance_state()
         self._check_escrow_state(EscrowState.SignallingEscrow)
         locked_stETH_shares = self.lido.get_shares_by_pooled_eth(amount)
         shares_value: SharesValue = SharesValue.from_uint256(amount)
@@ -99,8 +100,8 @@ class Escrow:
         self._activate_next_governance_state()
 
     def unlock_stETH(self, holder_addr: str) -> int:
-        self._check_escrow_state(EscrowState.SignallingEscrow)
         self._activate_next_governance_state()
+        self._check_escrow_state(EscrowState.SignallingEscrow)
         self.accounting.checkAssetsUnlockDelayPassed(holder_addr, self.signaling_escrow_min_lock_time.total_seconds())
 
         shares = self.accounting.state.assets[holder_addr].stETHLockedShares
@@ -116,6 +117,7 @@ class Escrow:
     ## ---
 
     def lock_wstETH(self, holder_addr: str, amount: int) -> int:
+        self._activate_next_governance_state()
         self._check_escrow_state(EscrowState.SignallingEscrow)
         self.lido.wstETH_transferFrom(holder_addr, self.address, self.address, amount)
         stETH_shares = self.lido.unwrap(self.address, amount)
@@ -126,8 +128,8 @@ class Escrow:
         self._activate_next_governance_state()
 
     def unlock_wstETH(self, holder_addr: str) -> int:
-        self._check_escrow_state(EscrowState.SignallingEscrow)
         self._activate_next_governance_state()
+        self._check_escrow_state(EscrowState.SignallingEscrow)
         self.accounting.checkAssetsUnlockDelayPassed(holder_addr, self.signaling_escrow_min_lock_time.total_seconds())
 
         shares = self.accounting.state.assets[holder_addr].stETHLockedShares
@@ -141,6 +143,7 @@ class Escrow:
     ## ---
 
     def lock_unstETH(self, holder: str, unstETH_ids: List[int]):
+        self._activate_next_governance_state()
         self._check_escrow_state(EscrowState.SignallingEscrow)
         statuses = self.withdrawal_queue.get_withdrawal_status(unstETH_ids)
         self.accounting.accountUnstETHLock(holder, unstETH_ids, statuses)
@@ -151,8 +154,8 @@ class Escrow:
         self._activate_next_governance_state()
 
     def unlock_unstETH(self, holder: str, unstETH_ids: List[int]):
-        self._check_escrow_state(EscrowState.SignallingEscrow)
         self._activate_next_governance_state()
+        self._check_escrow_state(EscrowState.SignallingEscrow)
         self.accounting.checkAssetsUnlockDelayPassed(holder, self.signaling_escrow_min_lock_time.total_seconds())
         self.accounting.accountUnstETHUnlock(holder, unstETH_ids)
 
@@ -337,9 +340,9 @@ class Escrow:
     def is_rage_quit_finalized(self):
         return (
             (self.state == EscrowState.RageQuitEscrow)
-            & self.batches_queue.is_closed()
-            & (self.rage_quit_timelock_started_at == Timestamps.ZERO)
-            & (
+            and self.batches_queue.is_closed()
+            and (self.rage_quit_timelock_started_at == Timestamps.ZERO)
+            and (
                 self.time_manager.get_current_timestamp_value()
                 > (self.rage_quit_extension_delay + self.rage_quit_timelock_started_at)
             )

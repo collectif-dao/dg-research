@@ -99,6 +99,8 @@ class Proposals:
 
     def schedule(self, proposal_id: int, after_submit_delay: int):
         self._check_proposal_submitted(proposal_id)
+        if self._is_proposal_marked_cancelled(proposal_id):
+            raise ProposalErrors.ProposalNotSubmitted
         self._check_after_submit_delay_passed(proposal_id, after_submit_delay)
 
         proposal = self._get_proposal(proposal_id)
@@ -107,6 +109,8 @@ class Proposals:
 
     def execute(self, proposal_id: int, after_schedule_delay: int):
         self._check_proposal_scheduled(proposal_id)
+        if self._is_proposal_marked_cancelled(proposal_id):
+            raise ProposalErrors.ProposalNotScheduled
         self._check_after_schedule_delay_passed(proposal_id, after_schedule_delay)
 
         proposal = self._get_proposal(proposal_id)
@@ -139,14 +143,20 @@ class Proposals:
 
     def can_execute(self, proposal_id: int, after_schedule_delay: int) -> bool:
         proposal = self._get_proposal(proposal_id)
-        return (proposal.status == ProposalStatus.Scheduled) & (
+        if self._is_proposal_marked_cancelled(proposal_id):
+            return False
+
+        return (proposal.status == ProposalStatus.Scheduled) and (
             Timestamp.from_uint256(self.time_manager.get_current_timestamp())
             >= proposal.scheduledAt + Timestamp.from_uint256(after_schedule_delay)
         )
 
     def can_schedule(self, proposal_id: int, after_submit_delay: int) -> bool:
         proposal = self._get_proposal(proposal_id)
-        return (proposal.status == ProposalStatus.Submitted) & (
+        if self._is_proposal_marked_cancelled(proposal_id):
+            return False
+
+        return (proposal.status == ProposalStatus.Submitted) and (
             Timestamp.from_uint256(self.time_manager.get_current_timestamp())
             >= proposal.submittedAt + Timestamp.from_uint256(after_submit_delay)
         )
@@ -156,7 +166,7 @@ class Proposals:
     ## ---
 
     def _check_proposal_exist(self, proposal_id: int):
-        if proposal_id < self.proposal_id_offset | proposal_id > len(self.state.proposals):
+        if proposal_id < self.proposal_id_offset or proposal_id > len(self.state.proposals):
             raise ProposalErrors.ProposalNotFound
 
     def _check_proposal_submitted(self, proposal_id: int):
@@ -185,3 +195,8 @@ class Proposals:
 
     def _get_proposal(self, proposal_id: int) -> Proposal:
         return self.state.proposals[proposal_id - self.proposal_id_offset]
+
+    def _is_proposal_marked_cancelled(self, proposal_id: int) -> bool:
+        proposal = self._get_proposal(proposal_id)
+
+        return proposal_id <= self.state.last_canceled_proposal_id and proposal.status != ProposalStatus.Executed

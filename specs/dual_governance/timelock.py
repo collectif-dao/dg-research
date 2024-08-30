@@ -60,7 +60,7 @@ class EmergencyProtectedTimelock:
         return self.proposals.can_schedule(proposal_id, self.after_submit_delay)
 
     def can_execute(self, proposal_id: int) -> bool:
-        return self.emergency_protection.is_emergency_mode_activated() is not True & self.proposals.can_execute(
+        return self.emergency_protection.is_emergency_mode_activated() is not True and self.proposals.can_execute(
             proposal_id, self.after_schedule_delay
         )
 

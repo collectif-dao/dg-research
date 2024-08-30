@@ -1,63 +1,238 @@
 import random
+from datetime import datetime
+from typing import List, Set
 
-from specs.dual_governance.proposals import ExecutorCall
-
-from .utils import *
+from model.types.proposal_type import ProposalGeneration
+from model.types.proposals import Proposal, ProposalType, get_proposal_by_id, new_proposal
+from model.types.scenario import Scenario
+from model.utils.proposals import iterable_proposals
+from specs.dual_governance import DualGovernance
+from specs.dual_governance.proposals import ExecutorCall, ProposalStatus
+from specs.dual_governance.state import State
 
 
 # Behaviors
 def generate_proposal(params, substep, state_history, prev_state):
-    dg = prev_state["dg"]
-    new_proposal_id = dg.timelock.proposals.count() + dg.timelock.proposals.proposal_id_offset
-    if random.random() > 0.95:
-        proposal = new_proposal(prev_state["timestep"], new_proposal_id)
-        return {"proposal_create": proposal}
-    else:
+    dual_governance: DualGovernance = prev_state["dual_governance"]
+
+    if not dual_governance.state.is_proposals_creation_allowed():
         return {"proposal_create": None}
 
+    if (
+        dual_governance.get_current_state() == State.VetoSignalling
+        and dual_governance.state._is_veto_signalling_reactivation_duration_passed()
+    ):
+        return {"proposal_create": None}
 
-def update_proposals(params, substep, state_history, prev_state):
-    return {"update_proposals": None}
+    scenario: Scenario = prev_state["scenario"]
+    non_initialized_proposals: List[Proposal] = prev_state["non_initialized_proposals"]
+    proposal_generation: ProposalGeneration = prev_state["proposal_generation"]
+    new_proposal_id = dual_governance.timelock.proposals.count() + dual_governance.timelock.proposals.proposal_id_offset
+
+    if len(non_initialized_proposals) > 0:
+        for proposal in non_initialized_proposals:
+            if proposal.timestep == prev_state["timestep"]:
+                print("identified non initialized proposal")
+                proposal.id = new_proposal_id
+
+                return {"proposal_create": proposal}
+
+    match proposal_generation:
+        case ProposalGeneration.Random:
+            if random.random() > 0.99:
+                proposer: str = ""
+                if scenario in [Scenario.CoordinatedAttack, Scenario.SingleAttack, Scenario.SmartContractHack]:
+                    proposer = random.choice(tuple(prev_state["attackers"]))
+
+                ## TODO: check duplicated proposals if attack status is active
+
+                proposal = new_proposal(prev_state["timestep"], new_proposal_id, proposer, scenario)
+            else:
+                proposal = None
+
+        case ProposalGeneration.TargetedAttack:
+            is_active_attack = prev_state["is_active_attack"]
+
+            if is_active_attack:
+                proposal = None
+            else:
+                attackers: Set[str] = prev_state["attackers"]
+                active_attackers = len(attackers)
+
+                if active_attackers <= 0:
+                    proposal = None
+                else:
+                    attacker = random.choice(tuple(attackers))
+
+                    proposal = new_proposal(
+                        prev_state["timestep"],
+                        new_proposal_id,
+                        attacker,
+                        scenario,
+                        prev_state["proposal_types"],
+                        prev_state["proposal_subtypes"],
+                    )
+                    print(proposal)
+
+    return {"proposal_create": proposal}
+
+
+def cancel_all_pending_proposals(params, substep, state_history, prev_state):
+    dual_governance: DualGovernance = prev_state["dual_governance"]
+    proposals: List[Proposal] = prev_state["proposals"]
+
+    if dual_governance.get_current_state() == State.VetoSignalling:
+        total_num_of_proposals = dual_governance.timelock.proposals.count()
+        last_canceled_proposal = dual_governance.timelock.proposals.state.last_canceled_proposal_id
+
+        if total_num_of_proposals == last_canceled_proposal:
+            return {"cancel_all_pending_proposals": []}
+
+        start_proposal_id = last_canceled_proposal + 1
+
+        proposals_iterable = iterable_proposals(
+            dual_governance.timelock.proposals.state.proposals,
+            start_proposal_id,
+            total_num_of_proposals - last_canceled_proposal,
+        )
+
+        canceled_proposals = []
+
+        if proposals_iterable is not None:
+            for proposal in proposals_iterable:
+                timelock_proposal = dual_governance.timelock.proposals.get(proposal.id)
+
+                if timelock_proposal.status != ProposalStatus.Executed:
+                    model_proposal = get_proposal_by_id(proposals, timelock_proposal.id)
+                    print(model_proposal)
+
+                    if (
+                        model_proposal.proposal_type == ProposalType.Negative
+                        or ProposalType.Danger
+                        or ProposalType.Hack
+                    ):
+                        print(f"Proposal ID {timelock_proposal.id} is going to be canceled.")
+                        print("last_canceled_proposal", last_canceled_proposal)
+                        if timelock_proposal.id <= last_canceled_proposal:
+                            print(f"Trying to cancel Proposal ID {timelock_proposal.id} second time.")
+                            continue
+                        else:
+                            canceled_proposals.append(timelock_proposal.id)
+
+        return {"cancel_all_pending_proposals": canceled_proposals}
+
+    return {"cancel_all_pending_proposals": []}
 
 
 # Mechanisms
 
 
 def submit_proposal(params, substep, state_history, prev_state, policy_input):
-    dg = prev_state["dg"]
+    dual_governance: DualGovernance = prev_state["dual_governance"]
     proposal = policy_input["proposal_create"]
 
-    if proposal is not None and dg.state.is_proposals_creation_allowed():
-        dg.submit_proposal("", [ExecutorCall("", "", [])])
+    if proposal is not None:
+        print(
+            "submitting proposal with ID",
+            proposal.id,
+            "at ",
+            dual_governance.time_manager.get_current_time(),
+        )
+        dual_governance.submit_proposal("", [ExecutorCall("", "", [])])
 
-    return ("dg", dg)
+    return ("dual_governance", dual_governance)
 
 
-def register_proposals_type(params, substep, state_history, prev_state, policy_input):
-    dg = prev_state["dg"]
-    proposals_type = prev_state["proposals_type"]
+def activate_attack(params, substep, state_history, prev_state, policy_input):
+    proposal: Proposal = policy_input["proposal_create"]
+
+    if proposal is None:
+        return ("is_active_attack", prev_state["is_active_attack"])
+
+    if proposal.proposal_type in (ProposalType.Danger, ProposalType.Hack, ProposalType.Negative):
+        return ("is_active_attack", True)
+
+    return ("is_active_attack", False)
+
+
+def deactivate_attack(params, substep, state_history, prev_state, policy_input):
+    ## TODO: check all list of proposals and make sure that if one attacking proposal is in the list, still have active_attack state
+    cancel_proposals = policy_input["cancel_all_pending_proposals"]
+
+    if len(cancel_proposals) > 0:
+        print("deactivating attack")
+        return ("is_active_attack", False)
+
+    return ("is_active_attack", prev_state["is_active_attack"])
+
+
+def register_proposal(params, substep, state_history, prev_state, policy_input):
+    dual_governance: DualGovernance = prev_state["dual_governance"]
+    proposals = prev_state["proposals"]
     proposal = policy_input["proposal_create"]
 
-    if proposal is not None and dg.state.is_proposals_creation_allowed():
-        proposals_type[proposal["id"]] = proposal["type"]
+    if proposal is not None and dual_governance.state.is_proposals_creation_allowed():
+        proposals.append(proposal)
 
-    return ("proposals_type", proposals_type)
+    return ("proposals", proposals)
 
 
-def shedule_and_execute_proposals(params, substep, state_history, prev_state, policy_input):
-    dg = prev_state["dg"]
+def initialize_proposal(params, substep, state_history, prev_state, policy_input):
+    non_initialized_proposals: List[Proposal] = prev_state["non_initialized_proposals"]
+    proposal: Proposal = policy_input["proposal_create"]
 
-    i = 0
-    for proposal in dg.timelock.proposals.state.proposals:
-        try:
-            dg.schedule_proposal(proposal.id)
-        except Exception:
-            i = 1
+    if proposal is not None and len(non_initialized_proposals) > 0:
+        non_initialized_proposals = [
+            non_initialized_proposal
+            for non_initialized_proposal in non_initialized_proposals
+            if not (
+                non_initialized_proposal.timestep == proposal.timestep
+                and non_initialized_proposal.damage == proposal.damage
+                and non_initialized_proposal.attack_targets == proposal.attack_targets
+                and non_initialized_proposal.proposal_type == proposal.proposal_type
+                and non_initialized_proposal.sub_type == proposal.sub_type
+            )
+        ]
 
-    for proposal in dg.timelock.proposals.state.proposals:
-        try:
-            dg.execute_proposal(proposal.id)
-        except Exception:
-            i = 1
+    return ("non_initialized_proposals", non_initialized_proposals)
 
-    return ("dg", dg)
+
+def schedule_and_execute_proposals(params, substep, state_history, prev_state, policy_input):
+    dual_governance: DualGovernance = prev_state["dual_governance"]
+    cancel_proposals = policy_input["cancel_all_pending_proposals"]
+
+    if len(cancel_proposals) != 0:
+        print("need to cancel proposals")
+        print(cancel_proposals)
+        dual_governance.cancel_all_pending_proposals()
+
+    for proposal in dual_governance.timelock.proposals.state.proposals:
+        if dual_governance.can_schedule(proposal.id) and dual_governance.state.can_schedule_proposal(
+            proposal.submittedAt
+        ):
+            print(
+                "scheduling proposal with ID",
+                proposal.id,
+                "at ",
+                dual_governance.time_manager.get_current_time(),
+                "that has been submitted at ",
+                datetime.fromtimestamp(proposal.submittedAt.value),
+            )
+            dual_governance.schedule_proposal(proposal.id)
+
+    for proposal in dual_governance.timelock.proposals.state.proposals:
+        if dual_governance.can_execute(proposal.id):
+            print(
+                "executing proposal with ID",
+                proposal.id,
+                "at ",
+                dual_governance.time_manager.get_current_time(),
+                "that has been scheduled at ",
+                datetime.fromtimestamp(proposal.scheduledAt.value),
+                "and submitted at ",
+                datetime.fromtimestamp(proposal.submittedAt.value),
+            )
+
+            dual_governance.execute_proposal(proposal.id)
+
+    return ("dual_governance", dual_governance)

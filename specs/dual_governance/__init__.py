@@ -80,10 +80,10 @@ class DualGovernance:
         return self.state.rage_quit_escrow
 
     def can_schedule(self, proposal_id: int) -> bool:
-        return self.state.is_proposals_adoption_allowed() & self.timelock.can_schedule(proposal_id)
+        return self.state.is_proposals_adoption_allowed() and self.timelock.can_schedule(proposal_id)
 
     def can_execute(self, proposal_id: int) -> bool:
-        return self.state.is_proposals_adoption_allowed() & self.timelock.can_execute(proposal_id)
+        return self.state.is_proposals_adoption_allowed() and self.timelock.can_execute(proposal_id)
 
     ## ---
     ## state transitions section

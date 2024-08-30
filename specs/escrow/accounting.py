@@ -316,7 +316,7 @@ class AssetsAccounting:
     def _claimUnstETHRecord(self, unstETHId: int, claimableAmount: ETHValue):
         unstETHRecord: UnstETHRecord = self.state.unstETHRecords[unstETHId]
 
-        if (unstETHRecord.status != UnstETHRecordStatus.Locked) & (
+        if (unstETHRecord.status != UnstETHRecordStatus.Locked) and (
             unstETHRecord.status != UnstETHRecordStatus.Finalized
         ):
             raise Errors.InvalidUnstETHStatus
