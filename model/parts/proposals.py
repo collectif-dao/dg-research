@@ -1,4 +1,3 @@
-import random
 from datetime import datetime
 from typing import List, Set
 
@@ -6,6 +5,7 @@ from model.types.proposal_type import ProposalGeneration
 from model.types.proposals import Proposal, ProposalType, get_proposal_by_id, new_proposal
 from model.types.scenario import Scenario
 from model.utils.proposals import iterable_proposals
+from model.utils.seed import get_rng
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.proposals import ExecutorCall, ProposalStatus
 from specs.dual_governance.state import State
@@ -39,10 +39,11 @@ def generate_proposal(params, substep, state_history, prev_state):
 
     match proposal_generation:
         case ProposalGeneration.Random:
-            if random.random() > 0.99:
+            rng = get_rng()
+            if rng.random() > 0.99:
                 proposer: str = ""
                 if scenario in [Scenario.CoordinatedAttack, Scenario.SingleAttack, Scenario.SmartContractHack]:
-                    proposer = random.choice(tuple(prev_state["attackers"]))
+                    proposer = rng.choice(tuple(prev_state["attackers"]))
 
                 ## TODO: check duplicated proposals if attack status is active
 
@@ -62,7 +63,8 @@ def generate_proposal(params, substep, state_history, prev_state):
                 if active_attackers <= 0:
                     proposal = None
                 else:
-                    attacker = random.choice(tuple(attackers))
+                    rng = get_rng()
+                    attacker = rng.choice(tuple(attackers))
 
                     proposal = new_proposal(
                         prev_state["timestep"],

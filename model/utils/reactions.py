@@ -3,6 +3,7 @@ import numpy as np
 from model.sys_params import normal_actor_max_delay, quick_actor_max_delay, slow_actor_max_delay
 from model.types.governance_participation import GovernanceParticipation
 from model.types.reaction_time import ModeledReactions, ReactionTime
+from model.utils.seed import get_rng
 from specs.types.timestamp import Timestamp
 
 
@@ -19,17 +20,19 @@ def calculate_reaction_delay(samples, reaction: ReactionTime) -> int:
 
 
 def generate_reaction_delay(samples, min_time, max_time):
+    rng = get_rng()
     scaled_reaction_times = (samples - np.min(samples)) / (np.max(samples) - np.min(samples)) * (
         max_time - min_time
     ) + min_time
 
-    reaction_delay = np.random.choice(scaled_reaction_times, p=None)
+    reaction_delay = rng.choice(scaled_reaction_times, p=None)
 
     return int(reaction_delay)
 
 
 def determine_reaction_time(reactions: ModeledReactions) -> ReactionTime:
-    reaction_time_value = np.random.normal(0, 1)
+    rng = get_rng()
+    reaction_time_value = rng.normal(0, 1)
 
     match reactions:
         case ModeledReactions.Normal:
@@ -58,7 +61,8 @@ def determine_reaction_time(reactions: ModeledReactions) -> ReactionTime:
 
 
 def determine_governance_participation(reactions: ModeledReactions) -> GovernanceParticipation:
-    participation_value = np.random.normal(0, 1)
+    rng = get_rng()
+    participation_value = rng.normal(0, 1)
 
     if participation_value >= 2:
         return GovernanceParticipation.Full

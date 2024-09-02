@@ -15,6 +15,7 @@ from model.utils.actors import (
     determine_actor_types,
 )
 from model.utils.reactions import determine_governance_participation, determine_reaction_time
+from model.utils.seed import initialize_seed
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.proposals import ExecutorCall
 from specs.lido import Lido
@@ -32,7 +33,10 @@ def generate_initial_state(
     initial_proposals: List[Proposal] = [],
     max_actors: int = 0,
     attackers: Set[str] = set(),
+    seed: int | str = None,
 ) -> Any:
+    initialize_seed(seed)
+
     proposals: List[Proposal] = []
     non_initialized_proposals: List[Proposal] = []
     actors, attackers = generate_actors(scenario, reactions, max_actors, attackers)
@@ -93,6 +97,7 @@ def generate_initial_state(
         "proposal_subtypes": proposal_subtypes,
         "is_active_attack": is_active_attack,
         "proposal_generation": proposal_generation,
+        "seed": seed,
     }
 
 

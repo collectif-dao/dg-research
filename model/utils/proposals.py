@@ -1,14 +1,15 @@
 from typing import List
 
-import numpy as np
-
 from model.types.proposals import ProposalSubType, ProposalType
 from model.types.scenario import Scenario
+from model.utils.seed import get_rng
 from specs.dual_governance.proposals import Proposal, ProposalStatus
 
 
 def determine_proposal_type(scenario: Scenario) -> ProposalType:
-    distribution = np.random.normal(0, 1)
+    rng = get_rng()
+
+    distribution = rng.normal(0, 1)
 
     match scenario:
         case Scenario.HappyPath:
@@ -37,7 +38,8 @@ def determine_proposal_type(scenario: Scenario) -> ProposalType:
 
 
 def determine_proposal_subtype(scenario: Scenario) -> ProposalSubType:
-    distribution = np.random.normal(0, 1)
+    rng = get_rng()
+    distribution = rng.normal(0, 1)
 
     match scenario:
         case Scenario.HappyPath:
@@ -57,17 +59,18 @@ def determine_proposal_subtype(scenario: Scenario) -> ProposalSubType:
 
 
 def determine_proposal_damage(proposal_type: ProposalType) -> int:
+    rng = get_rng()
     damage: int = 0
 
     match proposal_type:
         case ProposalType.Positive:
-            damage = np.random.uniform(-25, -5)
+            damage = rng.uniform(-25, -5)
         case ProposalType.Negative:
-            damage = np.random.uniform(25, 5)
+            damage = rng.uniform(25, 5)
         case ProposalType.Random:
-            damage = np.random.uniform(-25, 25)
+            damage = rng.uniform(-25, 25)
         case ProposalType.NoImpact:
-            damage = np.random.uniform(-2, 2)
+            damage = rng.uniform(-2, 2)
         case ProposalType.Danger:
             damage = 100
         case ProposalType.Hack:

@@ -1,8 +1,6 @@
 from dataclasses import dataclass, field
 from typing import List, Set, Tuple
 
-import numpy as np
-
 from model.actors.errors import NotEnoughActorStETHBalance, NotEnoughActorWstETHBalance
 from model.types.actors import ActorType
 from model.types.escrow import ActorLockAmounts
@@ -12,6 +10,7 @@ from model.types.proposal_type import ProposalType
 from model.types.proposals import Proposal, ProposalSubType
 from model.types.reaction_time import ReactionTime
 from model.utils.reactions import calculate_reaction_delay
+from model.utils.seed import get_rng
 from specs.dual_governance import DualGovernance
 from specs.time_manager import TimeManager
 from specs.utils import generate_address
@@ -210,7 +209,8 @@ class BaseActor:
             self.health = self.initial_health
 
     def update_reaction_delay(self):
-        samples = np.random.lognormal(mean=1, sigma=0.5, size=1000)
+        rng = get_rng()
+        samples = rng.lognormal(mean=1, sigma=0.5, size=1000)
         reaction_delay = calculate_reaction_delay(samples, self.reaction_time)
         self.reaction_delay = reaction_delay
 

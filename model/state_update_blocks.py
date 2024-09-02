@@ -15,6 +15,7 @@ from model.parts.proposals import (
     schedule_and_execute_proposals,
     submit_proposal,
 )
+from model.utils.seed import initialize_seed
 
 from .parts.actors import (
     actor_lock_or_unlock_in_escrow,
@@ -23,7 +24,20 @@ from .parts.actors import (
     lock_or_unlock_stETH,
 )
 
+
+def setup_seed(params, substep, state_history, prev_state):
+    if prev_state["timestep"] == 0:
+        initialize_seed(prev_state["seed"])
+    return {}
+
+
 state_update_blocks = [
+    {
+        "policies": {
+            "initialize_seed": setup_seed,
+        },
+        "variables": {},
+    },
     {
         # proposals.py
         "policies": {"generate_proposal": generate_proposal},
