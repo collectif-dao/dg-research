@@ -8,11 +8,11 @@ from model.utils.proposals import determine_proposal_damage, determine_proposal_
 
 @dataclass
 class Proposal:
-    proposal_type: ProposalType = field(default_factory=lambda: ProposalType.NoImpact)
-    proposer: str = field(default_factory=lambda: "")
     id: int = 0
-    damage: int = 0
     timestep: int = 0
+    damage: int = 0
+    proposer: str = field(default_factory=lambda: "")
+    proposal_type: ProposalType = field(default_factory=lambda: ProposalType.NoImpact)
     sub_type: ProposalSubType = field(default_factory=lambda: ProposalSubType.NoEffect)
     attack_targets: Set[str] = field(default_factory=lambda: set())
 

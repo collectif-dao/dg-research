@@ -27,7 +27,7 @@ def generate_initial_state(
     scenario: Scenario = Scenario.HappyPath,
     reactions: ModeledReactions = ModeledReactions.Normal,
     proposal_types: ProposalType = ProposalType.NoImpact,
-    proposal_subtypes: ProposalType = ProposalSubType.NoEffect,
+    proposal_subtypes: ProposalSubType = ProposalSubType.NoEffect,
     proposal_generation: ProposalGeneration = ProposalGeneration.Random,
     initial_proposals: List[Proposal] = [],
     max_actors: int = 0,
