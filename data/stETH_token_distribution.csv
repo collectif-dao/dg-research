@@ -115,7 +115,7 @@ address,stETH,wstETH,total,label,type,protocol_type
 0xa3726bedfd1a8aa696b9b4581277240028c4314b,0,6121.661852,7184.994516,Token Millionaire,Private,
 0x7785ddcece9e3c7d86279cd5e79e4e155f8eb816,7138.944313,0,7138.944313,Mellow Finance,Contract,Restaking
 0x720d8790666bd40b9ca289cbe73cb1334f0ae7e3,7101.6725,0,7101.6725,Gnosis Safe MultiSig ,Private,
-0x8c2e5c77bafc42d66c4300221f56dd3aa53d2034,7069.468944,0,7069.468944,ENZF Vault Proxy,Pricate,
+0x8c2e5c77bafc42d66c4300221f56dd3aa53d2034,7069.468944,0,7069.468944,ENZF Vault Proxy,Private,
 0xe84a061897afc2e7ff5fb7e3686717c528617487,7056.945123,0,7056.945123,CumberLand,Custody,
 0xe637b85b0649e2b4477663e1d219611d1aa3c64c,0,6000,7042.2,Token Millionaire,Private,
 0x04f6fe1e64a63ffc6f8b2c7f199fcfe18c41e893,6987.083879,0,6987.083879,Token Millionaire [0x04f6fe],Private,
@@ -297,7 +297,7 @@ address,stETH,wstETH,total,label,type,protocol_type
 0xaaf33a7e4756d097b2158551a25374daf600c49d,2758.833812,0,2758.833812,ETH Millionaire [0xaaf33a],Private,
 0xd9a442856c234a39a81a089c06451ebaa4306a72,2757.372463,0,2757.372463,Puffer Finance: pufETH,Contract,Restaking
 0x4382e9fee6222922541661fbc54bc4a670e64cbc,2750.243774,0,2750.243774,Token Millionaire,Private,
-0xa2f987a546d4cd1c607ee8141276876c26b72bdf,2716.720364,0,2716.720364,Anchor protocol: Vault,Contract ,Leverage/Lending
+0xa2f987a546d4cd1c607ee8141276876c26b72bdf,2716.720364,0,2716.720364,Anchor protocol: Vault,Contract,Leverage/Lending
 0xc2f18062d275211dbf5fa76daa21475a7da95c7a,2678.070382,0,2678.070382,Token Millionaire [0xc2f180],Private,
 0x124a863e9fa5393db10db10a92ddad8522df96fa,2645.069768,0,2645.069768,Token Millionaire [0x124a86],Private,
 0xef39769cb5c1195ac7005e7e7e707baa880b30d3,2607.942403,0,2607.942403,Gnosis Safe MultiSig ,Private,
