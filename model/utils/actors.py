@@ -2,6 +2,7 @@ from typing import List, Set
 
 from model.actors.actor import BaseActor
 from model.actors.token_holders.coordinated_stETH_attacker import CoordinatedStETHAttackerActor
+from model.actors.token_holders.defender_actor import StETHDefenderActor
 from model.actors.token_holders.single_stETH_attacker import SingleStETHAttackerActor
 from model.actors.token_holders.stETH_holder_actor import StETHHolderActor
 from model.types.scenario import Scenario
@@ -17,17 +18,16 @@ def determine_actor_health(scenario: Scenario, mean_health=50, std_dev_health=20
     return health
 
 
-def determine_actor_types(scenario: Scenario, address: str, attackers: Set[str]):
+def determine_actor_types(scenario: Scenario, address: str, attackers: Set[str], defenders: Set[str]):
     rng = get_rng()
 
-    if len(attackers) > 0:
-        if address in attackers:
-            if scenario == Scenario.CoordinatedAttack:
-                return CoordinatedStETHAttackerActor()
-            elif scenario == Scenario.SingleAttack:
-                return SingleStETHAttackerActor()
-        else:
-            return StETHHolderActor()
+    if address in attackers:
+        if scenario == Scenario.CoordinatedAttack:
+            return CoordinatedStETHAttackerActor()
+        elif scenario == Scenario.SingleAttack:
+            return SingleStETHAttackerActor()
+    elif address in defenders:
+        return StETHDefenderActor()
     else:
         match scenario:
             case Scenario.HappyPath:

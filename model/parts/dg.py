@@ -75,7 +75,6 @@ def update_escrow(params, substep, state_history, prev_state, policy_input):
                 continue
             else:
                 dual_governance.state.signalling_escrow.unlock_stETH(actor_address)
-                print("rare case")
 
     return ("dual_governance", dual_governance)
 

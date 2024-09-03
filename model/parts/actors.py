@@ -107,7 +107,11 @@ def actor_update_health(
                         wstETH_gain_per_attacker = total_wstETH_gains / num_attackers
 
                     for actor in actors:
-                        if actor.actor_type == ActorType.HonestActor and actor.entity != "Contract":
+                        if (
+                            actor.actor_type == ActorType.HonestActor
+                            and actor.entity != "Contract"
+                            or (actor.actor_type in [ActorType.SingleDefender, ActorType.CoordinatedDefender])
+                        ):
                             actor.simulate_proposal_effect(proposal)
                             actor.update_actor_health(proposal.damage)
                             actor.after_simulate_proposal_effect()

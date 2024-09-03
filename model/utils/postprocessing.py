@@ -182,6 +182,12 @@ def postprocessing(df: DataFrame):
         )
     )
 
+    total_defenders = actors.map(
+        lambda actors: sum(
+            [1 for actor in actors if actor.actor_type in {ActorType.SingleDefender, ActorType.CoordinatedDefender}]
+        )
+    )
+
     total_wstETH_honest_actors = actors.map(
         lambda actors: sum(
             [actor.initial_wstETH_balance for actor in actors if actor.actor_type == ActorType.HonestActor]
@@ -214,8 +220,29 @@ def postprocessing(df: DataFrame):
         )
     )
 
+    total_wstETH_defenders_actors = actors.map(
+        lambda actors: sum(
+            [
+                actor.initial_wstETH_balance
+                for actor in actors
+                if actor.actor_type in {ActorType.SingleDefender, ActorType.CoordinatedDefender}
+            ]
+        )
+    )
+
+    total_stETH_defenders_actors = actors.map(
+        lambda actors: sum(
+            [
+                actor.initial_st_eth_balance
+                for actor in actors
+                if actor.actor_type in {ActorType.SingleDefender, ActorType.CoordinatedDefender}
+            ]
+        )
+    )
+
     total_honest_actors_funds = (total_wstETH_honest_actors + total_stETH_honest_actors) / ether_base
     total_attackers_actors_funds = (total_wstETH_attackers_actors + total_stETH_attackers_actors) / ether_base
+    total_defenders_actors_funds = (total_wstETH_defenders_actors + total_stETH_defenders_actors) / ether_base
 
     total_damage_of_proposals = proposals.map(lambda proposals: sum([proposal.damage for proposal in proposals]))
     total_number_of_proposals = proposals.map(lambda proposals: sum([1 for proposal in proposals if proposal.id > 0]))
@@ -274,9 +301,12 @@ def postprocessing(df: DataFrame):
             ## Distribution of actors based on behavior
             "total_stETH_good_actors": total_stETH_good_actors,
             "total_attackers": total_attackers,
+            "total_defenders": total_defenders,
             # Total funds distribution based on actor's behavior
             "total_honest_actors_funds": total_honest_actors_funds,
             "total_attackers_actors_funds": total_attackers_actors_funds,
+            "total_defenders_actors_funds": total_defenders_actors_funds,
+            # simulation parameters
             "timestep": timesteps,
             # "run": df.run,
             "simulation": df.simulation + 1,

@@ -33,13 +33,14 @@ def generate_initial_state(
     initial_proposals: List[Proposal] = [],
     max_actors: int = 0,
     attackers: Set[str] = set(),
+    defenders: Set[str] = set(),
     seed: int | str = None,
 ) -> Any:
     initialize_seed(seed)
 
     proposals: List[Proposal] = []
     non_initialized_proposals: List[Proposal] = []
-    actors, attackers = generate_actors(scenario, reactions, max_actors, attackers)
+    actors, attackers, defenders = generate_actors(scenario, reactions, max_actors, attackers, defenders)
     time_manager = TimeManager()
     time_manager.initialize()
 
@@ -71,8 +72,6 @@ def generate_initial_state(
             len(attackers),
         )
 
-    print(proposals)
-    print(non_initialized_proposals)
     is_active_attack = False
 
     if len(proposals) > 0:
@@ -81,8 +80,6 @@ def generate_initial_state(
 
             if proposal.proposal_type in (ProposalType.Danger, ProposalType.Hack, ProposalType.Negative):
                 is_active_attack = True
-
-    print(attackers)
 
     return {
         "actors": actors,
@@ -93,6 +90,7 @@ def generate_initial_state(
         "time_manager": time_manager,
         "scenario": scenario,
         "attackers": attackers,
+        "defenders": defenders,
         "proposal_types": proposal_types,
         "proposal_subtypes": proposal_subtypes,
         "is_active_attack": is_active_attack,
@@ -102,7 +100,7 @@ def generate_initial_state(
 
 
 def generate_actors(
-    scenario: Scenario, reactions: ModeledReactions, max_actors: int, attackers: Set[str]
+    scenario: Scenario, reactions: ModeledReactions, max_actors: int, attackers: Set[str], defenders: Set[str]
 ) -> Tuple[List[BaseActor], Set[str]]:
     initial_actors = []
 
@@ -120,6 +118,7 @@ def generate_actors(
 
             created_actor = create_actor(
                 attackers,
+                defenders,
                 scenario,
                 reactions,
                 line_count,
@@ -131,6 +130,10 @@ def generate_actors(
             )
 
             initial_actors.append(created_actor)
+
+            if created_actor.address not in defenders:
+                if created_actor.actor_type in [ActorType.SingleDefender, ActorType.CoordinatedDefender]:
+                    defenders.add(created_actor.address)
 
             if created_actor.address not in attackers:
                 match scenario:
@@ -146,11 +149,12 @@ def generate_actors(
 
             line_count += 1
 
-    return initial_actors, attackers
+    return initial_actors, attackers, defenders
 
 
 def create_actor(
     attackers: Set[str],
+    defenders: Set[str],
     scenario: Scenario,
     reactions: ModeledReactions,
     id: int,
@@ -160,10 +164,10 @@ def create_actor(
     wstETH: int,
     type: str,
 ):
-    created_actor = determine_actor_types(scenario, address, attackers)
+    created_actor = determine_actor_types(scenario, address, attackers, defenders)
     health = determine_actor_health(scenario)
 
-    if type == "Contract":
+    if type == "Contract" and address not in defenders and address not in attackers:
         created_actor = StETHHolderActor()
         reaction_time = ReactionTime.NoReaction
         participation = GovernanceParticipation.NoParticipation
@@ -171,7 +175,12 @@ def create_actor(
         reaction_time = determine_reaction_time(reactions)
         participation = determine_governance_participation(reactions)
 
-    if created_actor.actor_type in {ActorType.SingleAttacker, ActorType.CoordinatedAttacker}:
+    if created_actor.actor_type in {
+        ActorType.SingleAttacker,
+        ActorType.CoordinatedAttacker,
+        ActorType.SingleDefender,
+        ActorType.CoordinatedDefender,
+    }:
         reaction_time = ReactionTime.Quick
         participation = GovernanceParticipation.Full
 

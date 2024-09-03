@@ -32,8 +32,10 @@ def generate_proposal(params, substep, state_history, prev_state):
     if len(non_initialized_proposals) > 0:
         for proposal in non_initialized_proposals:
             if proposal.timestep == prev_state["timestep"]:
-                print("identified non initialized proposal")
                 proposal.id = new_proposal_id
+
+                if prev_state["is_active_attack"]:
+                    proposal = None
 
                 return {"proposal_create": proposal}
 
@@ -48,6 +50,9 @@ def generate_proposal(params, substep, state_history, prev_state):
                 ## TODO: check duplicated proposals if attack status is active
 
                 proposal = new_proposal(prev_state["timestep"], new_proposal_id, proposer, scenario)
+
+                if prev_state["is_active_attack"]:
+                    proposal = None
             else:
                 proposal = None
 
@@ -113,10 +118,7 @@ def cancel_all_pending_proposals(params, substep, state_history, prev_state):
                         or ProposalType.Danger
                         or ProposalType.Hack
                     ):
-                        print(f"Proposal ID {timelock_proposal.id} is going to be canceled.")
-                        print("last_canceled_proposal", last_canceled_proposal)
                         if timelock_proposal.id <= last_canceled_proposal:
-                            print(f"Trying to cancel Proposal ID {timelock_proposal.id} second time.")
                             continue
                         else:
                             canceled_proposals.append(timelock_proposal.id)
@@ -162,7 +164,6 @@ def deactivate_attack(params, substep, state_history, prev_state, policy_input):
     cancel_proposals = policy_input["cancel_all_pending_proposals"]
 
     if len(cancel_proposals) > 0:
-        print("deactivating attack")
         return ("is_active_attack", False)
 
     return ("is_active_attack", prev_state["is_active_attack"])
