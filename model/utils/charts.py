@@ -28,7 +28,7 @@ def monte_carlo_plot(df, aggregate_dimension, x, y, runs):
     plt.figure(figsize=(10, 6))
     for r in range(1, runs + 1):
         legend_name = "Run " + str(r)
-        plt.plot(df[df.run == r][x], df[df.run == r][y], label=legend_name)
+        plt.plot(df[df.simulation == r][x], df[df.simulation == r][y], label=legend_name)
     plt.plot(mean_df[x], mean_df[y], label="Mean", color="black")
     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.0)
     plt.xlabel(x)
@@ -38,10 +38,10 @@ def monte_carlo_plot(df, aggregate_dimension, x, y, runs):
 
 
 def state_plot(df, x, y, run):
-    states = df[df.run == run][y].map(lambda r: State(r).name)
+    states = df[df.simulation == run][y].map(lambda r: State(r).name)
     states.value_counts().plot(kind="bar").set_title("DG states time")
     plt.figure(figsize=(10, 6))
-    plt.plot(df[df.run == run][x], states)
+    plt.plot(df[df.simulation == run][x], states)
     plt.xlabel(x)
     plt.ylabel(y)
     plt.title("DG States")

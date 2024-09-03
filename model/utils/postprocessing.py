@@ -278,7 +278,8 @@ def postprocessing(df: DataFrame):
             "total_honest_actors_funds": total_honest_actors_funds,
             "total_attackers_actors_funds": total_attackers_actors_funds,
             "timestep": timesteps,
-            "run": df.run,
+            # "run": df.run,
+            "simulation": df.simulation + 1,
         }
     )
 
