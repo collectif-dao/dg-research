@@ -30,6 +30,7 @@ class StETHHolderActor(BaseActor):
             and self.total_damage > 0
             and self.health > 0
             and (self.st_eth_locked > 0 or self.wstETH_locked > 0)
+            and self.recovery_time > 0
         ):
             return self.calculate_unlock_from_escrow(dual_governance)
         else:
@@ -38,14 +39,14 @@ class StETHHolderActor(BaseActor):
     # Internal calculations
 
     def calculate_lock_into_escrow(self, dual_governance: DualGovernance):
-        first_proposal_timestamp = get_first_proposal_timestamp(dual_governance.timelock.proposals.state.proposals)
+        first_proposal_timestamp = get_first_proposal_timestamp(dual_governance.timelock.proposals)
         if first_proposal_timestamp + self.reaction_delay < dual_governance.time_manager.get_current_timestamp():
             return (self.st_eth_balance, self.wstETH_balance)
 
         return (0, 0)
 
     def calculate_unlock_from_escrow(self, dual_governance: DualGovernance):
-        if self.last_locked_tx_timestamp + self.reaction_delay < dual_governance.time_manager.get_current_timestamp():
+        if self.recovery_time + self.reaction_delay < dual_governance.time_manager.get_current_timestamp():
             return (-self.st_eth_locked, -self.wstETH_locked)
 
         return (0, 0)

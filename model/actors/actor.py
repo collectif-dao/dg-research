@@ -42,6 +42,8 @@ class BaseActor:
     health: int = 0
     total_damage: int = 0
     total_recovery: int = 0
+    reaction_delay: int = 9223372036854775807
+    recovery_time: int = 0
 
     governance_goal: GovernanceGoal = field(default_factory=lambda: GovernanceGoal.Neutrality)
 
@@ -138,7 +140,11 @@ class BaseActor:
         # print("self.wstETH_locked after", self.wstETH_locked)
         # print("self.wstETH_balance after", self.wstETH_balance)
 
-    def update_actor_health(self, damage: int = 0):
+    def update_actor_health(
+        self,
+        time_manager: TimeManager,
+        damage: int = 0,
+    ):
         if damage > 0:
             if self.health - damage < 0:
                 damage = self.health
@@ -148,13 +154,14 @@ class BaseActor:
             if self.total_damage + damage < 0:
                 damage = -self.total_damage
             self.total_recovery -= damage
+            self.recovery_time = time_manager.get_current_timestamp()
 
             if self.total_recovery > self.total_damage:
                 self.total_recovery = self.total_damage
 
         self.health -= damage
 
-        if self.total_damage > 0:
+        if self.total_damage > 0 and damage < 0:
             max_recoverable_health = self.total_damage
             if self.health > max_recoverable_health:
                 self.health = max_recoverable_health

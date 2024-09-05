@@ -162,3 +162,8 @@ cython_debug/
 
 # Ruff
 .ruff_cache
+
+# Simulation results
+results/simulations
+
+.DS_Store

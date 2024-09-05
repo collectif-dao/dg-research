@@ -1,4 +1,5 @@
 import csv
+from datetime import datetime
 from typing import Any, List, Set, Tuple
 
 from model.actors.actor import BaseActor
@@ -35,14 +36,18 @@ def generate_initial_state(
     attackers: Set[str] = set(),
     defenders: Set[str] = set(),
     seed: int | str = None,
+    simulation_starting_time: datetime = datetime.min,
 ) -> Any:
     initialize_seed(seed)
 
     proposals: List[Proposal] = []
     non_initialized_proposals: List[Proposal] = []
     actors, attackers, defenders = generate_actors(scenario, reactions, max_actors, attackers, defenders)
-    time_manager = TimeManager()
-    time_manager.initialize()
+
+    time_manager = TimeManager(current_time=simulation_starting_time)
+
+    if simulation_starting_time == datetime.min:
+        time_manager.initialize()
 
     lido = Lido()
     lido.initialize(time_manager, Address.wstETH)

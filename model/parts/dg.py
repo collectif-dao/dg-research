@@ -2,6 +2,7 @@ from typing import Dict
 
 from model.types.escrow import ActorLockAmounts
 from specs.dual_governance import DualGovernance
+from specs.dual_governance.state import State
 from specs.lido import Lido
 from specs.time_manager import TimeManager
 from specs.types.timestamp import Timestamp
@@ -92,7 +93,26 @@ def update_dg_time_manager(params, substep, state_history, prev_state, policy_in
     dual_governance: DualGovernance = prev_state["dual_governance"]
 
     dual_governance.state.time_manager.shift_current_time(delta)
-    # dual_governance.activate_next_state()
+
+    rage_quit_support = dual_governance.state.signalling_escrow.get_rage_quit_support()
+    state = dual_governance.get_current_state()
+
+    if (
+        state == State.VetoSignalling
+        and dual_governance.state._is_second_seal_rage_quit_support_crossed(rage_quit_support)
+        and dual_governance.state._is_dynamic_timelock_duration_passed(rage_quit_support)
+    ):
+        dual_governance.activate_next_state()  ## should transition to RageQuit state
+
+    if (
+        state == State.VetoSignallingDeactivation
+        and dual_governance.state._is_veto_signalling_deactivation_max_duration_passed()
+    ):
+        dual_governance.activate_next_state()  ## should transition to VetoCooldown state
+
+    if state == State.VetoCooldown and dual_governance.state._is_veto_cooldown_duration_passed():
+        dual_governance.activate_next_state()  ## should transition to Normal or VetoSignalling state
+
     return ("dual_governance", dual_governance)
 
 

@@ -1,9 +1,7 @@
-from typing import List
-
 from model.types.proposals import ProposalSubType, ProposalType
 from model.types.scenario import Scenario
 from model.utils.seed import get_rng
-from specs.dual_governance.proposals import Proposal, ProposalStatus
+from specs.dual_governance.proposals import Proposals, ProposalStatus
 
 
 def determine_proposal_type(scenario: Scenario) -> ProposalType:
@@ -79,14 +77,19 @@ def determine_proposal_damage(proposal_type: ProposalType) -> int:
     return damage
 
 
-def get_first_proposal_timestamp(proposals: List[Proposal]):
+def get_first_proposal_timestamp(proposals: Proposals):
+    proposal_list = proposals.state.proposals
+
     submitted_timestamps = [
         proposal.submittedAt.value
-        for proposal in proposals
-        if proposal.status == ProposalStatus.Submitted or proposal.status == ProposalStatus.Scheduled
+        for proposal in proposal_list
+        if (proposal.status == ProposalStatus.Submitted or proposal.status == ProposalStatus.Scheduled)
+        and not proposals._is_proposal_marked_cancelled(proposal.id)
     ]
     scheduled_timestamps = [
-        proposal.scheduledAt.value for proposal in proposals if proposal.status == ProposalStatus.Scheduled
+        proposal.scheduledAt.value
+        for proposal in proposal_list
+        if (proposal.status == ProposalStatus.Scheduled) and not proposals._is_proposal_marked_cancelled(proposal.id)
     ]
 
     all_timestamps = submitted_timestamps + scheduled_timestamps

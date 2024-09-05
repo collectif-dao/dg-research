@@ -8,6 +8,7 @@ from model.types.proposals import Proposal, get_proposal_by_id
 from model.types.scenario import Scenario
 from specs.dual_governance import DualGovernance
 from specs.lido import Lido
+from specs.time_manager import TimeManager
 
 
 # Behaviors
@@ -67,9 +68,10 @@ def actor_react_on_proposal(params, substep, state_history, prev_state, policy_i
     lido: Lido = prev_state["lido"]
     attackers: Set[str] = prev_state["attackers"]
     dual_governance: DualGovernance = prev_state["dual_governance"]
+    time_manager: TimeManager = prev_state["time_manager"]
     scenario: Scenario = prev_state["scenario"]
 
-    actors = actor_update_health(scenario, proposal, dual_governance, lido, actors, attackers)
+    actors = actor_update_health(scenario, proposal, dual_governance, lido, actors, attackers, time_manager)
 
     return ("actors", actors)
 
@@ -81,6 +83,7 @@ def actor_update_health(
     lido: Lido,
     actors: List[BaseActor],
     attackers: Set[str],
+    time_manager: TimeManager,
 ):
     if proposal is not None:
         if proposal.damage != 0:
@@ -90,7 +93,7 @@ def actor_update_health(
                 if scenario is Scenario.HappyPath:
                     for actor in actors:
                         actor.simulate_proposal_effect(proposal)
-                        actor.update_actor_health(proposal.damage)
+                        actor.update_actor_health(time_manager, proposal.damage)
 
                 elif scenario in (Scenario.SingleAttack, Scenario.CoordinatedAttack):
                     total_stETH_gains, total_wstETH_gains = calculate_attack_gains(
@@ -113,7 +116,7 @@ def actor_update_health(
                             or (actor.actor_type in [ActorType.SingleDefender, ActorType.CoordinatedDefender])
                         ):
                             actor.simulate_proposal_effect(proposal)
-                            actor.update_actor_health(proposal.damage)
+                            actor.update_actor_health(time_manager, proposal.damage)
                             actor.after_simulate_proposal_effect()
 
                         if (scenario == Scenario.CoordinatedAttack and actor.address in attackers) or (
@@ -188,21 +191,24 @@ def actor_reset_proposal_reaction(params, substep, state_history, prev_state, po
     cancel_proposal_ids = policy_input["cancel_all_pending_proposals"]
     actors: List[BaseActor] = prev_state["actors"]
     proposals: List[Proposal] = prev_state["proposals"]
+    time_manager: TimeManager = prev_state["time_manager"]
 
-    actors = actor_recover_health(cancel_proposal_ids, actors, proposals)
+    actors = actor_recover_health(cancel_proposal_ids, actors, proposals, time_manager)
     actors = actor_reset_proposal_effect(cancel_proposal_ids, actors, proposals)
 
     return ("actors", actors)
 
 
-def actor_recover_health(cancel_proposal_ids, actors: List[BaseActor], proposals: List[Proposal]):
+def actor_recover_health(
+    cancel_proposal_ids, actors: List[BaseActor], proposals: List[Proposal], time_manager: TimeManager
+):
     if len(cancel_proposal_ids) != 0:
         for id in cancel_proposal_ids:
             proposal = get_proposal_by_id(proposals, id)
             if proposal.damage != 0:
                 for actor in actors:
                     if actor.actor_type == ActorType.HonestActor and actor.entity != "Contract":
-                        actor.update_actor_health(-proposal.damage)
+                        actor.update_actor_health(time_manager, -proposal.damage)
 
     return actors
 
