@@ -62,9 +62,9 @@ def determine_proposal_damage(proposal_type: ProposalType) -> int:
 
     match proposal_type:
         case ProposalType.Positive:
-            damage = rng.uniform(-25, -5)
+            damage = rng.uniform(-5, -25)
         case ProposalType.Negative:
-            damage = rng.uniform(25, 5)
+            damage = rng.uniform(5, 25)
         case ProposalType.Random:
             damage = rng.uniform(-25, 25)
         case ProposalType.NoImpact:
