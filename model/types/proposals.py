@@ -22,16 +22,16 @@ def new_proposal(
     id: int,
     proposer: str,
     scenario: Scenario,
-    proposal_type: ProposalType = ProposalType.NoImpact,
-    subtype: ProposalSubType = ProposalSubType.NoEffect,
+    proposal_type: ProposalType = None,
+    sub_type: ProposalSubType = None,
 ) -> Proposal:
-    proposal = Proposal(id=id, timestep=timestep, proposal_type=proposal_type, sub_type=subtype)
+    proposal = Proposal(id=id, timestep=timestep, proposal_type=proposal_type, sub_type=sub_type)
     proposal.proposer = proposer
 
-    if proposal_type == ProposalType.NoImpact:
+    if proposal_type is None:
         proposal.proposal_type = determine_proposal_type(scenario)
 
-    if subtype == ProposalSubType.NoEffect:
+    if sub_type is None:
         proposal.sub_type = determine_proposal_subtype(scenario)
 
     proposal.damage = determine_proposal_damage(proposal.proposal_type)

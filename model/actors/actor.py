@@ -143,31 +143,30 @@ class BaseActor:
     def update_actor_health(
         self,
         time_manager: TimeManager,
-        damage: int = 0,
+        damage: float = 0,
     ):
         if damage > 0:
             if self.health - damage < 0:
                 damage = self.health
             self.total_damage += damage
+            self.health -= damage
 
-        elif self.total_damage > 0 and damage < 0:
-            if self.total_damage + damage < 0:
-                damage = -self.total_damage
-            self.total_recovery -= damage
-            self.recovery_time = time_manager.get_current_timestamp()
-
-            if self.total_recovery > self.total_damage:
-                self.total_recovery = self.total_damage
-
-        self.health -= damage
-
-        if self.total_damage > 0 and damage < 0:
-            max_recoverable_health = self.total_damage
-            if self.health > max_recoverable_health:
-                self.health = max_recoverable_health
+        elif damage < 0:
+            if self.total_damage > 0:
+                max_recoverable_health = self.total_damage
+                if self.health + abs(damage) > (self.health + max_recoverable_health):
+                    damage = -(max_recoverable_health - self.health)
+                self.total_recovery += abs(damage)
+                self.recovery_time = time_manager.get_current_timestamp()
+                self.health += abs(damage)
 
         if self.health > 100:
             self.health = 100
+        elif self.health < 0:
+            self.health = 0
+
+        if self.total_recovery > self.total_damage:
+            self.total_recovery = self.total_damage
 
         self.update_reaction_delay()
 

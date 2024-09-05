@@ -49,7 +49,14 @@ def generate_proposal(params, substep, state_history, prev_state):
 
                 ## TODO: check duplicated proposals if attack status is active
 
-                proposal = new_proposal(prev_state["timestep"], new_proposal_id, proposer, scenario)
+                proposal = new_proposal(
+                    prev_state["timestep"],
+                    new_proposal_id,
+                    proposer,
+                    scenario,
+                    prev_state["proposal_types"],
+                    prev_state["proposal_subtypes"],
+                )
 
                 if prev_state["is_active_attack"]:
                     proposal = None
@@ -142,6 +149,7 @@ def submit_proposal(params, substep, state_history, prev_state, policy_input):
             "at ",
             dual_governance.time_manager.get_current_time(),
         )
+        print(proposal)
         dual_governance.submit_proposal("", [ExecutorCall("", "", [])])
 
     return ("dual_governance", dual_governance)
