@@ -25,7 +25,7 @@ class DualGovernanceConfig:
         Timestamp(int(timedelta(days=system_parameters["veto_signalling_deactivation_max_duration"]).total_seconds()))
     )
     veto_cooldown_duration: Timestamp = default(
-        Timestamp(int(timedelta(days=system_parameters["veto_cooldown_duration"]).total_seconds()))
+        Timestamp(int(timedelta(hours=system_parameters["veto_cooldown_duration"]).total_seconds()))
     )
 
     rage_quit_extension_delay: Timestamp = default(

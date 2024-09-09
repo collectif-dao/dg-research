@@ -172,7 +172,7 @@ def create_actor(
     created_actor = determine_actor_types(scenario, address, attackers, defenders)
     health = determine_actor_health(scenario)
 
-    if type == "Contract" and address not in defenders and address not in attackers:
+    if type in ["Contract", "CEX", "Custody"] and address not in defenders and address not in attackers:
         created_actor = StETHHolderActor()
         reaction_time = ReactionTime.NoReaction
         participation = GovernanceParticipation.NoParticipation

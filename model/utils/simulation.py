@@ -1,3 +1,5 @@
+import collections
+import collections.abc
 import pickle
 import re
 from collections import defaultdict
@@ -16,6 +18,8 @@ from model.types.reaction_time import ModeledReactions
 from model.types.scenario import Scenario
 from model.utils.initialization import generate_initial_state
 from specs.utils import ether_base
+
+collections.Hashable = collections.abc.Hashable
 
 
 def get_simulation_hash(initial_state=None, state_update_blocks=None, params=None, timesteps=None):

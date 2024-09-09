@@ -14,6 +14,7 @@ class ProposalSubType(Enum):
     NoEffect = 1
     FundsStealing = 2
     Bribing = 3
+    Hack = 4
 
 
 class ProposalGeneration(Enum):

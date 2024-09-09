@@ -24,6 +24,7 @@ def new_proposal(
     scenario: Scenario,
     proposal_type: ProposalType = None,
     sub_type: ProposalSubType = None,
+    attack_targets: set = {},
 ) -> Proposal:
     proposal = Proposal(id=id, timestep=timestep, proposal_type=proposal_type, sub_type=sub_type)
     proposal.proposer = proposer
@@ -35,6 +36,7 @@ def new_proposal(
         proposal.sub_type = determine_proposal_subtype(scenario)
 
     proposal.damage = determine_proposal_damage(proposal.proposal_type)
+    proposal.attack_targets = attack_targets
 
     return proposal
 

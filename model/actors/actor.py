@@ -6,7 +6,6 @@ from model.types.actors import ActorType
 from model.types.escrow import ActorLockAmounts
 from model.types.governance_goals import GovernanceGoal
 from model.types.governance_participation import GovernanceParticipation
-from model.types.proposal_type import ProposalType
 from model.types.proposals import Proposal, ProposalSubType
 from model.types.reaction_time import ReactionTime
 from model.utils.reactions import calculate_reaction_delay
@@ -63,7 +62,12 @@ class BaseActor:
         governance_participation: GovernanceParticipation = GovernanceParticipation.Normal,
     ):
         self.id = id
+
         self.entity = entity
+
+        if entity == "":
+            self.entity = "Other"
+
         self.starting_health = health
         self.health = health
         self.initial_health = health
@@ -101,44 +105,29 @@ class BaseActor:
         self.wstETH_locked = self.wstETH_locked + amounts.wstETH_amount
 
     def unlock_from_escrow(self, amounts: ActorLockAmounts, time_manager: TimeManager):
-        if self.st_eth_locked < amounts.stETH_amount:
+        if self.st_eth_locked < abs(amounts.stETH_amount):
             raise NotEnoughActorStETHBalance
 
-        if self.wstETH_locked < amounts.wstETH_amount:
+        if self.wstETH_locked < abs(amounts.wstETH_amount):
             raise NotEnoughActorWstETHBalance
 
         self.last_locked_tx_timestamp = time_manager.get_current_timestamp()
 
-        self.st_eth_balance = self.st_eth_balance - amounts.stETH_amount
-        self.st_eth_locked = self.st_eth_locked + amounts.stETH_amount
+        self.st_eth_balance = self.st_eth_balance + abs(amounts.stETH_amount)
+        self.st_eth_locked = self.st_eth_locked - abs(amounts.stETH_amount)
 
-        self.wstETH_balance = self.wstETH_balance - amounts.wstETH_amount
-        self.wstETH_locked = self.wstETH_locked + amounts.wstETH_amount
+        self.wstETH_balance = self.wstETH_balance + abs(amounts.wstETH_amount)
+        self.wstETH_locked = self.wstETH_locked - abs(amounts.wstETH_amount)
 
     def rebalance_to_stETH(self, amounts: ActorLockAmounts, time_manager: TimeManager):
-        if (self.st_eth_locked + self.wstETH_locked) + (amounts.stETH_amount + amounts.wstETH_amount) < 0:
+        if (self.st_eth_locked + self.wstETH_locked) < abs(amounts.stETH_amount) + abs(amounts.wstETH_amount):
             raise NotEnoughActorStETHBalance
 
         self.last_locked_tx_timestamp = time_manager.get_current_timestamp()
 
-        # print("rebalancing wstETH into stETH")
-
-        # print("amounts.stETH_amount", amounts.stETH_amount)
-        # print("amounts.wstETH_amount", amounts.wstETH_amount)
-
-        # print("self.st_eth_balance before", self.st_eth_balance)
-        # print("self.st_eth_locked before", self.st_eth_locked)
-        # print("self.wstETH_locked before", self.wstETH_locked)
-        # print("self.wstETH_balance before", self.wstETH_balance)
-
-        self.st_eth_balance = (self.st_eth_balance - amounts.stETH_amount) - amounts.wstETH_amount
-        self.st_eth_locked = self.st_eth_locked + amounts.stETH_amount
-        self.wstETH_locked = self.wstETH_locked + amounts.wstETH_amount
-
-        # print("self.st_eth_balance after", self.st_eth_balance)
-        # print("self.st_eth_locked after", self.st_eth_locked)
-        # print("self.wstETH_locked after", self.wstETH_locked)
-        # print("self.wstETH_balance after", self.wstETH_balance)
+        self.st_eth_balance = (self.st_eth_balance + abs(amounts.stETH_amount)) + abs(amounts.wstETH_amount)
+        self.st_eth_locked = self.st_eth_locked - abs(amounts.stETH_amount)
+        self.wstETH_locked = self.wstETH_locked - abs(amounts.wstETH_amount)
 
     def update_actor_health(
         self,
@@ -150,35 +139,28 @@ class BaseActor:
                 damage = self.health
             self.total_damage += damage
             self.health -= damage
-
         elif damage < 0:
+            if self.health + abs(damage) > 100:
+                damage = -(100 - self.health)
             if self.total_damage > 0:
-                max_recoverable_health = self.total_damage
-                if self.health + abs(damage) > (self.health + max_recoverable_health):
-                    damage = -(max_recoverable_health - self.health)
                 self.total_recovery += abs(damage)
                 self.recovery_time = time_manager.get_current_timestamp()
-                self.health += abs(damage)
+            self.health += abs(damage)
 
-        if self.health > 100:
-            self.health = 100
-        elif self.health < 0:
-            self.health = 0
-
-        if self.total_recovery > self.total_damage:
-            self.total_recovery = self.total_damage
+        self.health = max(0, min(self.health, 100))
+        self.total_recovery = min(self.total_recovery, self.total_damage)
 
         self.update_reaction_delay()
 
     def simulate_proposal_effect(self, proposal: Proposal):
-        if self.entity == "Contract" and proposal.proposal_type != ProposalType.Hack:
-            self.hypothetical_stETH_balance = self.st_eth_balance
-            self.hypothetical_wstETH_balance = self.wstETH_balance
-        else:
+        if self.entity == "Contract" and proposal.sub_type == ProposalSubType.Hack:
+            if self.address in proposal.attack_targets or len(proposal.attack_targets) == 0:
+                self.hypothetical_stETH_balance = 0
+                self.hypothetical_wstETH_balance = 0
+        elif self.entity != "Contract":
             match proposal.sub_type:
                 case ProposalSubType.NoEffect:
-                    self.hypothetical_stETH_balance = self.st_eth_balance
-                    self.hypothetical_wstETH_balance = self.wstETH_balance
+                    return
 
                 case ProposalSubType.FundsStealing:
                     if self.address in proposal.attack_targets or len(proposal.attack_targets) == 0:
