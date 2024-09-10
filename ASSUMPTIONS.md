@@ -1,3 +1,5 @@
+\usepackage{amsmath}
+
 # Model Assumptions
 
 This document outlines the key assumptions made during the development of the Lido Dual Governance model. These assumptions are crucial for understanding the model's behavior, limitations, and potential areas for future refinement.
@@ -169,6 +171,7 @@ The `generate_reaction_delay` function generates a random reaction delay within 
 ```python
 def generate_reaction_delay(min_time, max_time):
     rng = get_rng()
+    
     samples = rng.lognormal(mean=1, sigma=0.5, size=1000)
     scaled_reaction_times = (samples - np.min(samples)) / (np.max(samples) - np.min(samples)) * (
         max_time - min_time
@@ -179,6 +182,37 @@ def generate_reaction_delay(min_time, max_time):
     return int(reaction_delay)
 ```
 
+## Actor's Reaction Delay (proposition)
+Actor's reaction delay is generated **every time actor's health gets updated**. Actor's heath is updated when proposals are submitted or cancelled. Depending on the circumstances actors can try to either **lock** their tokens in escrow or **unlock** them. Actor will try to lock the tokens if her **health becomes less or equal to zero**. Actor will try to unlock the locked tokens if her **health goes above zero**. Every timestep the conditions above are checked and locking\unlocking occurs if the reaction delay is smaller than the time elapsed since the earliest proposal submission that was not cancelled.
+
+### Model Parameters for Reaction Delay
+The reaction delay is sampled from the log-normal distribution with parameters $\mu$ and $\sigma$. For each Reaction Time there is a specific log-normal distribution, that is determined by two parameters: median delay and 99 percentile delay. These two parameters uniquely identify $\mu$ and $\sigma$.
+
+- **`slow_actor_median_delay`**: Time in seconds, representing 10 days. The probability that a Slow Actor reacts before this time is $0.5$. 
+- **`slow_actor_99_delay`**: Time in seconds, representing 15 days. The probability that a Slow Actor reacts before this time is $0.99$.
+- **`normal_actor_median_delay`**: Time in seconds, representing 3 days. The probability that a Normal Actor reacts before this time is $0.5$.
+- **`normal_actor_99_delay`**: Time in seconds, representing 10 days. The probability that a Normal Actor reacts before this time is $0.99$.
+- **`quick_actor_median_delay`**: Time in seconds, representing 12 hours. The probability that a Quick Actor reacts before this time is $0.5$.
+- **`quick_actor_99_delay`**: Time in seconds, representing 1 day. The probability that a Quick Actor reacts before this time is $0.99$.
+
+
+#### `generate_reaction_delay` Function
+
+The `generate_reaction_delay` function generates a random reaction delay within a specified range using a log-normal distribution. In the function log-normal distribution parameters $\mu, \sigma$ are determined based on desired median and p% percentile.
+
+```python
+def generate_reaction_delay(median_delay, p_percentile_delay, p=.99):
+    mu = np.log(median_delay)
+    standard_normal_p_percentile = scipy.stats.norm.isf(1 - p)
+    sigma = (np.log(p_percentile_delay) - mu) / standard_normal_p_percentile
+
+    rng = get_rng()
+    reaction_delay = rng.lognormal(mean=mu, sigma=sigma)
+    reaction_delay = int(np.round(reaction_delay))
+
+    return reaction_delay
+```
+![Resulting reaction delay distributions](/images/ReactionDelayDistributions.png "ReactionDelayDistributions")
 # Proposal Generation
 
 The proposal generation in the model is determined by several functions that define the type, subtype, and damage of proposals based on the scenario and a normal distribution. These functions help simulate different types of proposals that can impact the governance system.
