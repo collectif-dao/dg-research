@@ -42,7 +42,7 @@ def generate_initial_state(
 
     proposals: List[Proposal] = []
     non_initialized_proposals: List[Proposal] = []
-    actors, attackers, defenders = generate_actors(scenario, reactions, max_actors, attackers, defenders)
+    actors, attackers_actors, defenders_actors = generate_actors(scenario, reactions, max_actors, attackers, defenders)
 
     time_manager = TimeManager(current_time=simulation_starting_time)
 
@@ -94,8 +94,8 @@ def generate_initial_state(
         "non_initialized_proposals": non_initialized_proposals,
         "time_manager": time_manager,
         "scenario": scenario,
-        "attackers": attackers,
-        "defenders": defenders,
+        "attackers": attackers_actors,
+        "defenders": defenders_actors,
         "proposal_types": proposal_types,
         "proposal_subtypes": proposal_subtypes,
         "is_active_attack": is_active_attack,
@@ -108,6 +108,8 @@ def generate_actors(
     scenario: Scenario, reactions: ModeledReactions, max_actors: int, attackers: Set[str], defenders: Set[str]
 ) -> Tuple[List[BaseActor], Set[str]]:
     initial_actors = []
+    attackers_actors: Set[str] = set()
+    defenders_actors: Set[str] = set()
 
     with open("data/stETH_token_distribution.csv", mode="r") as csv_file:
         csv_reader = csv.DictReader(csv_file, delimiter=",")
@@ -136,25 +138,23 @@ def generate_actors(
 
             initial_actors.append(created_actor)
 
-            if created_actor.address not in defenders:
-                if created_actor.actor_type in [ActorType.SingleDefender, ActorType.CoordinatedDefender]:
-                    defenders.add(created_actor.address)
+            if created_actor.actor_type in [ActorType.SingleDefender, ActorType.CoordinatedDefender]:
+                defenders_actors.add(created_actor.address)
 
-            if created_actor.address not in attackers:
-                match scenario:
-                    case Scenario.CoordinatedAttack:
-                        if created_actor.actor_type == ActorType.CoordinatedAttacker:
-                            attackers.add(created_actor.address)
-                    case Scenario.SingleAttack:
-                        if created_actor.actor_type == ActorType.SingleAttacker:
-                            attackers.add(created_actor.address)
-                    case Scenario.SmartContractHack:
-                        if created_actor.actor_type == ActorType.Hacker:
-                            attackers.add(created_actor.address)
+            match scenario:
+                case Scenario.CoordinatedAttack:
+                    if created_actor.actor_type == ActorType.CoordinatedAttacker:
+                        attackers_actors.add(created_actor.address)
+                case Scenario.SingleAttack:
+                    if created_actor.actor_type == ActorType.SingleAttacker:
+                        attackers_actors.add(created_actor.address)
+                case Scenario.SmartContractHack:
+                    if created_actor.actor_type == ActorType.Hacker:
+                        attackers_actors.add(created_actor.address)
 
             line_count += 1
 
-    return initial_actors, attackers, defenders
+    return initial_actors, attackers_actors, defenders_actors
 
 
 def create_actor(

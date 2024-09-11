@@ -8,6 +8,7 @@ from hashlib import sha256
 from pathlib import Path
 
 import pandas as pd
+from json_tricks import dumps
 from radcad import Backend, Engine, Experiment, Model, Simulation
 
 from model.state_update_blocks import state_update_blocks
@@ -23,13 +24,14 @@ collections.Hashable = collections.abc.Hashable
 
 
 def get_simulation_hash(initial_state=None, state_update_blocks=None, params=None, timesteps=None):
-    initial_state_bytes = pickle.dumps(initial_state)
+    initial_state_json = dumps(initial_state)
+    initial_state_hash = sha256(initial_state_json.encode("utf-8"))
+
     state_update_blocks_bytes = pickle.dumps(state_update_blocks)
     params_bytes = pickle.dumps(params)
 
-    combined_bytes = initial_state_bytes + state_update_blocks_bytes + params_bytes
-
-    simulation_hash = sha256(combined_bytes).hexdigest()
+    combined_bytes = state_update_blocks_bytes + params_bytes
+    simulation_hash = sha256(initial_state_hash.digest() + combined_bytes).hexdigest()
 
     return simulation_hash + "-" + str(timesteps)
 
@@ -59,18 +61,33 @@ def setup_simulation(
             proposal_types,
             proposal_subtypes,
             proposals_generation,
-            initial_proposals=proposals,
-            attackers=attackers,
-            defenders=defenders,
-            seed=seed_str,
-            simulation_starting_time=simulation_starting_time,
+            proposals,
+            0,
+            attackers,
+            defenders,
+            seed_str,
+            simulation_starting_time,
         )
 
         model = Model(initial_state=state, params=sys_params, state_update_blocks=state_update_blocks)
         simulation = Simulation(model=model, timesteps=timesteps, runs=1)
 
+        state_data = construct_state_data(
+            actors=state["actors"],
+            scenario=state["scenario"],
+            proposal_types=state["proposal_types"],
+            proposal_subtypes=state["proposal_subtypes"],
+            proposal_generation=state["proposal_generation"],
+            proposals=state["proposals"],
+            non_initialized_proposals=state["non_initialized_proposals"],
+            attackers=state["attackers"],
+            defenders=state["defenders"],
+            seed=seed_str,
+            simulation_starting_time=simulation_starting_time,
+        )
+
         simulation_hash = get_simulation_hash(
-            initial_state=simulation.model.initial_state,
+            initial_state=state_data,
             state_update_blocks=simulation.model.state_update_blocks,
             params=simulation.model.params,
             timesteps=timesteps,
@@ -176,3 +193,12 @@ def save_execution_result(experiment, timesteps, out_dir):
             pickle.dump(sliced_df, f)
 
         create_actors_df(sliced_df, folder_path)
+
+
+def construct_state_data(**kwargs):
+    state_data = {}
+
+    for key, value in kwargs.items():
+        state_data[key] = value
+
+    return state_data
