@@ -101,6 +101,7 @@ def generate_initial_state(
         "is_active_attack": is_active_attack,
         "proposal_generation": proposal_generation,
         "seed": seed,
+        "simulation_starting_time": time_manager.get_current_timestamp(),
     }
 
 

@@ -60,6 +60,30 @@ Or alternatively using pip:
 pip install -r requirements.txt
 ```
 
+Or by using a target from `Makefile`:
+
+```bash
+make install
+```
+
+## Running Simulations
+
+The `Makefile` provides a set of targets to automate the execution of different simulations.
+
+To run all the defined simulations in sequence, use the following command:
+
+```bash
+make run_simulations
+```
+
+This will execute the all existing simulations in order.
+
+Or you can run a specific simulation by it's name, for example:
+
+```bash
+make model_validation
+```
+
 ## Development
 
 Current model code has been tested on Python 3.12 version, so please let us know if you're facing issues with older versions.

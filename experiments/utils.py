@@ -18,6 +18,7 @@ from model.types.proposals import Proposal
 from model.types.reaction_time import ModeledReactions
 from model.types.scenario import Scenario
 from model.utils.initialization import generate_initial_state
+from model.utils.postprocessing import postprocessing
 from specs.utils import ether_base
 
 collections.Hashable = collections.abc.Hashable
@@ -43,7 +44,7 @@ def setup_simulation(
     proposal_types: ProposalType,
     proposal_subtypes: ProposalSubType,
     proposals_generation: ProposalGeneration,
-    proposals: list[Proposal],
+    proposals: list[Proposal] = [],
     attackers: set[str] = set(),
     defenders: set[str] = set(),
     seed: int = 0,
@@ -82,8 +83,8 @@ def setup_simulation(
             non_initialized_proposals=state["non_initialized_proposals"],
             attackers=state["attackers"],
             defenders=state["defenders"],
-            seed=seed_str,
-            simulation_starting_time=simulation_starting_time,
+            seed=state["seed"],
+            simulation_starting_time=state["simulation_starting_time"],
         )
 
         simulation_hash = get_simulation_hash(
@@ -97,7 +98,7 @@ def setup_simulation(
 
         folder_path = out_dir.joinpath(f"{simulation_hash}/")
         results_file = folder_path / "result.pkl"
-        actors_file = folder_path / "actors.csv"
+        actors_file = folder_path / "actors.pkl"
 
         if folder_path.exists() and results_file.is_file() and actors_file.is_file():
             print(f"Skipping simulation {simulation_hash} as it already exists with required files.")
@@ -111,12 +112,13 @@ def setup_simulation(
     return experiment, simulation_hashes
 
 
-def merge_simulation_results(simulation_hashes: str, out_dir=None):
+def merge_simulation_results(simulation_hashes: str, simulation_name: str, out_dir=None):
     dfs: list = []
     simulation_counter = 0
+    simulation_path = out_dir.joinpath(f"{simulation_name}/")
 
     for simulation_hash in simulation_hashes:
-        folder_path = out_dir.joinpath(f"{simulation_hash}/")
+        folder_path = simulation_path.joinpath(f"{simulation_hash}/")
         results_file = folder_path / "result.pkl"
 
         if not results_file.is_file():
@@ -131,13 +133,16 @@ def merge_simulation_results(simulation_hashes: str, out_dir=None):
         simulation_counter += 1
 
     combined_df = pd.concat(dfs, ignore_index=True)
+    # combined_result_file = simulation_path.joinpath(Path("results.csv"))
+    # combined_df.to_csv(combined_result_file, index=False)
+
     return combined_df
 
 
 def create_actors_df(simulation_result, out_dir=None):
     if out_dir == None:
         out_dir = Path("")
-    out_filepath = out_dir.joinpath(Path("actors.csv"))
+    result_path = out_dir.joinpath(Path("actors.pkl"))
 
     value_dict = defaultdict(list)
     value_dict["reaction_delay"] = []
@@ -161,29 +166,74 @@ def create_actors_df(simulation_result, out_dir=None):
         index += 1
 
     df = pd.DataFrame(value_dict)
-    # df.reset_index()
-    df.to_csv(out_filepath, index=False)
+    df.reset_index()
+
+    with open(result_path, "wb") as f:
+        pickle.dump(df, f)
 
 
-def save_execution_result(experiment, timesteps, out_dir):
+def save_combined_actors_simulation_result(simulation_hashes: list[str], simulation_name: str, out_path: Path):
+    dfs: list = []
+    simulation_counter = 0
+    simulation_path = out_path.joinpath(f"{simulation_name}/")
+
+    for hash in simulation_hashes:
+        folder_path = simulation_path.joinpath(f"{hash}/")
+        actors_file = folder_path / "actors.pkl"
+
+        with open(actors_file, "rb") as f:
+            actors_df = pickle.load(f)
+
+        actors_df["simulation"] = simulation_counter
+        dfs.append(actors_df)
+        simulation_counter += 1
+
+    out_filepath = simulation_path.joinpath(Path("actors.csv"))
+    # parquet_filepath = simulation_path.joinpath(Path("actors.parquet"))
+
+    combined_df = pd.concat(dfs, ignore_index=True)
+    combined_df.to_csv(out_filepath, index=False)
+    # combined_df.to_parquet(parquet_filepath)
+
+    return combined_df
+
+
+def save_execution_result(experiment, simulation_name, timesteps, out_dir):
     if out_dir == None:
         out_dir = Path("")
 
     experiment_df = pd.DataFrame(experiment.results)
     simulations = experiment.get_simulations()
 
+    simulation_path = out_dir.joinpath(f"{simulation_name}/")
+    simulation_path.mkdir(exist_ok=True)
+
     for run in range(len(simulations)):
         start_idx = run + (run * timesteps)
         end_idx = start_idx + timesteps + 1
 
+        state_data = construct_state_data(
+            actors=simulations[run].model.initial_state["actors"],
+            scenario=simulations[run].model.initial_state["scenario"],
+            proposal_types=simulations[run].model.initial_state["proposal_types"],
+            proposal_subtypes=simulations[run].model.initial_state["proposal_subtypes"],
+            proposal_generation=simulations[run].model.initial_state["proposal_generation"],
+            proposals=simulations[run].model.initial_state["proposals"],
+            non_initialized_proposals=simulations[run].model.initial_state["non_initialized_proposals"],
+            attackers=simulations[run].model.initial_state["attackers"],
+            defenders=simulations[run].model.initial_state["defenders"],
+            seed=simulations[run].model.initial_state["seed"],
+            simulation_starting_time=simulations[run].model.initial_state["simulation_starting_time"],
+        )
+
         simulation_hash = get_simulation_hash(
-            initial_state=experiment.simulations[run].model.initial_state,
+            initial_state=state_data,
             state_update_blocks=experiment.simulations[run].model.state_update_blocks,
             params=experiment.simulations[run].model.params,
             timesteps=experiment.simulations[run].timesteps,
         )
 
-        folder_path = out_dir.joinpath(f"{simulation_hash}/")
+        folder_path = simulation_path.joinpath(f"{simulation_hash}/")
         folder_path.mkdir(exist_ok=True)
 
         sliced_df = experiment_df.iloc[start_idx:end_idx]
@@ -193,6 +243,16 @@ def save_execution_result(experiment, timesteps, out_dir):
             pickle.dump(sliced_df, f)
 
         create_actors_df(sliced_df, folder_path)
+
+
+def save_postprocessing_result(dataframe: pd.DataFrame, simulation_name: str, out_path: Path):
+    post_processing = postprocessing(dataframe)
+    folder_path = out_path.joinpath(f"{simulation_name}")
+    result_path = folder_path.joinpath("post_processing.csv")
+    # parquet_filepath = folder_path.joinpath("post_processing.parquet")
+
+    post_processing.to_csv(result_path, index=False)
+    # post_processing.to_parquet(parquet_filepath)
 
 
 def construct_state_data(**kwargs):

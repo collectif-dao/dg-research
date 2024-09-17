@@ -11,10 +11,6 @@ from specs.utils import ether_base, percent_base
 
 
 def postprocessing(df: DataFrame):
-    # subset to last substep
-    df = df[df["substep"] == df.substep.max()]
-
-    # Get the ABM results
     dg_ds = df.dual_governance
     time_manager_ds = df.time_manager
     timesteps = df.timestep
