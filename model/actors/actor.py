@@ -8,8 +8,7 @@ from model.types.governance_goals import GovernanceGoal
 from model.types.governance_participation import GovernanceParticipation
 from model.types.proposals import Proposal, ProposalSubType
 from model.types.reaction_time import ReactionTime
-from model.utils.reactions import calculate_reaction_delay
-from model.utils.seed import get_rng
+from model.utils.reactions import generate_reaction_delay
 from specs.dual_governance import DualGovernance
 from specs.time_manager import TimeManager
 from specs.utils import generate_address
@@ -197,9 +196,7 @@ class BaseActor:
             self.health = self.initial_health
 
     def update_reaction_delay(self):
-        rng = get_rng()
-        samples = rng.lognormal(mean=1, sigma=0.5, size=1000)
-        reaction_delay = calculate_reaction_delay(samples, self.reaction_time)
+        reaction_delay = generate_reaction_delay(self.reaction_time)
         self.reaction_delay = reaction_delay
 
     def reset_proposal_effect(self):
