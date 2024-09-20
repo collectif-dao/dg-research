@@ -50,6 +50,7 @@ def setup_simulation(
     seed: int = 0,
     simulation_starting_time: datetime = datetime.min,
     out_dir: str = "",
+    institutional_threshold: float = 1.0
 ):
     simulations: list[Simulation] = []
     simulation_hashes: list[str] = []
@@ -68,6 +69,7 @@ def setup_simulation(
             defenders,
             seed_str,
             simulation_starting_time,
+            institutional_threshold
         )
 
         model = Model(initial_state=state, params=sys_params, state_update_blocks=state_update_blocks)

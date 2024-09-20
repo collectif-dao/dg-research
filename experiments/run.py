@@ -9,6 +9,7 @@ from experiments.simulation_configuration import get_path
 from experiments.templates.model_validation import create_experiment as model_validation_experiment
 from experiments.templates.rage_quit_scenario import create_experiment as rage_quit_experiment
 from experiments.templates.withdrawal_queue_replacement import create_experiment as withdrawal_queue_experiment
+from experiments.templates.withdrawal_queue_replacement_institutional import create_experiment as withdrawal_queue_replacement_institutional
 from experiments.utils import (
     merge_simulation_results,
     save_combined_actors_simulation_result,
@@ -33,6 +34,7 @@ def run(simulation_name: str = None):
         "model_validation": model_validation_experiment,
         "withdrawal_queue_replacement": withdrawal_queue_experiment,
         "rage_quit": rage_quit_experiment,
+        'withdrawal_queue_replacement_institutional': withdrawal_queue_replacement_institutional
     }
 
     if simulation_name not in simulations:

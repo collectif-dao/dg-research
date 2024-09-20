@@ -1,6 +1,6 @@
 # Define the default target
 .PHONY: run_simulations
-run_simulations: install model_validation withdrawal_queue_replacement rage_quit
+run_simulations: install model_validation withdrawal_queue_replacement rage_quit withdrawal_queue_replacement_institutional
 
 # Define targets for each simulation
 .PHONY: model_validation
@@ -17,6 +17,11 @@ withdrawal_queue_replacement:
 rage_quit:
 	@echo "Running rage_quit simulation"
 	@./run_simulation.sh rage_quit
+
+.PHONY: withdrawal_queue_replacement_institutional
+withdrawal_queue_replacement_institutional:
+	@echo "Running withdrawal_queue_replacement_institutional simulation"
+	@./run_simulation.sh withdrawal_queue_replacement_institutional
 
 # Install dependencies from requirements.txt if not already installed
 .PHONY: install
