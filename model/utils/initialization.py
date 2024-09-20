@@ -37,13 +37,15 @@ def generate_initial_state(
     defenders: Set[str] = set(),
     seed: int | str = None,
     simulation_starting_time: datetime = datetime.min,
-    institutional_threshold: float = 1.0
+    institutional_threshold: int = 0,
 ) -> Any:
     initialize_seed(seed)
 
     proposals: List[Proposal] = []
     non_initialized_proposals: List[Proposal] = []
-    actors, attackers_actors, defenders_actors = generate_actors(scenario, reactions, max_actors, attackers, defenders, institutional_threshold)
+    actors, attackers_actors, defenders_actors = generate_actors(
+        scenario, reactions, max_actors, attackers, defenders, institutional_threshold
+    )
 
     time_manager = TimeManager(current_time=simulation_starting_time)
 
@@ -107,15 +109,16 @@ def generate_initial_state(
 
 
 def generate_actors(
-    scenario: Scenario, reactions: ModeledReactions, max_actors: int, attackers: Set[str], defenders: Set[str],
-        institutional_threshold: float = 1.0
+    scenario: Scenario,
+    reactions: ModeledReactions,
+    max_actors: int,
+    attackers: Set[str],
+    defenders: Set[str],
+    institutional_threshold: int = 0,
 ) -> Tuple[List[BaseActor], Set[str]]:
     initial_actors = []
     attackers_actors: Set[str] = set()
     defenders_actors: Set[str] = set()
-
-    total_eth = 8536242865911699582484480 #TODO rewrite reading token_distribtuion CSV with pandas, and sum tokens before
-    institutional_min_tokens = int(total_eth * institutional_threshold)
 
     with open("data/stETH_token_distribution.csv", mode="r") as csv_file:
         csv_reader = csv.DictReader(csv_file, delimiter=",")
@@ -140,7 +143,7 @@ def generate_actors(
                 int(float(row["stETH"]) * ether_base),
                 int(float(row["wstETH"]) * ether_base),
                 row["type"],
-                institutional_min_tokens
+                institutional_threshold,
             )
 
             initial_actors.append(created_actor)
@@ -175,24 +178,21 @@ def create_actor(
     stETH: int,
     wstETH: int,
     type: str,
-    institutional_min_tokens: int = -1
+    institutional_threshold: int = 0,
 ):
     created_actor = determine_actor_types(scenario, address, attackers, defenders)
     health = determine_actor_health(scenario)
 
-    if (type in ["Contract", "CEX", "Custody"]) and (address not in defenders) and (address not in attackers):
+    if type in ["Contract", "CEX", "Custody"] and address not in defenders and address not in attackers:
         created_actor = StETHHolderActor()
         reaction_time = ReactionTime.NoReaction
         participation = GovernanceParticipation.NoParticipation
-    elif institutional_min_tokens > 0:
-        if stETH + wstETH >= institutional_min_tokens:
-            reaction_time = ReactionTime.Slow
-        else:
-            reaction_time = ReactionTime.Quick
-        participation = GovernanceParticipation.Normal
     else:
         reaction_time = determine_reaction_time(reactions)
         participation = determine_governance_participation(reactions)
+
+    if institutional_threshold != 0 and stETH + wstETH >= (institutional_threshold * ether_base):
+        reaction_time = ReactionTime.Slow
 
     if created_actor.actor_type in {
         ActorType.SingleAttacker,
