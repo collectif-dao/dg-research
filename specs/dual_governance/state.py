@@ -117,9 +117,9 @@ class DualGovernanceState:
 
     def get_veto_signalling_state(self):
         is_active = self.state == State.VetoSignalling
-        duration = self.get_veto_signalling_duration() if is_active else timedelta(0)
-        entered_at = self.entered_at if is_active else datetime.min
-        activated_at = self.veto_signalling_activation_time if is_active else datetime.min
+        duration = self.get_veto_signalling_duration() if is_active else Timestamp(0)
+        entered_at = self.entered_at if is_active else Timestamp(0)
+        activated_at = self.veto_signalling_activation_time if is_active else Timestamp(0)
         return is_active, duration, entered_at, activated_at
 
     def get_veto_signalling_duration(self):
