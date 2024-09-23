@@ -16,6 +16,7 @@ from specs.time_manager import TimeManager
 from specs.types.address import Address
 from specs.types.shares_value import SharesValue
 from specs.types.timestamp import Timestamp, Timestamps
+from specs.utils import percent_base
 
 from .utils import calc_rage_quit_support, sample_stETH_total_supply, test_escrow_address
 
@@ -56,6 +57,35 @@ def test_initialize():
     assert proposals.state.last_canceled_proposal_id == 0
     assert proposals.proposal_id_offset == 1
     assert len(proposals.state.proposals) == 0
+
+
+def test_config_overrides():
+    time_manager = TimeManager()
+    time_manager.initialize()
+
+    lido = Lido()
+    lido.initialize(time_manager, Address.wstETH)
+    lido._mint_shares(Address.DEAD, sample_stETH_total_supply)
+    lido.set_buffered_ether(sample_stETH_total_supply)
+
+    first_seal_rage_quit_support = 1 * percent_base
+    second_seal_rage_quit_support = 12 * percent_base
+
+    dual_governance = DualGovernance()
+    dual_governance.initialize(
+        test_escrow_address,
+        time_manager,
+        lido,
+        "",
+        "",
+        Timestamp(0),
+        Timestamp(0),
+        first_seal_rage_quit_support=first_seal_rage_quit_support,
+        second_seal_rage_quit_support=second_seal_rage_quit_support,
+    )
+
+    assert dual_governance.state.config.first_seal_rage_quit_support == first_seal_rage_quit_support
+    assert dual_governance.state.config.second_seal_rage_quit_support == second_seal_rage_quit_support
 
 
 @given(

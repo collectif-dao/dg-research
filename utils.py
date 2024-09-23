@@ -59,7 +59,6 @@ def setup_simulation(
     out_dir: str = "",
     dual_governance_params: list[DualGovernanceParameters] = None,
     max_actors: int = 0,
-    institutional_threshold: int = 0,
 ):
     simulations: list[Simulation] = []
     simulation_hashes: list[str] = []
@@ -94,7 +93,6 @@ def setup_simulation(
                 simulation_starting_time,
                 first_rage_quit_support=first_rage_quit_support,
                 second_rage_quit_support=second_rage_quit_support,
-                institutional_threshold=institutional_threshold,
             )
 
             model = Model(initial_state=state, params=sys_params, state_update_blocks=state_update_blocks)

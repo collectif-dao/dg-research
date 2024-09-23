@@ -304,7 +304,9 @@ def postprocessing(df: DataFrame):
             "total_defenders_actors_funds": total_defenders_actors_funds,
             # simulation parameters
             "timestep": timesteps,
-            # "run": df.run,
+            "first_seal_rage_quit_support": df.first_seal_rage_quit_support,
+            "second_seal_rage_quit_support": df.second_seal_rage_quit_support,
+            "seed": df.seed,
             "simulation": df.simulation + 1,
         }
     )

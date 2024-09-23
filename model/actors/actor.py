@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass, field
 from typing import List, Set, Tuple
 
@@ -197,7 +198,7 @@ class BaseActor:
 
     def update_reaction_delay(self):
         reaction_delay = generate_reaction_delay(self.reaction_time)
-        self.reaction_delay = reaction_delay
+        self.reaction_delay = math.ceil(reaction_delay)
 
     def reset_proposal_effect(self):
         self.hypothetical_stETH_balance = self.initial_st_eth_balance

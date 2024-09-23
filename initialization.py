@@ -40,15 +40,12 @@ def generate_initial_state(
     simulation_starting_time: datetime = datetime.min,
     first_rage_quit_support: int = None,
     second_rage_quit_support: int = None,
-    institutional_threshold: int = 0,
 ) -> Any:
     initialize_seed(seed)
 
     proposals: List[Proposal] = []
     non_initialized_proposals: List[Proposal] = []
-    actors, attackers_actors, defenders_actors = generate_actors(
-        scenario, reactions, max_actors, attackers, defenders, institutional_threshold
-    )
+    actors, attackers_actors, defenders_actors = generate_actors(scenario, reactions, max_actors, attackers, defenders)
 
     time_manager = TimeManager(current_time=simulation_starting_time)
 
@@ -122,12 +119,7 @@ def generate_initial_state(
 
 
 def generate_actors(
-    scenario: Scenario,
-    reactions: ModeledReactions,
-    max_actors: int,
-    attackers: Set[str],
-    defenders: Set[str],
-    institutional_threshold: int = 0,
+    scenario: Scenario, reactions: ModeledReactions, max_actors: int, attackers: Set[str], defenders: Set[str]
 ) -> Tuple[List[BaseActor], Set[str]]:
     initial_actors = []
     attackers_actors: Set[str] = set()
@@ -138,7 +130,7 @@ def generate_actors(
         line_count = 0
 
         for row in csv_reader:
-            if 0 < max_actors < line_count:
+            if max_actors > 0 and line_count > max_actors:
                 break
 
             if line_count == 0:
@@ -156,7 +148,6 @@ def generate_actors(
                 int(float(row["stETH"]) * ether_base),
                 int(float(row["wstETH"]) * ether_base),
                 row["type"],
-                institutional_threshold,
             )
 
             initial_actors.append(created_actor)
@@ -191,7 +182,6 @@ def create_actor(
     stETH: int,
     wstETH: int,
     type: str,
-    institutional_threshold: int = 0,
 ):
     created_actor = determine_actor_types(scenario, address, attackers, defenders)
     health = determine_actor_health(scenario)
@@ -203,9 +193,6 @@ def create_actor(
     else:
         reaction_time = determine_reaction_time(reactions)
         participation = determine_governance_participation(reactions)
-
-    if institutional_threshold != 0 and stETH + wstETH >= (institutional_threshold * ether_base):
-        reaction_time = ReactionTime.Slow
 
     if created_actor.actor_type in {
         ActorType.SingleAttacker,

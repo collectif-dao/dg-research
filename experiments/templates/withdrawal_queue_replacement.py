@@ -1,21 +1,21 @@
 from experiments.simulation_configuration import SIMULATION_TIME, calculate_timesteps, get_path
-from experiments.utils import save_execution_result, setup_simulation
+from experiments.utils import DualGovernanceParameters, save_execution_result, setup_simulation
 from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
 from model.types.proposals import Proposal
 from model.types.scenario import Scenario
 
-MONTE_CARLO_RUNS = 5
+MONTE_CARLO_RUNS = 1
 SEED = 141
 SCENARIO = Scenario.SingleAttack
-TIMESTEPS = calculate_timesteps(3)
+TIMESTEPS = calculate_timesteps(1)
 
 proposals = [
     Proposal(
         timestep=2,
-        damage=45,
+        damage=100,
         proposal_type=ProposalType.Danger,
         sub_type=ProposalSubType.FundsStealing,
-        proposer="0x98078db053902644191f93988341e31289e1c8fe",
+        proposer="0xc329400492c6ff2438472d4651ad17389fcb843a",
         attack_targets={
             "0xb671e841a8e6db528358ed385983892552ef422f",
             "0x4b4eec1ddc9420a5cc35a25f5899dc5993f9e586",
@@ -24,8 +24,13 @@ proposals = [
     ),
 ]
 
-attackers = {"0x98078db053902644191f93988341e31289e1c8fe", "0xc329400492c6ff2438472d4651ad17389fcb843a"}
-defenders = {"0x3e40d73eb977dc6a537af587d48316fee66e9c8c"}
+attackers = {"0xc329400492c6ff2438472d4651ad17389fcb843a"}
+defenders = {}
+
+dual_governance_params = [
+    DualGovernanceParameters(first_rage_quit_support=1, second_rage_quit_support=10),
+    DualGovernanceParameters(first_rage_quit_support=2, second_rage_quit_support=12),
+]
 
 
 def create_experiment(simulation_name: str = "withdrawal_queue_replacement"):
@@ -44,6 +49,7 @@ def create_experiment(simulation_name: str = "withdrawal_queue_replacement"):
         seed=SEED,
         simulation_starting_time=SIMULATION_TIME,
         out_dir=out_path.joinpath(simulation_name),
+        dual_governance_params=dual_governance_params,
     )
 
     experiment.after_experiment = lambda experiment=None: save_execution_result(

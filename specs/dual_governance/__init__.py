@@ -30,6 +30,7 @@ class DualGovernance:
         execution_committee: str = "",
         protection_duration: Timestamp = Timestamp(0),
         emergency_mode_duration: Timestamp = Timestamp(0),
+        **config_overrides,
     ):
         self.time_manager = time_manager
         timelock = EmergencyProtectedTimelock()
@@ -43,7 +44,7 @@ class DualGovernance:
 
         self.timelock = timelock
 
-        config = DualGovernanceConfig()
+        config = DualGovernanceConfig(**config_overrides)
         dgState = DualGovernanceState(config)
         dgState.initialize(escrow_address, time_manager, lido=lido)
         self.state = dgState
