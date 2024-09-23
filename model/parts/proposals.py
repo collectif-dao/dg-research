@@ -118,7 +118,6 @@ def cancel_all_pending_proposals(params, substep, state_history, prev_state):
 
                 if timelock_proposal.status != ProposalStatus.Executed:
                     model_proposal = get_proposal_by_id(proposals, timelock_proposal.id)
-                    print(model_proposal)
 
                     if (
                         model_proposal.proposal_type == ProposalType.Negative
@@ -128,7 +127,9 @@ def cancel_all_pending_proposals(params, substep, state_history, prev_state):
                         if timelock_proposal.id <= last_canceled_proposal:
                             continue
                         else:
-                            canceled_proposals.append(timelock_proposal.id)
+                            if model_proposal.cancelable:
+                                print(model_proposal)
+                                canceled_proposals.append(timelock_proposal.id)
 
         return {"cancel_all_pending_proposals": canceled_proposals}
 

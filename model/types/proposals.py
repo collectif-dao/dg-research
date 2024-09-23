@@ -15,6 +15,7 @@ class Proposal:
     proposal_type: ProposalType = field(default_factory=lambda: ProposalType.NoImpact)
     sub_type: ProposalSubType = field(default_factory=lambda: ProposalSubType.NoEffect)
     attack_targets: Set[str] = field(default_factory=lambda: set())
+    cancelable: bool = True
 
 
 def new_proposal(
@@ -25,8 +26,9 @@ def new_proposal(
     proposal_type: ProposalType = None,
     sub_type: ProposalSubType = None,
     attack_targets: set = {},
+    cancelable: bool = True,
 ) -> Proposal:
-    proposal = Proposal(id=id, timestep=timestep, proposal_type=proposal_type, sub_type=sub_type)
+    proposal = Proposal(id=id, timestep=timestep, proposal_type=proposal_type, sub_type=sub_type, cancelable=cancelable)
     proposal.proposer = proposer
 
     if proposal_type is None:
