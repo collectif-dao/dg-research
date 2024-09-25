@@ -1,6 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Set
 
+from model.sys_params import cancellation_delay_days
 from model.types.proposal_type import ProposalGeneration
 from model.types.proposals import Proposal, ProposalType, get_proposal_by_id, new_proposal
 from model.types.scenario import Scenario
@@ -9,6 +10,8 @@ from model.utils.seed import get_rng
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.proposals import ExecutorCall, ProposalStatus
 from specs.dual_governance.state import State
+from specs.time_manager import TimeManager
+from specs.types.timestamp import Timestamp
 
 
 # Behaviors
@@ -96,8 +99,12 @@ def generate_proposal(params, substep, state_history, prev_state):
 def cancel_all_pending_proposals(params, substep, state_history, prev_state):
     dual_governance: DualGovernance = prev_state["dual_governance"]
     proposals: List[Proposal] = prev_state["proposals"]
+    time_manager: TimeManager = prev_state["time_manager"]
 
-    if dual_governance.get_current_state() == State.VetoSignalling:
+    is_active_veto_signalling, _, _, activated_at = dual_governance.state.get_veto_signalling_state()
+    if is_active_veto_signalling and time_manager.get_current_timestamp_value() >= activated_at + Timestamp(
+        timedelta(days=cancellation_delay_days).total_seconds()
+    ):
         total_num_of_proposals = dual_governance.timelock.proposals.count()
         last_canceled_proposal = dual_governance.timelock.proposals.state.last_canceled_proposal_id
 
@@ -120,7 +127,6 @@ def cancel_all_pending_proposals(params, substep, state_history, prev_state):
 
                 if timelock_proposal.status != ProposalStatus.Executed:
                     model_proposal = get_proposal_by_id(proposals, timelock_proposal.id)
-                    print(model_proposal)
 
                     if (
                         model_proposal.proposal_type == ProposalType.Negative
@@ -130,7 +136,9 @@ def cancel_all_pending_proposals(params, substep, state_history, prev_state):
                         if timelock_proposal.id <= last_canceled_proposal:
                             continue
                         else:
-                            canceled_proposals.append(timelock_proposal.id)
+                            if model_proposal.cancelable:
+                                print(model_proposal)
+                                canceled_proposals.append(timelock_proposal.id)
 
         return {"cancel_all_pending_proposals": canceled_proposals}
 

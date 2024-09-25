@@ -9,8 +9,12 @@ from radcad import Backend, Engine
 from experiments.templates.model_validation import create_experiment as model_validation_experiment
 from experiments.templates.rage_quit_scenario import create_experiment as rage_quit_experiment
 from experiments.templates.withdrawal_queue_replacement import create_experiment as withdrawal_queue_experiment
-from experiments.templates.withdrawal_queue_replacement_institutional import create_experiment as withdrawal_queue_replacement_institutional
-from experiments.templates.signalling_thresholds_sweep_under_proposal_with_attack import create_experiment as signalling_thresholds_sweep_under_proposal_with_attack
+from experiments.templates.withdrawal_queue_replacement_institutional import (
+    create_experiment as withdrawal_queue_replacement_institutional,
+)
+from experiments.templates.signalling_thresholds_sweep_under_proposal_with_attack import (
+    create_experiment as signalling_thresholds_sweep_under_proposal_with_attack,
+)
 # from experiments.utils import (
 #     merge_simulation_results,
 #     save_combined_actors_simulation_result,
@@ -35,8 +39,8 @@ def run(simulation_name: str = None):
         "model_validation": model_validation_experiment,
         "withdrawal_queue_replacement": withdrawal_queue_experiment,
         "rage_quit": rage_quit_experiment,
-        'withdrawal_queue_replacement_institutional': withdrawal_queue_replacement_institutional,
-        'signalling_thresholds_sweep_under_proposal_with_attack': signalling_thresholds_sweep_under_proposal_with_attack
+        "withdrawal_queue_replacement_institutional": withdrawal_queue_replacement_institutional,
+        "signalling_thresholds_sweep_under_proposal_with_attack": signalling_thresholds_sweep_under_proposal_with_attack
     }
 
     if simulation_name not in simulations:
@@ -46,7 +50,7 @@ def run(simulation_name: str = None):
     create_experiment = simulations[simulation_name]
     experiment, simulation_hashes = create_experiment()
 
-    experiment.engine = Engine(backend=Backend.MULTIPROCESSING, processes=5, raise_exceptions=False, drop_substeps=True)
+    experiment.engine = Engine(backend=Backend.MULTIPROCESSING, raise_exceptions=False, drop_substeps=True)
 
     simulations = experiment.get_simulations()
 

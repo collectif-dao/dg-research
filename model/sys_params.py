@@ -17,3 +17,4 @@ normal_actor_max_delay = 3600 * 24 * 5
 quick_actor_max_delay = 3600 * 24  ## it should start from the proposal submission on the DAO level
 
 sample_actor_delay = 3600
+cancellation_delay_days = 2

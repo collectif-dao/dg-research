@@ -4,7 +4,7 @@ from model.types.proposal_type import ProposalGeneration, ProposalSubType, Propo
 from model.types.proposals import Proposal
 from model.types.scenario import Scenario
 
-MONTE_CARLO_RUNS = 3
+MONTE_CARLO_RUNS = 1
 SEED = 141
 SCENARIO = Scenario.SingleAttack
 TIMESTEPS = calculate_timesteps(3)
@@ -12,19 +12,15 @@ TIMESTEPS = calculate_timesteps(3)
 proposals = [
     Proposal(
         timestep=2,
-        damage=45,
-        proposal_type=ProposalType.Danger,
-        sub_type=ProposalSubType.FundsStealing,
-        proposer="0x98078db053902644191f93988341e31289e1c8fe",
-        attack_targets={
-            "0xb671e841a8e6db528358ed385983892552ef422f",
-            "0x4b4eec1ddc9420a5cc35a25f5899dc5993f9e586",
-            "0x47176b2af9885dc6c4575d4efd63895f7aaa4790",
-        },
+        damage=40,
+        proposal_type=ProposalType.Negative,
+        sub_type=ProposalSubType.NoEffect,
+        proposer="0xc329400492c6ff2438472d4651ad17389fcb843a",
+        cancelable=False,
     ),
 ]
 
-attackers = {"0x98078db053902644191f93988341e31289e1c8fe", "0xc329400492c6ff2438472d4651ad17389fcb843a"}
+attackers = {"0xc329400492c6ff2438472d4651ad17389fcb843a"}
 defenders = {}
 
 
@@ -35,8 +31,8 @@ def create_experiment(simulation_name: str = "rage_quit"):
         timesteps=TIMESTEPS,
         monte_carlo_runs=MONTE_CARLO_RUNS,
         scenario=SCENARIO,
-        proposal_types=ProposalType.Danger,
-        proposal_subtypes=ProposalSubType.FundsStealing,
+        proposal_types=ProposalType.Negative,
+        proposal_subtypes=ProposalSubType.NoEffect,
         proposals_generation=ProposalGeneration.Random,
         proposals=proposals,
         attackers=attackers,
