@@ -87,6 +87,8 @@ def generate_proposal(params, substep, state_history, prev_state):
                         prev_state["proposal_subtypes"],
                     )
                     print(proposal)
+        case ProposalGeneration.NoGeneration:
+            proposal = None
 
     return {"proposal_create": proposal}
 

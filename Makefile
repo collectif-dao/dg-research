@@ -23,6 +23,11 @@ withdrawal_queue_replacement_institutional:
 	@echo "Running withdrawal_queue_replacement_institutional simulation"
 	@./run_simulation.sh withdrawal_queue_replacement_institutional
 
+.PHONY: signalling_thresholds_sweep_under_proposal_with_attack
+signalling_thresholds_sweep_under_proposal_with_attack:
+	@echo "Running signalling_thresholds_sweep_under_proposal_with_attack simulation"
+	@./run_simulation.sh signalling_thresholds_sweep_under_proposal_with_attack
+
 # Install dependencies from requirements.txt if not already installed
 .PHONY: install
 install:

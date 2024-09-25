@@ -19,7 +19,7 @@ TIMESTEPS = int((timesteps_per_day * days_per_month) * SIMULATION_TIME_MONTHS)  
 SIMULATION_TIME = datetime(2024, 9, 1)  # simulation starting time
 
 
-def calculate_timesteps(simulation_months: int = 1) -> int:
+def calculate_timesteps(simulation_months: float = 1) -> int:
     timesteps = int((timesteps_per_day * days_per_month) * simulation_months)
 
     return timesteps
