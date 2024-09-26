@@ -174,6 +174,9 @@ def generate_actors(
                 case Scenario.SmartContractHack:
                     if created_actor.actor_type == ActorType.Hacker:
                         attackers_actors.add(created_actor.address)
+                case Scenario.VetoSignallingLoop:
+                    if created_actor.actor_type == ActorType.CoordinatedAttacker:
+                        attackers_actors.add(created_actor.address)
 
             line_count += 1
 
@@ -230,7 +233,10 @@ def generate_initial_proposals(
     if not dual_governance.state.is_proposals_creation_allowed():
         return [], initial_proposals
 
-    if scenario in [Scenario.SingleAttack, Scenario.CoordinatedAttack] and total_attackers <= 0:
+    if (
+        scenario in [Scenario.SingleAttack, Scenario.CoordinatedAttack, Scenario.VetoSignallingLoop]
+        and total_attackers <= 0
+    ):
         return [], initial_proposals
 
     proposals: List[Proposal] = []

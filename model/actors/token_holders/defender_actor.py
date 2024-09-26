@@ -6,6 +6,7 @@ from model.types.actors import ActorType
 from model.types.governance_participation import GovernanceParticipation
 from model.types.proposal_type import ProposalType
 from model.types.proposals import Proposal
+from model.types.scenario import Scenario
 from model.utils.proposals import get_first_proposal_timestamp
 from specs.dual_governance import DualGovernance
 
@@ -15,7 +16,9 @@ class StETHDefenderActor(BaseActor):
     actor_type: ActorType = ActorType.SingleDefender
     governance_participation: GovernanceParticipation = field(default_factory=lambda: GovernanceParticipation.Full)
 
-    def calculate_lock_amount(self, dual_governance: DualGovernance, proposals: List[Proposal]) -> Tuple[int, int]:
+    def calculate_lock_amount(
+        self, scenario: Scenario, dual_governance: DualGovernance, proposals: List[Proposal]
+    ) -> Tuple[int, int]:
         for proposal in proposals:
             if proposal.proposal_type in [ProposalType.Negative, ProposalType.Danger, ProposalType.Hack]:
                 if not dual_governance.timelock.proposals._is_proposal_marked_cancelled(proposal.id) and (

@@ -16,10 +16,11 @@ def lock_or_unlock_stETH(params, substep, state_history, prev_state):
     dual_governance: DualGovernance = prev_state["dual_governance"]
     actors: List[BaseActor] = prev_state["actors"]
     proposals: List[Proposal] = prev_state["proposals"]
+    scenario: Scenario = prev_state["scenario"]
     staked: Dict[str, ActorLockAmounts] = dict()
 
     for actor in actors:
-        stETH_amount, wstETH_amount = actor.calculate_lock_amount(dual_governance, proposals)
+        stETH_amount, wstETH_amount = actor.calculate_lock_amount(scenario, dual_governance, proposals)
 
         if stETH_amount is None:
             stETH_amount = 0
@@ -90,7 +91,7 @@ def actor_update_health(
             last_canceled_proposal = dual_governance.timelock.proposals.state.last_canceled_proposal_id
 
             if proposal.id > last_canceled_proposal:
-                if scenario is Scenario.HappyPath:
+                if scenario in [Scenario.HappyPath, Scenario.VetoSignallingLoop]:
                     for actor in actors:
                         actor.simulate_proposal_effect(proposal)
                         actor.update_actor_health(time_manager, proposal.damage)

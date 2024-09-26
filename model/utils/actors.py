@@ -26,6 +26,8 @@ def determine_actor_types(scenario: Scenario, address: str, attackers: Set[str],
             return CoordinatedStETHAttackerActor()
         elif scenario == Scenario.SingleAttack:
             return SingleStETHAttackerActor()
+        elif scenario == Scenario.VetoSignallingLoop:
+            return CoordinatedStETHAttackerActor()
     elif address in defenders:
         return StETHDefenderActor()
     else:
@@ -42,6 +44,14 @@ def determine_actor_types(scenario: Scenario, address: str, attackers: Set[str],
                     return StETHHolderActor()
 
             case Scenario.CoordinatedAttack:
+                actors_distribution = rng.normal(0, 1)
+
+                if actors_distribution >= 3:
+                    return CoordinatedStETHAttackerActor()
+                else:
+                    return StETHHolderActor()
+
+            case Scenario.VetoSignallingLoop:
                 actors_distribution = rng.normal(0, 1)
 
                 if actors_distribution >= 3:

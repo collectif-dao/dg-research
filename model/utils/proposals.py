@@ -34,6 +34,12 @@ def determine_proposal_type(scenario: Scenario) -> ProposalType:
             else:
                 return ProposalType.Hack
 
+        case Scenario.VetoSignallingLoop:
+            if distribution >= 2 or distribution <= -2:
+                return ProposalType.Random
+            else:
+                return ProposalType.Positive
+
 
 def determine_proposal_subtype(scenario: Scenario) -> ProposalSubType:
     rng = get_rng()
@@ -55,6 +61,9 @@ def determine_proposal_subtype(scenario: Scenario) -> ProposalSubType:
             else:
                 return ProposalSubType.FundsStealing
 
+        case Scenario.VetoSignallingLoop:
+            return ProposalType.NoImpact
+
 
 def determine_proposal_damage(proposal_type: ProposalType) -> int:
     rng = get_rng()
@@ -62,7 +71,7 @@ def determine_proposal_damage(proposal_type: ProposalType) -> int:
 
     match proposal_type:
         case ProposalType.Positive:
-            damage = rng.uniform(-5, -25)
+            damage = rng.uniform(-25, -5)
         case ProposalType.Negative:
             damage = rng.uniform(5, 25)
         case ProposalType.Random:

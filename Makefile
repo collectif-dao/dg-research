@@ -28,6 +28,11 @@ signalling_thresholds_sweep_under_proposal_with_attack:
 	@echo "Running signalling_thresholds_sweep_under_proposal_with_attack simulation"
 	@./run_simulation.sh signalling_thresholds_sweep_under_proposal_with_attack
 
+.PHONY: veto_signalling_loop
+veto_signalling_loop:
+	@echo "Running veto_signalling_loop simulation"
+	@./run_simulation.sh veto_signalling_loop
+
 # Install dependencies from requirements.txt if not already installed
 .PHONY: install
 install:

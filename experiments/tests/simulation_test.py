@@ -62,8 +62,6 @@ def test_setup_simulation(
     simulation_index = 0
     for run in range(monte_carlo_runs):
         for params_index, params in enumerate(dual_governance_params):
-            print(f"params that I'm testing are {params}")
-
             simulation = experiment.simulations[simulation_index]
             assert simulation.timesteps == timesteps
             assert simulation.runs == 1

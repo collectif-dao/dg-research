@@ -9,6 +9,7 @@ from model.types.governance_goals import GovernanceGoal
 from model.types.governance_participation import GovernanceParticipation
 from model.types.proposals import Proposal, ProposalSubType
 from model.types.reaction_time import ReactionTime
+from model.types.scenario import Scenario
 from model.utils.reactions import generate_reaction_delay
 from specs.dual_governance import DualGovernance
 from specs.time_manager import TimeManager
@@ -204,7 +205,9 @@ class BaseActor:
         self.hypothetical_stETH_balance = self.initial_st_eth_balance
         self.hypothetical_wstETH_balance = self.initial_wstETH_balance
 
-    def calculate_lock_amount(self, dual_governance: DualGovernance, proposals: List[Proposal]) -> Tuple[int, int]:
+    def calculate_lock_amount(
+        self, scenario: Scenario, dual_governance: DualGovernance, proposals: List[Proposal]
+    ) -> Tuple[int, int]:
         return (0, 0)
 
     def is_coordinated_attacker(self, coordinated_attackers: Set[str]) -> bool:

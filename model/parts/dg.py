@@ -97,6 +97,9 @@ def update_dg_time_manager(params, substep, state_history, prev_state, policy_in
     rage_quit_support = dual_governance.state.signalling_escrow.get_rage_quit_support()
     state = dual_governance.get_current_state()
 
+    if state == State.VetoSignalling and dual_governance.state._is_veto_signalling_reactivation_duration_passed():
+        dual_governance.activate_next_state()  ## should transition to VetoSignallingDeactivation state
+
     if (
         state == State.VetoSignalling
         and dual_governance.state._is_second_seal_rage_quit_support_crossed(rage_quit_support)
