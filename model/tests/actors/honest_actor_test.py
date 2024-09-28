@@ -7,6 +7,7 @@ from model.types.governance_participation import GovernanceParticipation
 from model.types.proposal_type import ProposalSubType, ProposalType
 from model.types.proposals import Proposal
 from model.types.reaction_time import ReactionTime
+from model.types.scenario import Scenario
 from model.utils.seed import initialize_seed
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.proposals import ExecutorCall
@@ -43,6 +44,7 @@ def test_honest_actor_lock_unlock(
     time_manager = TimeManager()
     time_manager.initialize()
     sub_step = 5
+    scenario: Scenario = Scenario.HappyPath
 
     lido = Lido()
     lido.initialize(time_manager, Address.wstETH)
@@ -106,13 +108,13 @@ def test_honest_actor_lock_unlock(
         timestep += 1
 
         if honest_actor.health > 0 and honest_actor.total_damage == 0 and honest_actor.total_recovery == 0:
-            lock_amount = honest_actor.calculate_lock_amount(dual_governance, proposals)
+            lock_amount = honest_actor.calculate_lock_amount(scenario, dual_governance, proposals)
 
             assert lock_amount[0] == 0
             assert lock_amount[1] == 0
         elif honest_actor.health == 0 and honest_actor.total_damage > 0:
             time_manager.shift_current_timestamp(Timestamp.from_uint256(honest_actor.reaction_delay))
-            lock_amount = honest_actor.calculate_lock_amount(dual_governance, proposals)
+            lock_amount = honest_actor.calculate_lock_amount(scenario, dual_governance, proposals)
 
             if not locked:
                 assert lock_amount[0] == stETH_amount
@@ -134,7 +136,7 @@ def test_honest_actor_lock_unlock(
                 honest_actor.recovery_time + honest_actor.reaction_delay
             ) - dual_governance.time_manager.get_current_timestamp()
             time_manager.shift_current_timestamp(Timestamp.from_uint256(delta_time))
-            unlock_amount = honest_actor.calculate_lock_amount(dual_governance, proposals)
+            unlock_amount = honest_actor.calculate_lock_amount(scenario, dual_governance, proposals)
 
             if not unlocked:
                 assert unlock_amount[0] == -stETH_amount

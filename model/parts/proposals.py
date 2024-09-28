@@ -47,7 +47,12 @@ def generate_proposal(params, substep, state_history, prev_state):
             rng = get_rng()
             if rng.random() > 0.99:
                 proposer: str = ""
-                if scenario in [Scenario.CoordinatedAttack, Scenario.SingleAttack, Scenario.SmartContractHack]:
+                if scenario in [
+                    Scenario.CoordinatedAttack,
+                    Scenario.SingleAttack,
+                    Scenario.SmartContractHack,
+                    Scenario.VetoSignallingLoop,
+                ]:
                     proposer = rng.choice(tuple(prev_state["attackers"]))
 
                 ## TODO: check duplicated proposals if attack status is active
@@ -128,11 +133,7 @@ def cancel_all_pending_proposals(params, substep, state_history, prev_state):
                 if timelock_proposal.status != ProposalStatus.Executed:
                     model_proposal = get_proposal_by_id(proposals, timelock_proposal.id)
 
-                    if (
-                        model_proposal.proposal_type == ProposalType.Negative
-                        or ProposalType.Danger
-                        or ProposalType.Hack
-                    ):
+                    if model_proposal.proposal_type in [ProposalType.Negative, ProposalType.Danger, ProposalType.Hack]:
                         if timelock_proposal.id <= last_canceled_proposal:
                             continue
                         else:

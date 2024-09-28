@@ -6,14 +6,21 @@ import time
 from radcad import Backend, Engine
 
 # from experiments.simulation_configuration import get_path
+from experiments.simulation_configuration import get_path
 from experiments.templates.model_validation import create_experiment as model_validation_experiment
 from experiments.templates.rage_quit_scenario import create_experiment as rage_quit_experiment
+from experiments.templates.signalling_thresholds_sweep_under_proposal_with_attack import (
+    create_experiment as signalling_thresholds_sweep_under_proposal_with_attack,
+)
+from experiments.templates.veto_signalling_loop import create_experiment as veto_signalling_experiment
 from experiments.templates.withdrawal_queue_replacement import create_experiment as withdrawal_queue_experiment
 from experiments.templates.withdrawal_queue_replacement_institutional import (
     create_experiment as withdrawal_queue_replacement_institutional,
 )
-from experiments.templates.signalling_thresholds_sweep_under_proposal_with_attack import (
-    create_experiment as signalling_thresholds_sweep_under_proposal_with_attack,
+from experiments.utils import (
+    merge_simulation_results,
+    save_combined_actors_simulation_result,
+    save_postprocessing_result,
 )
 from experiments.templates.single_attack_sweep_first_threshold1 import create_experiment as single_attack_sweep_first_threshold1
 from experiments.templates.single_attack_sweep_first_threshold2 import create_experiment as single_attack_sweep_first_threshold2
@@ -36,8 +43,8 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-def run(simulation_name: str = None):
-    # out_path = get_path()
+def run(simulation_name: str = None, post_processing: bool = False):
+    out_path = get_path()
 
     if simulation_name is None:
         simulation_name = "model_validation"
@@ -63,7 +70,7 @@ def run(simulation_name: str = None):
     create_experiment = simulations[simulation_name]
     experiment, simulation_hashes = create_experiment()
 
-    experiment.engine = Engine(backend=Backend.MULTIPROCESSING, raise_exceptions=False, drop_substeps=True, processes=6)
+    experiment.engine = Engine(backend=Backend.MULTIPROCESSING, raise_exceptions=False, drop_substeps=True)
 
     simulations = experiment.get_simulations()
 
@@ -82,12 +89,12 @@ def run(simulation_name: str = None):
         experiment_duration = time.time() - start_time
         logging.info(f"Experiment complete in {experiment_duration} seconds")
 
-    if len(simulation_hashes) != 0 and len(simulations) != 0:
+    if len(simulation_hashes) != 0 and len(simulations) != 0 and post_processing is True:
         logging.info("Post-processing results")
 
-        # result = merge_simulation_results(simulation_hashes, simulation_name, out_path)
-        # save_combined_actors_simulation_result(simulation_hashes, simulation_name, out_path)
-        # save_postprocessing_result(result, simulation_name, out_path)
+        result = merge_simulation_results(simulation_hashes, simulation_name, out_path)
+        save_combined_actors_simulation_result(simulation_hashes, simulation_name, out_path)
+        save_postprocessing_result(result, simulation_name, out_path)
 
         post_processing_duration = time.time() - start_time - experiment_duration
         logging.info(f"Post-processing complete in {post_processing_duration} seconds")
@@ -98,6 +105,7 @@ def run(simulation_name: str = None):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run a simulation")
     parser.add_argument("--simulation_name", type=str, help="Name of the simulation to run")
+    parser.add_argument("--post_processing", type=bool, help="Save execution post-processing result", default=False)
     args = parser.parse_args()
 
-    run(args.simulation_name)
+    run(args.simulation_name, args.post_processing)
