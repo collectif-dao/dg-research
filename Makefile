@@ -28,6 +28,21 @@ signalling_thresholds_sweep_under_proposal_with_attack:
 	@echo "Running signalling_thresholds_sweep_under_proposal_with_attack simulation"
 	@./run_simulation.sh signalling_thresholds_sweep_under_proposal_with_attack
 
+.PHONY: thresholds_sweep
+thresholds_sweep:
+	@echo "Running thresholds_sweep_second1"
+	@./run_simulation.sh single_attack_sweep_second_threshold1
+	@echo "Running thresholds_sweep_second2"
+	@./run_simulation.sh single_attack_sweep_second_threshold2
+# 	@echo "Running thresholds_sweep_first1"
+# 	@./run_simulation.sh single_attack_sweep_first_threshold1
+# 	@echo "Running thresholds_sweep_first2"
+# 	@./run_simulation.sh single_attack_sweep_first_threshold2
+# 	@echo "Running thresholds_sweep_first3"
+# 	@./run_simulation.sh single_attack_sweep_first_threshold3
+# 	@echo "Running thresholds_sweep_first4"
+# 	@./run_simulation.sh single_attack_sweep_first_threshold4
+
 # Install dependencies from requirements.txt if not already installed
 .PHONY: install
 install:

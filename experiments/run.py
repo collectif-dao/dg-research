@@ -15,6 +15,13 @@ from experiments.templates.withdrawal_queue_replacement_institutional import (
 from experiments.templates.signalling_thresholds_sweep_under_proposal_with_attack import (
     create_experiment as signalling_thresholds_sweep_under_proposal_with_attack,
 )
+from experiments.templates.single_attack_sweep_first_threshold1 import create_experiment as single_attack_sweep_first_threshold1
+from experiments.templates.single_attack_sweep_first_threshold2 import create_experiment as single_attack_sweep_first_threshold2
+from experiments.templates.single_attack_sweep_first_threshold3 import create_experiment as single_attack_sweep_first_threshold3
+from experiments.templates.single_attack_sweep_first_threshold4 import create_experiment as single_attack_sweep_first_threshold4
+from experiments.templates.single_attack_sweep_second_threshold1 import create_experiment as single_attack_sweep_second_threshold1
+from experiments.templates.single_attack_sweep_second_threshold2 import create_experiment as single_attack_sweep_second_threshold2
+
 # from experiments.utils import (
 #     merge_simulation_results,
 #     save_combined_actors_simulation_result,
@@ -40,7 +47,13 @@ def run(simulation_name: str = None):
         "withdrawal_queue_replacement": withdrawal_queue_experiment,
         "rage_quit": rage_quit_experiment,
         "withdrawal_queue_replacement_institutional": withdrawal_queue_replacement_institutional,
-        "signalling_thresholds_sweep_under_proposal_with_attack": signalling_thresholds_sweep_under_proposal_with_attack
+        "signalling_thresholds_sweep_under_proposal_with_attack": signalling_thresholds_sweep_under_proposal_with_attack,
+        "single_attack_sweep_first_threshold1": single_attack_sweep_first_threshold1,
+        "single_attack_sweep_first_threshold2": single_attack_sweep_first_threshold2,
+        "single_attack_sweep_first_threshold3": single_attack_sweep_first_threshold3,
+        "single_attack_sweep_first_threshold4": single_attack_sweep_first_threshold4,
+        "single_attack_sweep_second_threshold1": single_attack_sweep_second_threshold1,
+        "single_attack_sweep_second_threshold2": single_attack_sweep_second_threshold2,
     }
 
     if simulation_name not in simulations:
@@ -50,7 +63,7 @@ def run(simulation_name: str = None):
     create_experiment = simulations[simulation_name]
     experiment, simulation_hashes = create_experiment()
 
-    experiment.engine = Engine(backend=Backend.MULTIPROCESSING, raise_exceptions=False, drop_substeps=True)
+    experiment.engine = Engine(backend=Backend.MULTIPROCESSING, raise_exceptions=False, drop_substeps=True, processes=6)
 
     simulations = experiment.get_simulations()
 

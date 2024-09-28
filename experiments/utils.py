@@ -192,7 +192,7 @@ def extract_dg_state_data(run_df):
     run_df["dg_dynamic_timelock_hours"] = run_df.dual_governance.apply(
         lambda dg: dg.state._calc_dynamic_timelock_duration(
             dg.state.signalling_escrow.get_rage_quit_support()).to_seconds()
-                   / 60 / 60 / 24)
+                   / 60 / 60)
 
     columns_to_extract = get_common_columns_to_extract_from_simulation_result()
     columns_to_extract += ['dg_state_value', 'dg_state_name', 'dg_dynamic_timelock_hours']
