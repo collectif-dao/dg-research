@@ -12,7 +12,7 @@ from experiments.templates.rage_quit_scenario import create_experiment as rage_q
 from experiments.templates.signalling_thresholds_sweep_under_proposal_with_attack import (
     create_experiment as signalling_thresholds_sweep_under_proposal_with_attack,
 )
-from experiments.templates.veto_signalling_loop import create_experiment as veto_signalling_experiment
+from experiments.templates.veto_signalling_loop import create_experiment as veto_signalling_loop
 from experiments.templates.withdrawal_queue_replacement import create_experiment as withdrawal_queue_experiment
 from experiments.templates.withdrawal_queue_replacement_institutional import (
     create_experiment as withdrawal_queue_replacement_institutional,
@@ -61,6 +61,7 @@ def run(simulation_name: str = None, post_processing: bool = False):
         "single_attack_sweep_first_threshold4": single_attack_sweep_first_threshold4,
         "single_attack_sweep_second_threshold1": single_attack_sweep_second_threshold1,
         "single_attack_sweep_second_threshold2": single_attack_sweep_second_threshold2,
+        "veto_signalling_loop": veto_signalling_loop,
     }
 
     if simulation_name not in simulations:
