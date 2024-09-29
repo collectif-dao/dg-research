@@ -88,7 +88,7 @@ Global System tests
   - Tests HP model in attack scenario
   - Test of DG state change (Signaling, Ragequit, Cooldown, ...)
  
-DG parameter specific tests with key test points:
+DG parameter specific tests
 - Simulation of various user reaction times distributions
   - Testing scenarios with different distribution % of slow, normal and fast users
   - Token ownership per group and their ability to react on proposals in time
