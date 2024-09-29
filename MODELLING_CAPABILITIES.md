@@ -70,8 +70,7 @@ For each scenario, a Jupiter Notebook is created and the following analytics cou
 - Distributions of locked tokens and relative thresholds
 <img src="https://github.com/user-attachments/assets/9fdbf3ca-8813-4fa2-acf6-e857b9383b17" width="600"/>
 
-
-// TODO: add remaining visualizations
+// TODO: add remaining visualizations and update legend where missing
 
 ## Tested scenario templates
 
@@ -109,10 +108,23 @@ DG parameter specific tests with key test points:
 
 ## Possible questions to be answered
 
+Here are some examples of questions that model can currently answer:
+- Do all parts of DG work properly?
+- Can signaling be randomly activated in regular DG flow? (threshold too low?)
+- What could be different actor reaction time disctribution assumptions and what could they affect?
+- Will DG reach thresholds in set timelines given specific actor reaction distribution?
+- What could be the maximal thresholds for Veto Signalling given specific actor reaction distribution?
+- What is the cost requirement for specific attacks (e.g. loop)?
+- How many actors needed to coordinate (stETh wallet distribution)?
+- Which wallets can be in 1,2,3 coordination per threshold?
+
+Plus, any specific questions to test numeric model parameters could be asked or specific attack scenarios could be simulated.
+
 ## Scenarios in the pipeline (2024.09.29)
 
 - Proposal impact labels
   - How general system health will be affected if majority of proposals a biased towards specific groups of actors in the system and harms the others
 - DAO and stETH misalignment
   - Cost of misaligned decision (e.g. DAO decision goes against community → cost of decision)
+- Additional simulations discussed in the word document
 - ...
