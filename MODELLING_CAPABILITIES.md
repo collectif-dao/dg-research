@@ -39,10 +39,29 @@ To further understand model capabilities, the list of variable parameters for sc
  
 # Scenario analytics
 
-For each scenario, a Jupiter Notebook is created and the following information could be provided for each scenario:
-- (Add visuals and graph examples)
+For each scenario, a Jupiter Notebook is created and the following analytics could be provided for each scenario:
+- General scenario analytics
+![Screenshot 2024-09-29 at 13 26 51](https://github.com/user-attachments/assets/d42f0010-5549-4f0a-9be1-c4382bbedb60)
+- Actors distribution analytics
+![Screenshot 2024-09-29 at 13 42 04](https://github.com/user-attachments/assets/e07ebd34-58f4-4144-8392-a3a95c9d37aa)
+- Wallet type analytics 
+![Screenshot 2024-09-29 at 13 44 59](https://github.com/user-attachments/assets/b1a08714-13be-49a4-ac6c-b192243831ef)
+- Threshold to active user ratio
+![Screenshot 2024-09-29 at 13 45 51](https://github.com/user-attachments/assets/91111b7c-358b-49c1-b73f-0bbb53aa6494)
+- Groups combination to Signaling threshold
+![image](https://github.com/user-attachments/assets/318d5f4a-f6d9-4637-895d-2a7946693177)
+- Time before Veto Signaling over multiple runs
+![Screenshot 2024-09-29 at 13 28 13](https://github.com/user-attachments/assets/c82b9d36-dd3a-4643-bd70-d20f643ecf6f)
+- Locked amount at each timestep over multiple runs
+![Screenshot 2024-09-29 at 13 31 57](https://github.com/user-attachments/assets/524b41d7-8b08-42b8-8340-c0b0ec8808ab)
+- Distributions of voting with confidence intervals over multiple runs
+![Screenshot 2024-09-29 at 13 33 52](https://github.com/user-attachments/assets/23a51959-a0ca-444b-9561-a385f336f939)
+- Distributions of locked tokens and relative thresholds 
+![Screenshot 2024-09-29 at 13 38 47](https://github.com/user-attachments/assets/9fdbf3ca-8813-4fa2-acf6-e857b9383b17)
 
-## Tested scenarios
+// TODO: add remaining important visualizations
+
+## Tested scenario templates
 
 List of currently completed test scenarios with key test points:
 
