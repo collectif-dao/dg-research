@@ -77,34 +77,33 @@ For each scenario, a Jupiter Notebook is created and the following analytics cou
 List of currently completed test scenarios with key test points:
 
 Global System tests
-- X runs of Normal Dual Governance operations for 3 months
+- X runs of Normal Dual Governance operations for 3 months [[Example Notebook](experiments/notebooks/01_model_validation.ipynb)]
   - Tests that all parts of the code are working correctly together
   - Tests HP model in general case
   - Check whether DG simulation works well without external pressure
   - Test whether all components of DG proposals, voting, etc. work correctly
-- Fund stealing attack on the entire protocol
+- Fund stealing attack on the entire protocol [[Example Notebook](experiments/notebooks/02_withdrawal_queue_attack.ipynb)]
   - Tests inputs of simple attack scenarios on the system
   - Tests agents' behavior under attack
   - Tests HP model in attack scenario
   - Test of DG state change (Signaling, Ragequit, Cooldown, ...)
  
 DG parameter specific tests
-- Simulation of various user reaction times distributions
-  - Testing scenarios with different distribution % of slow, normal and fast users
-  - Token ownership per group and their ability to react on proposals in time
-- Simulation of various veto signaling and ragequit threshhold parameters
+- Simulation of scenarios with different user reaction times assingment [[Example Notebook](experiments/notebooks/04_withdrawal_queue_attack_institutional.ipynb)]
+  - Testing actor reaction time assumptions
+  - Testing scenarios with different distribution of slow, normal and fast users
+  - Parametrizing token ownership per group and testing their ability to react on proposals in time
+- Simulation of various veto signaling and ragequit threshhold parameters [[Example Notebook 1](experiments/notebooks/05_singalling_threshold_sweeps_under_proposal_with_attack.ipynb)] [[Example Notebook 2](experiments/notebooks/06_ragequit_threshold_sweep.ipynb)] 
   - Time to signaling
   - Time to ragequit
   - Is there enough active actors to react in time
-- Veto Signaling loop attack
+- Veto Signaling loop attack [[Example Notebook](experiments/notebooks/06_veto_signalling_loop.ipynb)] 
   - Number of coordinated users needed to keep this system loop
   - Change of DG states in case of continuous loop
   - Loop duration potential
-- Systematic reaction time decrease (>80% of slow reaction actors)
+- Group label reaction time decrease [[Example Notebook](experiments/notebooks/04_withdrawal_queue_attack_institutional.ipynb)] 
   - What % of slow actors breaks the system from reacting in time on problem proposals
-  - What % of active "guardan" funds is needed to keep the system safe from attacks
-
-// TODO: add links to the example notebooks
+  - What % of active wallets+funds is needed to keep the system safe from attacks
 
 ## Possible questions to be answered
 
