@@ -61,50 +61,46 @@ For each scenario, a Jupiter Notebook is created and the following analytics cou
 - Time before Veto Signaling over multiple runs
 <img src="https://github.com/user-attachments/assets/c82b9d36-dd3a-4643-bd70-d20f643ecf6f" width="400"/>
 
-- Locked amount at each timestep over multiple runs
-<img src="https://github.com/user-attachments/assets/524b41d7-8b08-42b8-8340-c0b0ec8808ab" width="400"/>
+- Comparison locked amount at each timestep over multiple runs with different thresholds
+<img src="https://github.com/user-attachments/assets/732a7d41-c35c-4f0e-8c85-2636a3804d3b" width="800"/>
 
 - Distributions of voting with confidence intervals over multiple runs
-<img src="https://github.com/user-attachments/assets/23a51959-a0ca-444b-9561-a385f336f939" width="400"/>
-
-- Distributions of locked tokens and relative thresholds
-<img src="https://github.com/user-attachments/assets/9fdbf3ca-8813-4fa2-acf6-e857b9383b17" width="600"/>
-
-// TODO: add remaining visualizations and update legend where missing
+<img src="https://github.com/user-attachments/assets/4614b8db-5ae7-4fa5-9988-73a226003211" width="800"/>
 
 ## Tested scenario templates
 
 List of currently completed test scenarios with key test points:
 
 Global System tests
-- X runs of Normal Dual Governance operations for 3 months
+- X runs of Normal Dual Governance operations for 3 months [[Example Notebook](experiments/notebooks/01_model_validation.ipynb)]
   - Tests that all parts of the code are working correctly together
   - Tests HP model in general case
   - Check whether DG simulation works well without external pressure
   - Test whether all components of DG proposals, voting, etc. work correctly
-- Fund stealing attack on the entire protocol
+- Fund stealing attack on the entire protocol [[Example Notebook](experiments/notebooks/02_withdrawal_queue_attack.ipynb)]
   - Tests inputs of simple attack scenarios on the system
   - Tests agents' behavior under attack
   - Tests HP model in attack scenario
   - Test of DG state change (Signaling, Ragequit, Cooldown, ...)
  
 DG parameter specific tests
-- Simulation of various user reaction times distributions
-  - Testing scenarios with different distribution % of slow, normal and fast users
-  - Token ownership per group and their ability to react on proposals in time
-- Simulation of various veto signaling and ragequit threshhold parameters
+- Simulation of scenarios with different user reaction times assingment [[Example Notebook](experiments/notebooks/04_withdrawal_queue_attack_institutional.ipynb)]
+  - Testing actor reaction time assumptions
+  - Testing scenarios with different distribution of slow, normal and fast users
+  - Parametrizing token ownership per group and testing their ability to react on proposals in time
+- Simulation of various veto signaling and ragequit threshhold parameters [[Example Notebook 1](experiments/notebooks/05_singalling_threshold_sweeps_under_proposal_with_attack.ipynb)] [[Example Notebook 2](experiments/notebooks/06_ragequit_threshold_sweep.ipynb)] 
   - Time to signaling
   - Time to ragequit
   - Is there enough active actors to react in time
-- Veto Signaling loop attack
+- Veto Signaling loop attack [[Example Notebook](experiments/notebooks/06_veto_signalling_loop.ipynb)] 
   - Number of coordinated users needed to keep this system loop
   - Change of DG states in case of continuous loop
   - Loop duration potential
-- Systematic reaction time decrease (>80% of slow reaction actors)
+- Group label reaction time decrease [[Example Notebook](experiments/notebooks/04_withdrawal_queue_attack_institutional.ipynb)] 
   - What % of slow actors breaks the system from reacting in time on problem proposals
-  - What % of active "guardan" funds is needed to keep the system safe from attacks
+  - What % of active wallets+funds is needed to keep the system safe from attacks
 
-// TODO: add links to the example notebooks
+Instructions on how to run simulations locally available [here](README.md)
 
 ## Possible questions to be answered
 
