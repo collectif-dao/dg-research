@@ -11,5 +11,27 @@
       "source.organizeImports": "explicit"
     },
     "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "editor.tokenColorCustomizations": {
+    "[*Dark*]": {
+      "functions": "#dcdcaf",
+      "variables": "#cccccc",
+      "textMateRules": [
+        {
+          "scope": "variable.parameter",
+          "settings": {
+            "fontStyle": "",
+            "foreground": "#aadafa"
+          }
+        },
+        {
+          "scope": "constant.language",
+          "settings": {
+            "fontStyle": "",
+            "foreground": "#6699d1"
+          }
+        }
+      ]
+    }
   }
 }
