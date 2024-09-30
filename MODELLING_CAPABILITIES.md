@@ -107,20 +107,44 @@ Instructions on how to run simulations locally available [here](README.md)
 Here are some examples of questions that model can currently answer:
 - Do all parts of DG work properly?
 - Can signaling be randomly activated in regular DG flow? (threshold too low?)
-- What could be different actor reaction time disctribution assumptions and what could they affect?
+- What could be different actor reaction time distribution assumptions and what could they affect?
 - Will DG reach thresholds in set timelines given specific actor reaction distribution?
 - What could be the maximal thresholds for Veto Signalling given specific actor reaction distribution?
 - What is the cost requirement for specific attacks (e.g. loop)?
-- How many actors needed to coordinate (stETh wallet distribution)?
+- How many actors are needed to coordinate (stETh wallet distribution)?
 - Which wallets can be in 1,2,3 coordination per threshold?
 
 Plus, any specific questions to test numeric model parameters could be asked or specific attack scenarios could be simulated.
 
-## Scenarios in the pipeline (2024.09.29)
+## Scenarios in the research pipeline (on 2024.09.30)
 
-- Proposal impact labels
-  - How general system health will be affected if majority of proposals a biased towards specific groups of actors in the system and harms the others
-- DAO and stETH misalignment
-  - Cost of misaligned decision (e.g. DAO decision goes against community → cost of decision)
-- Additional simulations discussed in the word document
-- ...
+Actor Labels:
+- Provide variety of labels in the model to define proposal impacts per lable group
+- How general system health will be affected if the majority of proposals are biased toward specific groups of actors in the system and harm others
+
+DAO and stETH misalignment:
+- Cost of misaligned decision (e.g. DAO decision goes against community → cost of decision)
+
+Restaking protocol captures Lido:
+- Restaking contract gets upgraded and now is an active member of a Dual Governance system. How will it affect the system?
+- Restaking contract vetoes upgrade of protocol fee (e.g. from 10% to 12%)
+- Restaking contract trying to push upgrade of the protocol fee (e.g. from 10% to 5%)
+
+Bribing:
+- Single attacker trying to push Withdrawal Queue contract upgrade with bribes of 50% of users by stealing funds from another 50% of users (using Lido internal capital)
+- Cluster of coordinated attackers push proposal to replace the Withdrawal Queue and uses external capital to bribe users (bribing with active rebalancing)
+
+Smart contract hacks:
+- Hack of a smart contract with substantial funds. Attacker uses stETH/wstETH funds to capture dual governance effectively having a veto loop in overall Lido DAO.
+- Smart contract hack and attacker wants to withdraw funds via the withdrawal queue, simulate such attack from the Lido side to minimize the effect of attack
+
+General:
+- Coordinated group have enough funds to veto good proposals and postpone it’s execution
+- Bribe of Tiebreaker Committee members from a cluster of coordinated attackers trying to push proposal favouring their goals (not necessarily an attack on the Lido DAO)
+- Rage Quit scenario with standard Withdrawal Queue operations 
+- Rage Quit scenario with Node Operators declining exits and not fulfilling requests for withdrawals from the stake
+- System deal lock in which Tiebreaker Committee is activated and resolves an issue
+- Normal Dual Governance operations
+- Apply slow reaction as the majority of stETH/wstETH funds is in the hands of Institutional clients
+- Long-term lock of Dual Governance system by a cluster of coordinated attackers having over 20% of total supply, which target Rage Quit state for Dual Governance
+
