@@ -18,13 +18,13 @@ At the moment, the model is capable of simulating the following groups of scenar
 
 ## Parametrized elements of DG 
 
-To further understand model capabilities, the list of variable parameters for scenarios definition is provided below.
+To further understand model capabilities, the list of main variable parameters for scenario definition is provided below.
 - Actor parameters
   - Wallet information (token balances)
   - Wallet type (CEX, Private, Smart Contract, ...)
   - Reaction time (% of slow, normal, fast and non-voting actors)
   - HP of actors (parametrized independent escrow lock decision for each actor)
-  - (TBD) Wallet label (changes proposal HP effects on actor)
+  - Wallet labels (changes proposal HP effects on actor)
 - DG parameters
   - Governance % thresholds (Signaling, Ragequit, ...)
   - Governance time parameters (Time to proposal approval, Signaling duration, Timelock, Cooldown, ...)
@@ -34,8 +34,6 @@ To further understand model capabilities, the list of variable parameters for sc
   - Cancelation point (After signaling, no cancelation, ...)
   - Attack vector (Value capture, DG lock, ...)
   - Scenario duration (Number of timesteps)
-
-// TODO: @bach check if all current parametrized elements are added
  
 # Scenario analytics
 
@@ -43,7 +41,7 @@ For each scenario, a Jupiter Notebook is created and the following analytics cou
 - General scenario analytics
 <img src="https://github.com/user-attachments/assets/d42f0010-5549-4f0a-9be1-c4382bbedb60" width="400"/>
 
-- Actors distribution analytics
+- Actor distribution analytics
 <img src="https://github.com/user-attachments/assets/e07ebd34-58f4-4144-8392-a3a95c9d37aa" width="600"/>
 
 - Actor reaction time analytics
@@ -80,15 +78,15 @@ Global System tests
 - Fund stealing attack on the entire protocol [[Example Notebook](experiments/notebooks/02_withdrawal_queue_attack.ipynb)]
   - Tests inputs of simple attack scenarios on the system
   - Tests agents' behavior under attack
-  - Tests HP model in attack scenario
+  - Tests HP model in an attack scenario
   - Test of DG state change (Signaling, Ragequit, Cooldown, ...)
  
-DG parameter specific tests
-- Simulation of scenarios with different user reaction times assingment [[Example Notebook](experiments/notebooks/04_withdrawal_queue_attack_institutional.ipynb)]
+DG parameter-specific tests
+- Simulation of scenarios with different user reaction times assignment [[Example Notebook](experiments/notebooks/04_withdrawal_queue_attack_institutional.ipynb)]
   - Testing actor reaction time assumptions
-  - Testing scenarios with different distribution of slow, normal and fast users
-  - Parametrizing token ownership per group and testing their ability to react on proposals in time
-- Simulation of various veto signaling and ragequit threshhold parameters [[Example Notebook 1](experiments/notebooks/05_singalling_threshold_sweeps_under_proposal_with_attack.ipynb)] [[Example Notebook 2](experiments/notebooks/06_ragequit_threshold_sweep.ipynb)] 
+  - Testing scenarios with different distributions of slow, normal and fast users
+  - Parametrizing token ownership per group and testing their ability to react to proposals in time
+- Simulation of various veto signaling and ragequit threshold parameters [[Example Notebook 1](experiments/notebooks/05_singalling_threshold_sweeps_under_proposal_with_attack.ipynb)] [[Example Notebook 2](experiments/notebooks/06_ragequit_threshold_sweep.ipynb)] 
   - Time to signaling
   - Time to ragequit
   - Is there enough active actors to react in time
@@ -97,14 +95,14 @@ DG parameter specific tests
   - Change of DG states in case of continuous loop
   - Loop duration potential
 - Group label reaction time decrease [[Example Notebook](experiments/notebooks/04_withdrawal_queue_attack_institutional.ipynb)] 
-  - What % of slow actors breaks the system from reacting in time on problem proposals
+  - What % of slow actors break the system from reacting in time on problem proposals
   - What % of active wallets+funds is needed to keep the system safe from attacks
 
-Instructions on how to run simulations locally available [here](README.md)
+Instructions on how to run simulations locally are available [here](README.md)
 
 ## Possible questions to be answered
 
-Here are some examples of questions that model can currently answer:
+Here are some examples of questions that the model can currently answer:
 - Do all parts of DG work properly?
 - Can signaling be randomly activated in regular DG flow? (threshold too low?)
 - What could be different actor reaction time distribution assumptions and what could they affect?
@@ -119,7 +117,7 @@ Plus, any specific questions to test numeric model parameters could be asked or 
 ## Scenarios in the research pipeline (on 2024.09.30)
 
 Actor Labels:
-- Provide variety of labels in the model to define proposal impacts per lable group
+- Provide a variety of labels in the model to define proposal impacts per label group
 - How general system health will be affected if the majority of proposals are biased toward specific groups of actors in the system and harm others
 
 DAO and stETH misalignment:
@@ -128,7 +126,7 @@ DAO and stETH misalignment:
 Restaking protocol captures Lido:
 - Restaking contract gets upgraded and now is an active member of a Dual Governance system. How will it affect the system?
 - Restaking contract vetoes upgrade of protocol fee (e.g. from 10% to 12%)
-- Restaking contract trying to push upgrade of the protocol fee (e.g. from 10% to 5%)
+- Restaking contract trying to push an upgrade of the protocol fee (e.g. from 10% to 5%)
 
 Bribing:
 - Single attacker trying to push Withdrawal Queue contract upgrade with bribes of 50% of users by stealing funds from another 50% of users (using Lido internal capital)
@@ -136,15 +134,15 @@ Bribing:
 
 Smart contract hacks:
 - Hack of a smart contract with substantial funds. Attacker uses stETH/wstETH funds to capture dual governance effectively having a veto loop in overall Lido DAO.
-- Smart contract hack and attacker wants to withdraw funds via the withdrawal queue, simulate such attack from the Lido side to minimize the effect of attack
+- Smart contract hack where attacker wants to withdraw funds via the withdrawal queue, simulate such attack from the Lido side to minimize the effect of attack
 
 General:
-- Coordinated group have enough funds to veto good proposals and postpone it’s execution
-- Bribe of Tiebreaker Committee members from a cluster of coordinated attackers trying to push proposal favouring their goals (not necessarily an attack on the Lido DAO)
+- Coordinated group has enough funds to veto good proposals and postpone their execution
+- Bribe of Tiebreaker Committee members from a cluster of coordinated attackers trying to push a proposal favoring their goals (not necessarily an attack on the Lido DAO)
 - Rage Quit scenario with standard Withdrawal Queue operations 
 - Rage Quit scenario with Node Operators declining exits and not fulfilling requests for withdrawals from the stake
 - System deal lock in which Tiebreaker Committee is activated and resolves an issue
 - Normal Dual Governance operations
-- Apply slow reaction as the majority of stETH/wstETH funds is in the hands of Institutional clients
-- Long-term lock of Dual Governance system by a cluster of coordinated attackers having over 20% of total supply, which target Rage Quit state for Dual Governance
+- Apply slow reaction as the majority of stETH/wstETH funds are in the hands of Institutional actors
+- Long-term lock of Dual Governance system by a cluster of coordinated attackers having over 20% of total supply, which targets Rage Quit state for Dual Governance
 
