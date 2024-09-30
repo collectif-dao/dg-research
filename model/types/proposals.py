@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Set
+from typing import Dict, List, Set
 
 from model.types.proposal_type import ProposalSubType, ProposalType
 from model.types.scenario import Scenario
@@ -7,10 +7,22 @@ from model.utils.proposals import determine_proposal_damage, determine_proposal_
 
 
 @dataclass
+class ProposalsEffect:
+    effects: Dict[str, int] = field(default_factory=dict)
+
+    def add_effect(self, label: str, value: int):
+        self.effects[label] = value
+
+    def get_effect(self, label: str) -> int:
+        return self.effects.get(label, 0)
+
+
+@dataclass
 class Proposal:
     id: int = 0
     timestep: int = 0
     damage: int = 0
+    effects: ProposalsEffect = field(default_factory=ProposalsEffect)
     proposer: str = field(default_factory=lambda: "")
     proposal_type: ProposalType = field(default_factory=lambda: ProposalType.NoImpact)
     sub_type: ProposalSubType = field(default_factory=lambda: ProposalSubType.NoEffect)
@@ -27,8 +39,11 @@ def new_proposal(
     sub_type: ProposalSubType = None,
     attack_targets: set = {},
     cancelable: bool = True,
+    effects: ProposalsEffect = ProposalsEffect(),
 ) -> Proposal:
-    proposal = Proposal(id=id, timestep=timestep, proposal_type=proposal_type, sub_type=sub_type, cancelable=cancelable)
+    proposal = Proposal(
+        id=id, timestep=timestep, proposal_type=proposal_type, sub_type=sub_type, cancelable=cancelable, effects=effects
+    )
     proposal.proposer = proposer
 
     if proposal_type is None:

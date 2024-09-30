@@ -87,53 +87,52 @@ def actor_update_health(
     time_manager: TimeManager,
 ):
     if proposal is not None:
-        if proposal.damage != 0:
-            last_canceled_proposal = dual_governance.timelock.proposals.state.last_canceled_proposal_id
+        last_canceled_proposal = dual_governance.timelock.proposals.state.last_canceled_proposal_id
 
-            if proposal.id > last_canceled_proposal:
-                if scenario in [Scenario.HappyPath, Scenario.VetoSignallingLoop]:
-                    for actor in actors:
+        if proposal.id > last_canceled_proposal:
+            if scenario in [Scenario.HappyPath, Scenario.VetoSignallingLoop]:
+                for actor in actors:
+                    actor.simulate_proposal_effect(proposal)
+                    actor.apply_proposal_damage(time_manager, proposal, True)
+
+            elif scenario in (Scenario.SingleAttack, Scenario.CoordinatedAttack):
+                total_stETH_gains, total_wstETH_gains = calculate_attack_gains(
+                    proposal, dual_governance, lido, actors, attackers
+                )
+
+                if scenario == Scenario.SingleAttack:
+                    num_attackers = 1
+                elif scenario == Scenario.CoordinatedAttack:
+                    num_attackers = len(attackers)
+
+                if num_attackers > 0:
+                    stETH_gain_per_attacker = total_stETH_gains / num_attackers
+                    wstETH_gain_per_attacker = total_wstETH_gains / num_attackers
+
+                for actor in actors:
+                    if (
+                        actor.actor_type == ActorType.HonestActor
+                        and actor.entity != "Contract"
+                        or (actor.actor_type in [ActorType.SingleDefender, ActorType.CoordinatedDefender])
+                    ):
                         actor.simulate_proposal_effect(proposal)
-                        actor.update_actor_health(time_manager, proposal.damage)
+                        actor.apply_proposal_damage(time_manager, proposal, True)
+                        actor.after_simulate_proposal_effect()
 
-                elif scenario in (Scenario.SingleAttack, Scenario.CoordinatedAttack):
-                    total_stETH_gains, total_wstETH_gains = calculate_attack_gains(
-                        proposal, dual_governance, lido, actors, attackers
-                    )
-
-                    if scenario == Scenario.SingleAttack:
-                        num_attackers = 1
-                    elif scenario == Scenario.CoordinatedAttack:
-                        num_attackers = len(attackers)
-
-                    if num_attackers > 0:
-                        stETH_gain_per_attacker = total_stETH_gains / num_attackers
-                        wstETH_gain_per_attacker = total_wstETH_gains / num_attackers
-
-                    for actor in actors:
-                        if (
-                            actor.actor_type == ActorType.HonestActor
-                            and actor.entity != "Contract"
-                            or (actor.actor_type in [ActorType.SingleDefender, ActorType.CoordinatedDefender])
-                        ):
-                            actor.simulate_proposal_effect(proposal)
-                            actor.update_actor_health(time_manager, proposal.damage)
-                            actor.after_simulate_proposal_effect()
-
-                        if (scenario == Scenario.CoordinatedAttack and actor.address in attackers) or (
-                            scenario == Scenario.SingleAttack
-                            and proposal.proposer in attackers
-                            and actor.address == proposal.proposer
-                        ):
-                            print(
-                                "stealing from honest actors ",
-                                stETH_gain_per_attacker,
-                                " stETH and ",
-                                wstETH_gain_per_attacker,
-                                " wstETH",
-                            )
-                            actor.attack_honest_actors(proposal, stETH_gain_per_attacker, wstETH_gain_per_attacker)
-                            actor.after_simulate_proposal_effect()
+                    if (scenario == Scenario.CoordinatedAttack and actor.address in attackers) or (
+                        scenario == Scenario.SingleAttack
+                        and proposal.proposer in attackers
+                        and actor.address == proposal.proposer
+                    ):
+                        print(
+                            "stealing from honest actors ",
+                            stETH_gain_per_attacker,
+                            " stETH and ",
+                            wstETH_gain_per_attacker,
+                            " wstETH",
+                        )
+                        actor.attack_honest_actors(proposal, stETH_gain_per_attacker, wstETH_gain_per_attacker)
+                        actor.after_simulate_proposal_effect()
 
     return actors
 
@@ -209,7 +208,7 @@ def actor_recover_health(
             if proposal.damage != 0:
                 for actor in actors:
                     if actor.actor_type == ActorType.HonestActor and actor.entity != "Contract":
-                        actor.update_actor_health(time_manager, -proposal.damage)
+                        actor.apply_proposal_damage(time_manager, proposal, False)
 
     return actors
 
