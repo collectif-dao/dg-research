@@ -61,16 +61,11 @@ For each scenario, a Jupiter Notebook is created and the following analytics cou
 - Time before Veto Signaling over multiple runs
 <img src="https://github.com/user-attachments/assets/c82b9d36-dd3a-4643-bd70-d20f643ecf6f" width="400"/>
 
-- Locked amount at each timestep over multiple runs
-<img src="https://github.com/user-attachments/assets/524b41d7-8b08-42b8-8340-c0b0ec8808ab" width="400"/>
+- Comparison locked amount at each timestep over multiple runs with different thresholds
+<img src="https://github.com/user-attachments/assets/732a7d41-c35c-4f0e-8c85-2636a3804d3b" width="800"/>
 
 - Distributions of voting with confidence intervals over multiple runs
-<img src="https://github.com/user-attachments/assets/23a51959-a0ca-444b-9561-a385f336f939" width="400"/>
-
-- Distributions of locked tokens and relative thresholds
-<img src="https://github.com/user-attachments/assets/9fdbf3ca-8813-4fa2-acf6-e857b9383b17" width="600"/>
-
-// TODO: add remaining visualizations and update legend where missing
+<img src="https://github.com/user-attachments/assets/4614b8db-5ae7-4fa5-9988-73a226003211" width="800"/>
 
 ## Tested scenario templates
 
@@ -104,6 +99,8 @@ DG parameter specific tests
 - Group label reaction time decrease [[Example Notebook](experiments/notebooks/04_withdrawal_queue_attack_institutional.ipynb)] 
   - What % of slow actors breaks the system from reacting in time on problem proposals
   - What % of active wallets+funds is needed to keep the system safe from attacks
+
+Instructions on how to run simulations locally available [here](README.md)
 
 ## Possible questions to be answered
 
