@@ -1,18 +1,26 @@
 # Lido Dual Governance Model
 
-A modular agent based model of Lido Dual Governance system, based on the open-source Solidity implementation of Dual Governance system.
+A modular agent-based model of the Lido Dual Governance system, based on the open-source Solidity implementation.
 
 Implements the official Lido Dual Governance [specifications](https://github.com/lidofinance/dual-governance/)
 
-This model utilize an open-source Python library [radCAD](https://github.com/CADLabs/radCAD), an extension to [cadCAD](https://cadcad.org/).
-
-## Model Architecture
-
-WIP: Would be provided in later stage
+This model utilizes an open-source Python library [radCAD](https://github.com/CADLabs/radCAD), an extension to [cadCAD](https://cadcad.org/).
 
 ## Model Assumptions
 
-The model implements the official Lido Dual Governance Specification wherever possible, but rests on a few default actor-level assumptions detailed in the [ASSUMPTIONS.md](ASSUMPTIONS.md) document.
+The model implements the official Lido Dual Governance Specification wherever possible, and adds additional actor-level assumptions for simulations detailed in the [ASSUMPTIONS.md](ASSUMPTIONS.md) document.
+
+## Model Capabilities 
+
+The main model capabilities are described in the [MODELLING_CAPABILITIES.md](MODELLING_CAPABILITIES.md) document. There you find:
+- Current model state
+- Parametrized elements of DG
+- Available scenario analytics
+- Tested scenario templates
+- Possible questions to be answered
+- Scenarios in the research pipeline
+
+You could either look into already completed simulation notebooks in the [folder](experiments/notebooks) or run simulations on your local machine via the instructions below.
 
 ## Environment Setup
 
@@ -111,3 +119,8 @@ The following command runs Scalene on a provided benchmark.
 ```bash
 scalene benchmarks/memory_profiling.py
 ```
+
+
+## Model Architecture
+
+WIP: Would be provided in later stage
