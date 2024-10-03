@@ -1,10 +1,28 @@
 #!/bin/bash
 
-# Check if the simulation name is provided
-if [ -z "$1" ]; then
-  echo "Usage: $0 <simulation_name>"
-  exit 1
-fi
+# Default value for post_processing
+post_processing=false
 
-# Run the simulation with the provided name
-python3 -m experiments.run --simulation_name "$1"
+# Function to display usage
+usage() {
+  echo "Usage: $0 <simulation_name> [--post_processing]"
+  exit 1
+}
+
+# Check if the simulation name is provided
+[[ -z "$1" ]] && usage
+
+# Parse optional arguments
+while [[ "$#" -gt 0 ]]; do
+  case $1 in
+    --post_processing) post_processing=true ;;
+    *) [[ -z "$simulation_name" ]] && simulation_name=$1 || usage ;;
+  esac
+  shift
+done
+
+# Check if simulation_name is set
+[[ -z "$simulation_name" ]] && usage
+
+# Run the simulation with the provided name and post_processing flag
+python3 -m experiments.run --simulation_name "$simulation_name" --post_processing "$post_processing"

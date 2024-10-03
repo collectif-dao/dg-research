@@ -22,6 +22,7 @@ class BaseActor:
     actor_type: ActorType = ActorType.BaseActor
     address: str = field(default_factory=lambda: "")
     entity: str = ""
+    label: str = ""
 
     ldo_balance: int = 0
 
@@ -61,6 +62,7 @@ class BaseActor:
         wstETH: int,
         reaction_time=ReactionTime.Normal,
         governance_participation: GovernanceParticipation = GovernanceParticipation.Normal,
+        label: str = "",
     ):
         self.id = id
 
@@ -81,6 +83,7 @@ class BaseActor:
         self.initial_wstETH_balance = wstETH
         self.reaction_time = reaction_time
         self.governance_participation = governance_participation
+        self.label = label
 
         if address == "":
             self.address = generate_address()
@@ -152,6 +155,12 @@ class BaseActor:
         self.total_recovery = min(self.total_recovery, self.total_damage)
 
         self.update_reaction_delay()
+
+    def apply_proposal_damage(self, time_manager: TimeManager, proposal: Proposal, is_damage: bool):
+        label_damage = proposal.effects.get_effect(self.label)
+        damage: int = label_damage if label_damage != 0 else proposal.damage
+
+        self.update_actor_health(time_manager, damage if is_damage else -damage)
 
     def simulate_proposal_effect(self, proposal: Proposal):
         if self.entity == "Contract" and proposal.sub_type == ProposalSubType.Hack:

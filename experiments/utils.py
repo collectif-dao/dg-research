@@ -7,8 +7,8 @@ from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from json_tricks import dumps
 from radcad import Backend, Engine, Experiment, Model, Simulation
 
@@ -60,6 +60,7 @@ def setup_simulation(
     dual_governance_params: list[DualGovernanceParameters] = None,
     max_actors: int = 0,
     institutional_threshold: int = 0,
+    labeled_addresses: dict[str, str] = dict(),
 ):
     simulations: list[Simulation] = []
     simulation_hashes: list[str] = []
@@ -95,6 +96,7 @@ def setup_simulation(
                 first_rage_quit_support=first_rage_quit_support,
                 second_rage_quit_support=second_rage_quit_support,
                 institutional_threshold=institutional_threshold,
+                labeled_addresses=labeled_addresses,
             )
 
             model = Model(initial_state=state, params=sys_params, state_update_blocks=state_update_blocks)
@@ -167,22 +169,23 @@ def merge_simulation_results(simulation_hashes: str, simulation_name: str, out_d
 
     return combined_df
 
+
 def iterate_simulation_results(simulation_path: str):
     simulation_counter = 0
     simulation_path = Path(simulation_path)
     simulation_run_paths = filter(lambda p: p.is_dir(), simulation_path.iterdir())
 
     for simulation_run_path in simulation_run_paths:
-        results_file = simulation_run_path.joinpath('result.pkl')
-        with open(results_file, 'rb') as f:
+        results_file = simulation_run_path.joinpath("result.pkl")
+        with open(results_file, "rb") as f:
             run_df = pickle.load(f)
-        run_df['simulation'] = simulation_counter
+        run_df["simulation"] = simulation_counter
         yield run_df
         simulation_counter += 1
 
 
 def get_common_columns_to_extract_from_simulation_result():
-    return ['first_seal_rage_quit_support', 'second_seal_rage_quit_support', 'seed', 'timestep']
+    return ["first_seal_rage_quit_support", "second_seal_rage_quit_support", "seed", "timestep"]
 
 
 def extract_dg_state_data(run_df):
@@ -191,29 +194,28 @@ def extract_dg_state_data(run_df):
     run_df["dg_state_name"] = run_df["dg_state"].apply(lambda state: state.name)
     run_df["dg_dynamic_timelock_hours"] = run_df.dual_governance.apply(
         lambda dg: dg.state._calc_dynamic_timelock_duration(
-            dg.state.signalling_escrow.get_rage_quit_support()).to_seconds()
-                   / 60 / 60)
+            dg.state.signalling_escrow.get_rage_quit_support()
+        ).to_seconds()
+        / 60
+        / 60
+    )
 
     columns_to_extract = get_common_columns_to_extract_from_simulation_result()
-    columns_to_extract += ['dg_state_value', 'dg_state_name', 'dg_dynamic_timelock_hours']
+    columns_to_extract += ["dg_state_value", "dg_state_name", "dg_dynamic_timelock_hours"]
     extracted_data = run_df[columns_to_extract].copy()
     return extracted_data
 
 
 def extract_proposal_data(run_df):
-    run_df['last_cancelled_proposal_id'] = run_df['dual_governance'].apply(
-        lambda dg: dg.timelock.proposals.state.last_canceled_proposal_id)
-    cancelled_proposals = set(run_df['last_cancelled_proposal_id'].unique())
+    run_df["last_cancelled_proposal_id"] = run_df["dual_governance"].apply(
+        lambda dg: dg.timelock.proposals.state.last_canceled_proposal_id
+    )
+    cancelled_proposals = set(run_df["last_cancelled_proposal_id"].unique())
 
     simulation_start = (
-        run_df[(run_df["timestep"] == 0)]
-        .time_manager.apply(lambda tm: tm.current_time)
-        .iloc[0]
-        .timestamp()
+        run_df[(run_df["timestep"] == 0)].time_manager.apply(lambda tm: tm.current_time).iloc[0].timestamp()
     )
-    proposals_info = (
-        run_df.dual_governance.apply(lambda dg: dg.timelock.proposals.state.proposals).iloc[-1]
-    )
+    proposals_info = run_df.dual_governance.apply(lambda dg: dg.timelock.proposals.state.proposals).iloc[-1]
     proposal_dict = defaultdict(list)
     for proposal in proposals_info:
         proposal_dict["id"].append(proposal.id)
@@ -221,63 +223,61 @@ def extract_proposal_data(run_df):
         proposal_dict["submittedAt"].append((proposal.submittedAt.to_seconds() - simulation_start) / 3600 / 3)
         proposal_dict["scheduledAt"].append((proposal.scheduledAt.to_seconds() - simulation_start) / 3600 / 3)
         proposal_dict["executedAt"].append((proposal.executedAt.to_seconds() - simulation_start) / 3600 / 3)
-    for proposal_id in proposal_dict['id']:
+    for proposal_id in proposal_dict["id"]:
         if proposal_id in cancelled_proposals:
-            row_when_cancelled = np.argmax(run_df['last_cancelled_proposal_id'] == proposal_id)
+            row_when_cancelled = np.argmax(run_df["last_cancelled_proposal_id"] == proposal_id)
             timestep_when_cancelled = run_df.iloc[row_when_cancelled].timestep
-            proposal_dict['cancelledAt'].append(timestep_when_cancelled)
+            proposal_dict["cancelledAt"].append(timestep_when_cancelled)
         else:
-            proposal_dict['cancelledAt'].append(None)
+            proposal_dict["cancelledAt"].append(None)
 
-    common_data = run_df[get_common_columns_to_extract_from_simulation_result()].drop(columns='timestep')
+    common_data = run_df[get_common_columns_to_extract_from_simulation_result()].drop(columns="timestep")
     for col in common_data:
-        proposal_dict[col] = [common_data[col].iloc[0] for _ in range(len(proposal_dict['id']))]
+        proposal_dict[col] = [common_data[col].iloc[0] for _ in range(len(proposal_dict["id"]))]
 
     proposal_df = pd.DataFrame(proposal_dict).set_index("id")
     return proposal_df
 
 
 def aggregate_actor_data(actor_df):
-    actor_df['total_balance'] = actor_df.st_eth_balance + actor_df.wstETH_balance
-    actor_df['total_locked'] = actor_df.st_eth_locked + actor_df.wstETH_locked
+    actor_df["total_balance"] = actor_df.st_eth_balance + actor_df.wstETH_balance
+    actor_df["total_locked"] = actor_df.st_eth_locked + actor_df.wstETH_locked
 
-    total_initial_balance = actor_df[actor_df['timestep'] == 0]['total_balance'].sum()
-    total_actors = len(actor_df[actor_df['timestep'] == 0]['id'].unique())
-    actor_df['actor_locked'] = actor_df['total_locked'] > 0
-    actor_df_final = actor_df.groupby(get_common_columns_to_extract_from_simulation_result()).agg(
-        {'total_balance': 'sum',
-         'total_locked': 'sum',
-         'actor_locked': 'sum',
-         'health': 'sum'
-         }).reset_index()
-    initial_system_health = actor_df[actor_df['timestep'] == 0]['health'].sum()
-    actor_df_final['total_locked_ratio'] = actor_df_final['total_locked'] / total_initial_balance
-    actor_df_final['actor_locked_ratio'] = actor_df_final['actor_locked'] / total_actors
-    actor_df_final['system_health_ratio'] = actor_df_final['health'] / initial_system_health
-    actor_df_final['system_health'] = actor_df_final['health']
-    actor_df_final.drop(columns=['health'])
+    total_initial_balance = actor_df[actor_df["timestep"] == 0]["total_balance"].sum()
+    total_actors = len(actor_df[actor_df["timestep"] == 0]["id"].unique())
+    actor_df["actor_locked"] = actor_df["total_locked"] > 0
+    actor_df_final = (
+        actor_df.groupby(get_common_columns_to_extract_from_simulation_result())
+        .agg({"total_balance": "sum", "total_locked": "sum", "actor_locked": "sum", "health": "sum"})
+        .reset_index()
+    )
+    initial_system_health = actor_df[actor_df["timestep"] == 0]["health"].sum()
+    actor_df_final["total_locked_ratio"] = actor_df_final["total_locked"] / total_initial_balance
+    actor_df_final["actor_locked_ratio"] = actor_df_final["actor_locked"] / total_actors
+    actor_df_final["system_health_ratio"] = actor_df_final["health"] / initial_system_health
+    actor_df_final["system_health"] = actor_df_final["health"]
+    actor_df_final.drop(columns=["health"])
     return actor_df_final
 
 
 def extract_actor_data(run_df):
     common_columns = get_common_columns_to_extract_from_simulation_result()
-    run_df_actors = run_df[common_columns + ['actors']].explode('actors')
+    run_df_actors = run_df[common_columns + ["actors"]].explode("actors")
     actor_columns = [
-        'st_eth_balance',
-        'initial_st_eth_balance',
-        'st_eth_locked',
-        'wstETH_balance',
-        'initial_wstETH_balance',
-        'wstETH_locked',
-        'health',
-        'id'
+        "st_eth_balance",
+        "initial_st_eth_balance",
+        "st_eth_locked",
+        "wstETH_balance",
+        "initial_wstETH_balance",
+        "wstETH_locked",
+        "health",
+        "id",
     ]
     for col in actor_columns:
         run_df_actors[col] = run_df_actors.actors.apply(lambda actor: vars(actor)[col])
     actor_df = run_df_actors[common_columns + actor_columns]
     aggregated_actor_df = aggregate_actor_data(actor_df)
     return aggregated_actor_df
-
 
 
 def create_actors_df(simulation_result, out_dir=None):
