@@ -41,13 +41,14 @@ def generate_initial_state(
     first_rage_quit_support: int = None,
     second_rage_quit_support: int = None,
     institutional_threshold: int = 0,
+    labeled_addresses: dict[str, str] = dict(),
 ) -> Any:
     initialize_seed(seed)
 
     proposals: List[Proposal] = []
     non_initialized_proposals: List[Proposal] = []
     actors, attackers_actors, defenders_actors = generate_actors(
-        scenario, reactions, max_actors, attackers, defenders, institutional_threshold
+        scenario, reactions, max_actors, attackers, defenders, labeled_addresses, institutional_threshold
     )
 
     time_manager = TimeManager(current_time=simulation_starting_time)
@@ -95,6 +96,7 @@ def generate_initial_state(
 
     if len(proposals) > 0:
         for proposal in proposals:
+            ## TODO: add proposal_effects here
             actors = actor_update_health(scenario, proposal, dual_governance, lido, actors, attackers)
 
             if proposal.proposal_type in (ProposalType.Danger, ProposalType.Hack, ProposalType.Negative):
@@ -127,6 +129,7 @@ def generate_actors(
     max_actors: int,
     attackers: Set[str],
     defenders: Set[str],
+    labeled_addresses: dict[str, str],
     institutional_threshold: int = 0,
 ) -> Tuple[List[BaseActor], Set[str]]:
     initial_actors = []
@@ -157,6 +160,8 @@ def generate_actors(
                 int(float(row["wstETH"]) * ether_base),
                 row["type"],
                 institutional_threshold,
+                row["label"],
+                labeled_addresses,
             )
 
             initial_actors.append(created_actor)
@@ -195,6 +200,8 @@ def create_actor(
     wstETH: int,
     type: str,
     institutional_threshold: int = 0,
+    label: str = "",
+    labeled_addresses: dict[str, str] = dict,
 ):
     created_actor = determine_actor_types(scenario, address, attackers, defenders)
     health = determine_actor_health(scenario)
@@ -210,6 +217,9 @@ def create_actor(
     if institutional_threshold != 0 and stETH + wstETH >= (institutional_threshold * ether_base):
         reaction_time = ReactionTime.Slow
 
+    label_override = labeled_addresses.get(address, "")
+    actor_label: int = label_override if label_override != "" else label
+
     if created_actor.actor_type in {
         ActorType.SingleAttacker,
         ActorType.CoordinatedAttacker,
@@ -219,7 +229,7 @@ def create_actor(
         reaction_time = ReactionTime.Quick
         participation = GovernanceParticipation.Full
 
-    created_actor.initialize(id, type, address, health, ldo, stETH, wstETH, reaction_time, participation)
+    created_actor.initialize(id, type, address, health, ldo, stETH, wstETH, reaction_time, participation, actor_label)
 
     return created_actor
 
