@@ -77,19 +77,25 @@ def get_reaction_delay_random_variable(min_time, max_time, p=.99, median_paramet
     rv = scipy.stats.lognorm(s=sigma, loc=shift, scale=median)
     return rv
 
-def generate_reaction_delay(reaction: ReactionTime) -> int:
+# def generate_reaction_delay(reaction: ReactionTime) -> int:
+#     rng = get_rng()
+#     match reaction:
+#         case ReactionTime.Quick:
+#             left_bound, right_bound = 0, quick_actor_max_delay
+#         case ReactionTime.Normal:
+#             left_bound, right_bound = quick_actor_max_delay, normal_actor_max_delay
+#         case ReactionTime.Slow:
+#             left_bound, right_bound = normal_actor_max_delay, slow_actor_max_delay
+#         case ReactionTime.NoReaction:
+#             return Timestamp.MAX_VALUE
+#     reaction_delay_random_variable = get_reaction_delay_random_variable(left_bound, right_bound)
+#     reaction_delay = reaction_delay_random_variable.rvs(random_state=rng)
+#     return reaction_delay
+
+def generate_reaction_delay(reaction_time: ReactionTime) -> int:
     rng = get_rng()
-    match reaction:
-        case ReactionTime.Quick:
-            left_bound, right_bound = 0, quick_actor_max_delay
-        case ReactionTime.Normal:
-            left_bound, right_bound = quick_actor_max_delay, normal_actor_max_delay
-        case ReactionTime.Slow:
-            left_bound, right_bound = normal_actor_max_delay, slow_actor_max_delay
-        case ReactionTime.NoReaction:
-            return Timestamp.MAX_VALUE
-    reaction_delay_random_variable = get_reaction_delay_random_variable(left_bound, right_bound)
-    reaction_delay = reaction_delay_random_variable.rvs(random_state=rng)
+    reaction_delay_random_variable = reaction_delay_random_variables[reaction_time]
+    reaction_delay = int(np.ceil(reaction_delay_random_variable.rvs(random_state=rng)))
     return reaction_delay
 
 
@@ -133,3 +139,18 @@ def determine_governance_participation(reactions: ModeledReactions) -> Governanc
         return GovernanceParticipation.Normal
     else:
         return GovernanceParticipation.Abstaining
+
+class ConstantRandomVariable:
+    def __init__(self, value):
+        self.value = value
+    def rvs(self, size=None, random_state=None):
+        if size is None:
+            return self.value
+        return np.repeat(self.value, size)
+
+reaction_delay_random_variables = {
+    ReactionTime.NoReaction: ConstantRandomVariable(Timestamp.MAX_VALUE), #4
+    ReactionTime.Slow: get_reaction_delay_random_variable(normal_actor_max_delay, slow_actor_max_delay), #3
+    ReactionTime.Normal: get_reaction_delay_random_variable(quick_actor_max_delay, normal_actor_max_delay), #1
+    ReactionTime.Quick: get_reaction_delay_random_variable(0, quick_actor_max_delay) #2
+}

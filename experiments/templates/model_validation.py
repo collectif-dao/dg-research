@@ -4,8 +4,12 @@ from model.types.proposal_type import ProposalGeneration, ProposalSubType, Propo
 from model.types.scenario import Scenario
 
 MONTE_CARLO_RUNS = 1
-SEED = 5321
+# SEED = 5322 # veto loop somehow
+# SEED = 1000 # veto loop somehow
+# SEED = 2000 # veto loop somehow
+SEED = 392 # veto loop somehow
 TIMESTEPS = calculate_timesteps(3)
+# TIMESTEPS = 2400
 
 
 def create_experiment(simulation_name: str = "model_validation"):
@@ -22,8 +26,8 @@ def create_experiment(simulation_name: str = "model_validation"):
         simulation_starting_time=SIMULATION_TIME,
         out_dir=out_path.joinpath(simulation_name),
     )
-    experiment.after_experiment = lambda experiment=None: save_execution_result(
-        experiment, simulation_name, TIMESTEPS, out_path
-    )
+    # experiment.after_experiment = lambda experiment=None: save_execution_result(
+    #     experiment, simulation_name, TIMESTEPS, out_path
+    # )
 
     return experiment, simulation_hashes

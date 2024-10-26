@@ -62,7 +62,7 @@ def run(simulation_name: str = None, post_processing: bool = False):
     create_experiment = simulations[simulation_name]
     experiment, simulation_hashes = create_experiment()
 
-    experiment.engine = Engine(backend=Backend.MULTIPROCESSING, raise_exceptions=False, drop_substeps=True)
+    experiment.engine = Engine(backend=Backend.MULTIPROCESSING, raise_exceptions=False, drop_substeps=True, deepcopy=False)
 
     simulations = experiment.get_simulations()
 

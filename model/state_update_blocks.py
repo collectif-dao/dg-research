@@ -24,6 +24,8 @@ from .parts.actors import (
     lock_or_unlock_stETH,
 )
 
+from .parts.data_saving import save_data
+
 
 def setup_seed(params, substep, state_history, prev_state):
     if prev_state["timestep"] == 0:
@@ -71,5 +73,11 @@ state_update_blocks = [
             "is_active_attack": deactivate_attack,
             "actors": actor_reset_proposal_reaction,
         },
+    },
+    {
+        #data_saving.py
+        "label": "Saving data",
+        "policies": {"save_data": save_data},
+        "variables": {},
     },
 ]

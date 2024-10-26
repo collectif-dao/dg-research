@@ -99,9 +99,6 @@ def setup_simulation(
                 labeled_addresses=labeled_addresses,
             )
 
-            model = Model(initial_state=state, params=sys_params, state_update_blocks=state_update_blocks)
-            simulation = Simulation(model=model, timesteps=timesteps, runs=1)
-
             state_data = construct_state_data(
                 actors=state["actors"],
                 scenario=state["scenario"],
@@ -120,16 +117,22 @@ def setup_simulation(
 
             simulation_hash = get_simulation_hash(
                 initial_state=state_data,
-                state_update_blocks=simulation.model.state_update_blocks,
-                params=simulation.model.params,
+                state_update_blocks=state_update_blocks,
+                params=sys_params,
                 timesteps=timesteps,
             )
-
             simulation_hashes.append(simulation_hash)
 
             folder_path = Path(out_dir).joinpath(f"{simulation_hash}/")
             results_file = folder_path / "result.pkl"
             actors_file = folder_path / "actors.pkl"
+
+            folder_path.mkdir(exist_ok=True, parents=True)
+
+            state["outpath"] = folder_path
+            state["n_timesteps"] = timesteps
+            model = Model(initial_state=state, params=sys_params, state_update_blocks=state_update_blocks)
+            simulation = Simulation(model=model, timesteps=timesteps, runs=1)
 
             if folder_path.exists() and results_file.is_file() and actors_file.is_file():
                 print(f"Skipping simulation {simulation_hash} as it already exists with required files.")
