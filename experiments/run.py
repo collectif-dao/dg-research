@@ -5,6 +5,7 @@ import time
 
 from radcad import Backend, Engine
 
+from custom_simulation_execution import deepcopy_method
 from experiments.simulation_configuration import get_path
 from experiments.templates.actors_labelling import create_experiment as actors_labelling
 from experiments.templates.model_validation import create_experiment as model_validation_experiment
@@ -37,7 +38,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-def run(simulation_name: str = None, post_processing: bool = False):
+def run(simulation_name: str = None, post_processing: bool = False, time_profiling: bool = False):
     out_path = get_path()
 
     if simulation_name is None:
@@ -58,11 +59,15 @@ def run(simulation_name: str = None, post_processing: bool = False):
     if simulation_name not in simulations:
         logging.error(f"Simulation '{simulation_name}' not found.")
         return None, None
-
     create_experiment = simulations[simulation_name]
-    experiment, simulation_hashes = create_experiment()
+    experiment, simulation_hashes = create_experiment(time_profiling=time_profiling)
 
-    experiment.engine = Engine(backend=Backend.MULTIPROCESSING, raise_exceptions=False, drop_substeps=True)
+    if time_profiling:
+        drop_substeps = False
+    else:
+        drop_substeps = True
+
+    experiment.engine = Engine(backend=Backend.MULTIPROCESSING, raise_exceptions=False, drop_substeps=drop_substeps, deepcopy=False)
 
     simulations = experiment.get_simulations()
 
@@ -98,6 +103,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run a simulation")
     parser.add_argument("--simulation_name", type=str, help="Name of the simulation to run")
     parser.add_argument("--post_processing", type=bool, help="Save execution post-processing result", default=False)
+    parser.add_argument("--time_profiling", type=bool, help="Profile time usage", default=False)
     args = parser.parse_args()
+    print(args)
 
-    run(args.simulation_name, args.post_processing)
+    run(args.simulation_name, args.post_processing, args.time_profiling)

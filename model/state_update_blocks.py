@@ -24,6 +24,8 @@ from .parts.actors import (
     lock_or_unlock_stETH,
 )
 
+from .parts.data_saving import save_data
+
 
 def setup_seed(params, substep, state_history, prev_state):
     if prev_state["timestep"] == 0:
@@ -33,6 +35,7 @@ def setup_seed(params, substep, state_history, prev_state):
 
 state_update_blocks = [
     {
+        "label": "Seed Initialization",
         "policies": {
             "initialize_seed": setup_seed,
         },
@@ -40,6 +43,7 @@ state_update_blocks = [
     },
     {
         # proposals.py
+        "label": "Proposal Generation",
         "policies": {"generate_proposal": generate_proposal},
         "variables": {
             "dual_governance": submit_proposal,
@@ -51,11 +55,13 @@ state_update_blocks = [
     },
     {
         # agents.py, dg.py
+        "label": "Actors and Escrow",
         "policies": {"lock_or_unlock_stETH": lock_or_unlock_stETH},
         "variables": {"actors": actor_lock_or_unlock_in_escrow, "dual_governance": update_escrow},
     },
     {
         # dg.py
+        "label": "Spec Timestep",
         "policies": {"add_deltatime_to_dg": add_deltatime_to_dg},
         "variables": {
             "time_manager": update_time_manager,
@@ -65,6 +71,7 @@ state_update_blocks = [
     },
     {
         # proposals.py
+        "label": "System Acts On Proposals",
         "policies": {"cancel_all_pending_proposals": cancel_all_pending_proposals},
         "variables": {
             "dual_governance": schedule_and_execute_proposals,
@@ -72,4 +79,10 @@ state_update_blocks = [
             "actors": actor_reset_proposal_reaction,
         },
     },
+    {
+        #data_saving.py
+        "label": "Saving data",
+        "policies": {"save_data": save_data},
+        "variables": {}
+    }
 ]

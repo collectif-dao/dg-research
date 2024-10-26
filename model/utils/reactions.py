@@ -77,19 +77,29 @@ def get_reaction_delay_random_variable(min_time, max_time, p=.99, median_paramet
     rv = scipy.stats.lognorm(s=sigma, loc=shift, scale=median)
     return rv
 
-def generate_reaction_delay(reaction: ReactionTime) -> int:
+def generate_reaction_delay(reaction_time: int) -> int:
     rng = get_rng()
-    match reaction:
-        case ReactionTime.Quick:
-            left_bound, right_bound = 0, quick_actor_max_delay
-        case ReactionTime.Normal:
-            left_bound, right_bound = quick_actor_max_delay, normal_actor_max_delay
-        case ReactionTime.Slow:
-            left_bound, right_bound = normal_actor_max_delay, slow_actor_max_delay
-        case ReactionTime.NoReaction:
-            return Timestamp.MAX_VALUE
-    reaction_delay_random_variable = get_reaction_delay_random_variable(left_bound, right_bound)
+    # match reaction:
+    #     case 2:
+    #         left_bound, right_bound = 0, quick_actor_max_delay
+    #     case 1:
+    #         left_bound, right_bound = quick_actor_max_delay, normal_actor_max_delay
+    #     case 3:
+    #         left_bound, right_bound = normal_actor_max_delay, slow_actor_max_delay
+    #     case 4:
+    #         return Timestamp.MAX_VALUE
+    # reaction_delay_random_variable = get_reaction_delay_random_variable(left_bound, right_bound)
+    reaction_delay_random_variable = reaction_delay_random_variables[reaction_time]
     reaction_delay = reaction_delay_random_variable.rvs(random_state=rng)
+    return reaction_delay
+
+def generate_reaction_delay_vector(reaction_time: np.ndarray):
+    rng = get_rng()
+    reaction_delay = np.zeros(len(reaction_time), dtype='uint32')
+    for reaction_time_key, random_variable in reaction_delay_random_variables.items():
+        mask = reaction_time == reaction_time_key
+        size = np.sum(mask)
+        reaction_delay[mask] = np.ceil(random_variable.rvs(random_state=rng, size=size)).astype('uint32')
     return reaction_delay
 
 
@@ -100,27 +110,46 @@ def determine_reaction_time(reactions: ModeledReactions) -> ReactionTime:
     match reactions:
         case ModeledReactions.Normal:
             if reaction_time_value >= 2:
-                return ReactionTime.Quick
+                return 2
             elif reaction_time_value >= 1:
-                return ReactionTime.Normal
+                return 1
             else:
-                return ReactionTime.Slow
+                return 3
 
         case ModeledReactions.Accelerated:
             if reaction_time_value >= 1.6:
-                return ReactionTime.Quick
+                return 2
             elif reaction_time_value >= 0.8:
-                return ReactionTime.Normal
+                return 1
             else:
-                return ReactionTime.Slow
+                return 3
 
         case ModeledReactions.Slowed:
             if reaction_time_value >= 2.2:
-                return ReactionTime.Quick
+                return 2
             elif reaction_time_value >= 1.25:
-                return ReactionTime.Normal
+                return 1
             else:
-                return ReactionTime.Slow
+                return 3
+
+def determine_reaction_time_vector(size, reactions: ModeledReactions):
+    rng = get_rng()
+    reaction_time_values = np.array(rng.normal(0, 1, size=size))
+
+    reaction_times = np.zeros(size, dtype='uint8') + ReactionTime.Slow.value
+    match reactions:
+        case ModeledReactions.Normal:
+            normal_cutoff = 1
+            quick_cutoff = 2
+        case ModeledReactions.Slowed:
+            normal_cutoff = 1.25
+            quick_cutoff = 2.2
+        case ModeledReactions.Accelerated:
+            normal_cutoff = 0.8
+            quick_cutoff = 1.6
+    reaction_times[reaction_time_values >= quick_cutoff] = ReactionTime.Quick.value
+    reaction_times[reaction_time_values >= normal_cutoff] = ReactionTime.Normal.value
+    return reaction_times
 
 
 def determine_governance_participation(reactions: ModeledReactions) -> GovernanceParticipation:
@@ -128,8 +157,31 @@ def determine_governance_participation(reactions: ModeledReactions) -> Governanc
     participation_value = rng.normal(0, 1)
 
     if participation_value >= 2:
-        return GovernanceParticipation.Full
+        return 2
     elif participation_value >= 1:
-        return GovernanceParticipation.Normal
+        return 1
     else:
-        return GovernanceParticipation.Abstaining
+        return 3
+
+def determine_governance_participation_vector(size, reactions):
+    rng = get_rng()
+    participation_values = np.array(rng.normal(0, 1))
+    participation = np.zeros(size, dtype='uint8') + GovernanceParticipation.Abstaining.value
+    participation[participation_values >= 2] = GovernanceParticipation.Full.value
+    participation[participation_values >= 1] = GovernanceParticipation.Normal.value
+    return participation
+
+class ConstantRandomVariable:
+    def __init__(self, value):
+        self.value = value
+    def rvs(self, size=None, random_state=None):
+        if size is None:
+            return self.value
+        return np.repeat(self.value, size)
+
+reaction_delay_random_variables = {
+    ReactionTime.NoReaction.value: ConstantRandomVariable(2**32-1), #4
+    ReactionTime.Slow.value: get_reaction_delay_random_variable(normal_actor_max_delay, slow_actor_max_delay), #3
+    ReactionTime.Normal.value: get_reaction_delay_random_variable(quick_actor_max_delay, normal_actor_max_delay), #1
+    ReactionTime.Quick.value: get_reaction_delay_random_variable(0, quick_actor_max_delay) #2
+}

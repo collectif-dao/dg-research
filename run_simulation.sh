@@ -25,4 +25,4 @@ done
 [[ -z "$simulation_name" ]] && usage
 
 # Run the simulation with the provided name and post_processing flag
-python3 -m experiments.run --simulation_name "$simulation_name" --post_processing "$post_processing"
+python3 -m cProfile -o 'cprofile' experiments.run --simulation_name "$simulation_name" --post_processing "$post_processing" --time_profiling True

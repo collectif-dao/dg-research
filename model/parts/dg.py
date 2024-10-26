@@ -1,4 +1,6 @@
-from typing import Dict
+from typing import Dict, List
+
+import numpy as np
 
 from model.types.escrow import ActorLockAmounts
 from specs.dual_governance import DualGovernance
@@ -16,26 +18,26 @@ def add_deltatime_to_dg(params, substep, state_history, prev_state):
 
 # Mechanisms
 def update_escrow(params, substep, state_history, prev_state, policy_input):
-    delta_staked_by_agent: Dict[str, ActorLockAmounts] = policy_input["agent_delta_staked"]
+    delta_staked_by_agent: List[np.ndarray, np.ndarray, np.ndarray] = policy_input["agent_delta_staked"]
     dual_governance: DualGovernance = prev_state["dual_governance"]
 
-    for actor_address, delta_staked in delta_staked_by_agent.items():
-        if delta_staked.stETH_amount == 0 and delta_staked.wstETH_amount == 0:
+    for actor_address, stETH_amount, wstETH_amount in zip(*delta_staked_by_agent):
+        if stETH_amount == 0 and wstETH_amount == 0:
             continue
 
-        if delta_staked.stETH_amount > 0:
+        if stETH_amount > 0:
             dual_governance.state.signalling_escrow.lido.approve(
-                actor_address, dual_governance.state.signalling_escrow.address, delta_staked.stETH_amount
+                actor_address, dual_governance.state.signalling_escrow.address, stETH_amount
             )
-            dual_governance.state.signalling_escrow.lock_stETH(actor_address, delta_staked.stETH_amount)
+            dual_governance.state.signalling_escrow.lock_stETH(actor_address, stETH_amount)
 
-        if delta_staked.wstETH_amount > 0:
+        if wstETH_amount > 0:
             dual_governance.state.signalling_escrow.lido.wstETH.approve(
-                actor_address, dual_governance.state.signalling_escrow.address, delta_staked.wstETH_amount
+                actor_address, dual_governance.state.signalling_escrow.address, wstETH_amount
             )
-            dual_governance.state.signalling_escrow.lock_wstETH(actor_address, delta_staked.wstETH_amount)
+            dual_governance.state.signalling_escrow.lock_wstETH(actor_address, wstETH_amount)
 
-        if delta_staked.stETH_amount < 0 and delta_staked.wstETH_amount == 0:
+        if stETH_amount < 0 and wstETH_amount == 0:
             lock_time = int(dual_governance.state.signalling_escrow.signaling_escrow_min_lock_time.total_seconds())
             assetsUnlockAllowedAfter = dual_governance.state.signalling_escrow.accounting.state.assets[
                 actor_address
@@ -49,7 +51,7 @@ def update_escrow(params, substep, state_history, prev_state, policy_input):
             else:
                 dual_governance.state.signalling_escrow.unlock_stETH(actor_address)
 
-        if delta_staked.wstETH_amount < 0 and delta_staked.stETH_amount == 0:
+        if wstETH_amount < 0 and stETH_amount == 0:
             lock_time = int(dual_governance.state.signalling_escrow.signaling_escrow_min_lock_time.total_seconds())
             assetsUnlockAllowedAfter = dual_governance.state.signalling_escrow.accounting.state.assets[
                 actor_address
@@ -63,7 +65,7 @@ def update_escrow(params, substep, state_history, prev_state, policy_input):
             else:
                 dual_governance.state.signalling_escrow.unlock_wstETH(actor_address)
 
-        if delta_staked.wstETH_amount < 0 and delta_staked.stETH_amount < 0:
+        if wstETH_amount < 0 and stETH_amount < 0:
             lock_time = int(dual_governance.state.signalling_escrow.signaling_escrow_min_lock_time.total_seconds())
             assetsUnlockAllowedAfter = dual_governance.state.signalling_escrow.accounting.state.assets[
                 actor_address

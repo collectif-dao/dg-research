@@ -3,7 +3,7 @@ from typing import List
 import pandas as pd
 from pandas import DataFrame
 
-from model.actors.actor import BaseActor
+from model.actors.actors import Actors
 from model.types.actors import ActorType
 from model.types.reaction_time import ReactionTime
 from specs.dual_governance.proposals import ProposalStatus
@@ -14,7 +14,7 @@ def postprocessing(df: DataFrame):
     dg_ds = df.dual_governance
     time_manager_ds = df.time_manager
     timesteps = df.timestep
-    actors: List[BaseActor] = df.actors
+    actors: Actors = df.actors
     proposals = df.proposals
 
     proposals_submitted_count = dg_ds.map(

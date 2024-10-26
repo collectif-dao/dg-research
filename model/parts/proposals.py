@@ -159,6 +159,7 @@ def submit_proposal(params, substep, state_history, prev_state, policy_input):
             proposal.id,
             "at ",
             dual_governance.time_manager.get_current_time(),
+            prev_state['timestep'],
         )
         print(proposal)
         dual_governance.submit_proposal("", [ExecutorCall("", "", [])])
@@ -237,6 +238,7 @@ def schedule_and_execute_proposals(params, substep, state_history, prev_state, p
                 proposal.id,
                 "at ",
                 dual_governance.time_manager.get_current_time(),
+                prev_state['timestep'],
                 "that has been submitted at ",
                 datetime.fromtimestamp(proposal.submittedAt.value),
             )
@@ -249,6 +251,7 @@ def schedule_and_execute_proposals(params, substep, state_history, prev_state, p
                 proposal.id,
                 "at ",
                 dual_governance.time_manager.get_current_time(),
+                prev_state['timestep'],
                 "that has been scheduled at ",
                 datetime.fromtimestamp(proposal.scheduledAt.value),
                 "and submitted at ",

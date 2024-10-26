@@ -8,8 +8,8 @@ def default(obj):
     return field(default_factory=lambda: copy.copy(obj))
 
 
-percent_base = 10**16
 ether_base = 10**18
+percent_base = ether_base // 100
 
 
 def generate_address():

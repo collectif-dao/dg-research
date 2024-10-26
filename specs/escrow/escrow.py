@@ -277,7 +277,7 @@ class Escrow:
         left = self.lido.get_pooled_eth_by_shares(unfinalized_shares.value) + finalized_ETH.value
         right = self.lido.get_total_supply() + finalized_ETH.value
 
-        return int(ether_base * left / right)
+        return int(left / right * ether_base)
 
     def get_locked_assets_totals(self) -> LockedAssetsTotal:
         stETH_totals = self.accounting.state.stETHTotals

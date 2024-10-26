@@ -2,8 +2,9 @@ import csv
 from datetime import datetime
 from typing import Any, List, Set, Tuple
 
-from model.actors.actor import BaseActor
-from model.actors.token_holders.stETH_holder_actor import StETHHolderActor
+import numpy as np
+
+from model.actors.actors import Actors
 from model.parts.actors import actor_update_health
 from model.types.actors import ActorType
 from model.types.governance_participation import GovernanceParticipation
@@ -11,11 +12,8 @@ from model.types.proposal_type import ProposalGeneration, ProposalType
 from model.types.proposals import Proposal, ProposalSubType
 from model.types.reaction_time import ModeledReactions, ReactionTime
 from model.types.scenario import Scenario
-from model.utils.actors import (
-    determine_actor_health,
-    determine_actor_types,
-)
-from model.utils.reactions import determine_governance_participation, determine_reaction_time
+
+from model.utils.reactions import determine_reaction_time_vector, determine_governance_participation_vector
 from model.utils.seed import initialize_seed
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.proposals import ExecutorCall
@@ -47,7 +45,7 @@ def generate_initial_state(
 
     proposals: List[Proposal] = []
     non_initialized_proposals: List[Proposal] = []
-    actors, attackers_actors, defenders_actors = generate_actors(
+    actors = generate_actors(
         scenario, reactions, max_actors, attackers, defenders, labeled_addresses, institutional_threshold
     )
 
@@ -70,19 +68,19 @@ def generate_initial_state(
         Address.test_escrow_address, time_manager, lido, "", "", Timestamp(0), Timestamp(0), **filtered_params
     )
 
-    for actor in actors:
-        if actor.st_eth_balance > 0:
+    for i in range(actors.amount):
+        if actors.stETH[i] > 0:
             buffered_ether = lido.get_buffered_ether()
-            lido._mint_shares(actor.address, actor.st_eth_balance)
-            lido.set_buffered_ether(buffered_ether + actor.st_eth_balance)
+            lido._mint_shares(actors.address[i], actors.stETH[i])
+            lido.set_buffered_ether(buffered_ether + actors.stETH[i])
 
-        if actor.wstETH_balance > 0:
+        if actors.wstETH[i] > 0:
             buffered_ether = lido.get_buffered_ether()
-            lido._mint_shares(actor.address, actor.wstETH_balance)
-            lido.set_buffered_ether(buffered_ether + actor.wstETH_balance)
-            lido.approve(actor.address, Address.wstETH, actor.wstETH_balance)
+            lido._mint_shares(actors.address[i], actors.wstETH[i])
+            lido.set_buffered_ether(buffered_ether + actors.wstETH[i])
+            lido.approve(actors.address[i], Address.wstETH, actors.wstETH[i])
 
-            lido.wrap(actor.address, actor.wstETH_balance)
+            lido.wrap(actors.address[i], actors.wstETH[i])
 
     if len(initial_proposals) > 0:
         proposals, non_initialized_proposals = generate_initial_proposals(
@@ -97,10 +95,16 @@ def generate_initial_state(
     if len(proposals) > 0:
         for proposal in proposals:
             ## TODO: add proposal_effects here
-            actors = actor_update_health(scenario, proposal, dual_governance, lido, actors, attackers)
+            actors = actor_update_health(scenario, proposal, dual_governance, lido, actors, attackers, dual_governance.time_manager)
 
             if proposal.proposal_type in (ProposalType.Danger, ProposalType.Hack, ProposalType.Negative):
                 is_active_attack = True
+    attackers_actors = actors.address[
+        (actors.actor_type == ActorType.SingleAttacker.value) +
+        (actors.actor_type == ActorType.CoordinatedAttacker.value)]
+    defenders_actors = actors.address[
+        (actors.actor_type == ActorType.SingleDefender.value) +
+        (actors.actor_type == ActorType.CoordinatedDefender.value)]
 
     return {
         "actors": actors,
@@ -122,6 +126,13 @@ def generate_initial_state(
         "second_seal_rage_quit_support": dual_governance.state.config.second_seal_rage_quit_support,
     }
 
+def parse_token_amount(token_amount_str):
+    if "." not in token_amount_str:
+        return int(token_amount_str) * ether_base
+    parts = token_amount_str.split('.')
+    pad = "".join('0' for _ in range(int(np.log10(ether_base) - len(parts[1]))))
+    return int(parts[0] + parts[1] + pad)
+
 
 def generate_actors(
     scenario: Scenario,
@@ -131,107 +142,94 @@ def generate_actors(
     defenders: Set[str],
     labeled_addresses: dict[str, str],
     institutional_threshold: int = 0,
-) -> Tuple[List[BaseActor], Set[str]]:
-    initial_actors = []
-    attackers_actors: Set[str] = set()
-    defenders_actors: Set[str] = set()
+) -> Actors:
+
+    from model.utils.seed import get_rng
+    rng = get_rng()
+    actor_addresses = []
+    actor_ldo = []
+    actor_stETH = []
+    actor_wstETH = []
+    actor_typestr = []
+    actor_label = []
 
     with open("data/stETH_token_distribution.csv", mode="r") as csv_file:
         csv_reader = csv.DictReader(csv_file, delimiter=",")
-        line_count = 0
-
-        for row in csv_reader:
-            if 0 < max_actors < line_count:
+        for line_id, row in enumerate(csv_reader):
+            if 0 < max_actors < line_id + 1:
                 break
+            actor_addresses.append(row["address"])
+            actor_ldo.append(0)
+            actor_stETH.append(parse_token_amount(row["stETH"]))
+            actor_wstETH.append(parse_token_amount(row["wstETH"]))
+            actor_typestr.append(row["type"])
+            if row["address"] in labeled_addresses:
+                actor_label.append(labeled_addresses[row["address"]])
+            else:
+                actor_label.append(row["label"])
 
-            if line_count == 0:
-                line_count += 1
-                continue
-
-            created_actor = create_actor(
-                attackers,
-                defenders,
-                scenario,
-                reactions,
-                line_count,
-                row["address"],
-                0,
-                int(float(row["stETH"]) * ether_base),
-                int(float(row["wstETH"]) * ether_base),
-                row["type"],
-                institutional_threshold,
-                row["label"],
-                labeled_addresses,
-            )
-
-            initial_actors.append(created_actor)
-
-            if created_actor.actor_type in [ActorType.SingleDefender, ActorType.CoordinatedDefender]:
-                defenders_actors.add(created_actor.address)
-
-            match scenario:
-                case Scenario.CoordinatedAttack:
-                    if created_actor.actor_type == ActorType.CoordinatedAttacker:
-                        attackers_actors.add(created_actor.address)
-                case Scenario.SingleAttack:
-                    if created_actor.actor_type == ActorType.SingleAttacker:
-                        attackers_actors.add(created_actor.address)
-                case Scenario.SmartContractHack:
-                    if created_actor.actor_type == ActorType.Hacker:
-                        attackers_actors.add(created_actor.address)
-                case Scenario.VetoSignallingLoop:
-                    if created_actor.actor_type == ActorType.CoordinatedAttacker:
-                        attackers_actors.add(created_actor.address)
-
-            line_count += 1
-
-    return initial_actors, attackers_actors, defenders_actors
+    actor_addresses = np.array(actor_addresses)
+    actor_ldo = np.array(actor_ldo)
+    actor_stETH = np.array(actor_stETH)
+    actor_wstETH = np.array(actor_wstETH)
+    actor_typestr = np.array(actor_typestr)
+    actor_label = np.array(actor_label)
+    actor_types = np.zeros(len(actor_label), dtype='uint8') + ActorType.HonestActor.value
+    actor_health = np.array(rng.normal(loc=50, scale=20, size=len(actor_label)), dtype='int16')
+    actor_health = np.maximum(np.minimum(actor_health, 100), 1)
 
 
-def create_actor(
-    attackers: Set[str],
-    defenders: Set[str],
-    scenario: Scenario,
-    reactions: ModeledReactions,
-    id: int,
-    address: str,
-    ldo: int,
-    stETH: int,
-    wstETH: int,
-    type: str,
-    institutional_threshold: int = 0,
-    label: str = "",
-    labeled_addresses: dict[str, str] = dict,
-):
-    created_actor = determine_actor_types(scenario, address, attackers, defenders)
-    health = determine_actor_health(scenario)
+    actors_distribution = rng.normal(loc=0, scale=1, size=len(actor_addresses))
+    random_attacker_mask = actors_distribution >= 3
 
-    if type in ["Contract", "CEX", "Custody"] and address not in defenders and address not in attackers:
-        created_actor = StETHHolderActor()
-        reaction_time = ReactionTime.NoReaction
-        participation = GovernanceParticipation.NoParticipation
-    else:
-        reaction_time = determine_reaction_time(reactions)
-        participation = determine_governance_participation(reactions)
+    attacker_type = ActorType.HonestActor.value
+    match scenario:
+        case Scenario.SingleAttack:
+            attacker_type = ActorType.SingleAttacker.value
+        case Scenario.CoordinatedAttack:
+            attacker_type = ActorType.CoordinatedAttacker.value
+        case Scenario.VetoSignallingLoop:
+            attacker_type = ActorType.CoordinatedAttacker.value
+    actor_types[random_attacker_mask] = attacker_type
+    attacker_mask = np.isin(actor_addresses, list(attackers))
+    actor_types[attacker_mask] = attacker_type
+    defender_mask = np.isin(actor_addresses, list(defenders))
+    actor_types[defender_mask] = ActorType.SingleDefender.value
 
-    if institutional_threshold != 0 and stETH + wstETH >= (institutional_threshold * ether_base):
-        reaction_time = ReactionTime.Slow
+    actor_reaction_time = determine_reaction_time_vector(len(actor_addresses), reactions)
+    actor_participation = determine_governance_participation_vector(len(actor_addresses), reactions)
 
-    label_override = labeled_addresses.get(address, "")
-    actor_label: int = label_override if label_override != "" else label
+    abstaining_mask = np.all((
+        np.isin(actor_typestr, ["Contract", "CEX", "Custody"]),
+        np.logical_not(attacker_mask),
+        np.logical_not(defender_mask)), axis=0)
 
-    if created_actor.actor_type in {
-        ActorType.SingleAttacker,
-        ActorType.CoordinatedAttacker,
-        ActorType.SingleDefender,
-        ActorType.CoordinatedDefender,
-    }:
-        reaction_time = ReactionTime.Quick
-        participation = GovernanceParticipation.Full
+    actor_reaction_time[abstaining_mask] = ReactionTime.NoReaction.value
+    actor_participation[abstaining_mask] = GovernanceParticipation.Abstaining.value
 
-    created_actor.initialize(id, type, address, health, ldo, stETH, wstETH, reaction_time, participation, actor_label)
+    if institutional_threshold != 0:
+        institutional_mask = actor_stETH + actor_wstETH >= institutional_threshold * ether_base
+        actor_reaction_time[institutional_mask] = ReactionTime.Slow.value
 
-    return created_actor
+    override_mask = np.isin(actor_types,
+                            [ActorType.SingleAttacker.value,
+                             ActorType.CoordinatedAttacker.value,
+                             ActorType.SingleDefender.value,
+                             ActorType.CoordinatedDefender.value])
+    actor_reaction_time[override_mask] = ReactionTime.Quick.value
+    actor_participation[override_mask] = GovernanceParticipation.Full.value
+
+    return Actors(address=actor_addresses,
+                  ldo=actor_ldo,
+                  stETH=actor_stETH,
+                  wstETH=actor_wstETH,
+                  entity=actor_typestr,
+                  label=actor_label,
+                  actor_type=actor_types,
+                  health=actor_health,
+                  reaction_time=actor_reaction_time,
+                  governance_participation=actor_participation
+                  )
 
 
 def generate_initial_proposals(
