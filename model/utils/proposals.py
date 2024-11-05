@@ -83,7 +83,7 @@ def determine_proposal_damage(proposal_type: ProposalType) -> int:
         case ProposalType.Hack:
             damage = 200
 
-    return damage
+    return int(damage)
 
 
 def get_first_proposal_timestamp(proposals: Proposals):

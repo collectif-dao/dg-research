@@ -1,11 +1,9 @@
-from typing import Dict, List
+from typing import List
 
 import numpy as np
 
-from model.types.escrow import ActorLockAmounts
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.state import State
-from specs.lido import Lido
 from specs.time_manager import TimeManager
 from specs.types.timestamp import Timestamp
 
@@ -26,16 +24,24 @@ def update_escrow(params, substep, state_history, prev_state, policy_input):
             continue
 
         if stETH_amount > 0:
+            # print(f"stETH_amount > 0 and actor is {actor_address} with stETH_amount {stETH_amount}")
             dual_governance.state.signalling_escrow.lido.approve(
                 actor_address, dual_governance.state.signalling_escrow.address, stETH_amount
             )
             dual_governance.state.signalling_escrow.lock_stETH(actor_address, stETH_amount)
+            # print(
+            #     f"rage quit support after lock is {dual_governance.state.signalling_escrow.get_rage_quit_support() / ether_base}"
+            # )
 
         if wstETH_amount > 0:
+            # print(f"wstETH_amount > 0 and actor is {actor_address} with wstETH_amount {wstETH_amount}")
             dual_governance.state.signalling_escrow.lido.wstETH.approve(
                 actor_address, dual_governance.state.signalling_escrow.address, wstETH_amount
             )
             dual_governance.state.signalling_escrow.lock_wstETH(actor_address, wstETH_amount)
+            # print(
+            #     f"rage quit support after lock is {dual_governance.state.signalling_escrow.get_rage_quit_support()  / ether_base}"
+            # )
 
         if stETH_amount < 0 and wstETH_amount == 0:
             lock_time = int(dual_governance.state.signalling_escrow.signaling_escrow_min_lock_time.total_seconds())
@@ -52,7 +58,14 @@ def update_escrow(params, substep, state_history, prev_state, policy_input):
                 dual_governance.state.signalling_escrow.unlock_stETH(actor_address)
 
         if wstETH_amount < 0 and stETH_amount == 0:
+            if actor_address == "0x0b925ed163218f6662a35e0f0371ac234f9e9371":
+                print(f"wstETH_amount {wstETH_amount}")
+                print(f"stETH_amount {stETH_amount}")
+                print(f"dual_governance.state.signalling_escrow.accounting.state.assets[actor_address] {dual_governance.state.signalling_escrow.accounting.state.assets[
+                actor_address
+            ]}")
             lock_time = int(dual_governance.state.signalling_escrow.signaling_escrow_min_lock_time.total_seconds())
+
             assetsUnlockAllowedAfter = dual_governance.state.signalling_escrow.accounting.state.assets[
                 actor_address
             ].lastAssetsLockTimestamp + Timestamp.from_uint256(lock_time)
@@ -82,19 +95,11 @@ def update_escrow(params, substep, state_history, prev_state, policy_input):
     return ("dual_governance", dual_governance)
 
 
-def update_time_manager(params, substep, state_history, prev_state, policy_input):
-    delta = policy_input["timedelta_tick"]
-    time_manager: TimeManager = prev_state["time_manager"]
-    time_manager.shift_current_time(delta)
-
-    return ("time_manager", time_manager)
-
-
 def update_dg_time_manager(params, substep, state_history, prev_state, policy_input):
     delta = policy_input["timedelta_tick"]
+    time_manager: TimeManager = prev_state["time_manager"]
     dual_governance: DualGovernance = prev_state["dual_governance"]
-
-    dual_governance.state.time_manager.shift_current_time(delta)
+    time_manager.shift_current_time(delta)
 
     rage_quit_support = dual_governance.state.signalling_escrow.get_rage_quit_support()
     state = dual_governance.get_current_state()
@@ -119,11 +124,3 @@ def update_dg_time_manager(params, substep, state_history, prev_state, policy_in
         dual_governance.activate_next_state()  ## should transition to Normal or VetoSignalling state
 
     return ("dual_governance", dual_governance)
-
-
-def update_lido_time_manager(params, substep, state_history, prev_state, policy_input):
-    delta = policy_input["timedelta_tick"]
-    lido: Lido = prev_state["lido"]
-    lido.time_manager.shift_current_time(delta)
-
-    return ("lido", lido)

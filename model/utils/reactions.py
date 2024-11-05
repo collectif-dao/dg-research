@@ -5,12 +5,12 @@ from model.sys_params import normal_actor_max_delay, quick_actor_max_delay, slow
 from model.types.governance_participation import GovernanceParticipation
 from model.types.reaction_time import ModeledReactions, ReactionTime
 from model.utils.seed import get_rng
-from specs.types.timestamp import Timestamp
 
 ### TODO: 1. refactor random variables into the separate module. They have to be defined and calculated only at startup.
 ### TODO: 2. Reaction delay needs to be dependent on params on specs/parameters.py. But the relationship is yet to be defined.
 
-def determine_shift_mu_sigma(left_bound, right_bound, p=.99, median_parameter=.5):
+
+def determine_shift_mu_sigma(left_bound, right_bound, p=0.99, median_parameter=0.5):
     """
     Calculates parameters (shift, mu, sigma) for shifted log-normal distribution.
     The probability that a rv from the distribution lies between left_bound and right_bound is set by p.
@@ -47,7 +47,8 @@ def determine_shift_mu_sigma(left_bound, right_bound, p=.99, median_parameter=.5
     sigma = -np.log(median_parameter) / standard_normal_p_percentile
     return left_bound, median, sigma
 
-def get_reaction_delay_random_variable(min_time, max_time, p=.99, median_parameter=.5, shifted=False):
+
+def get_reaction_delay_random_variable(min_time, max_time, p=0.99, median_parameter=0.5, shifted=False):
     """
     Calculates parameters for reaction delay distribution which is assumed to be (shifted) log-normal and returns the frozen scipy.stats.lognorm object with set parameters.
     The min_time and max_time parameters control the location of the distribution. P(x < max_time) = p.
@@ -70,12 +71,17 @@ def get_reaction_delay_random_variable(min_time, max_time, p=.99, median_paramet
     scipy.stats.lognorm object
     """
     if shifted:
-        shift, median, sigma = determine_shift_mu_sigma(left_bound=min_time, right_bound=max_time, p=p, median_parameter=median_parameter)
+        shift, median, sigma = determine_shift_mu_sigma(
+            left_bound=min_time, right_bound=max_time, p=p, median_parameter=median_parameter
+        )
     else:
         median_parameter_adjusted = median_parameter + (1 - median_parameter) * min_time / max_time
-        shift, median, sigma = determine_shift_mu_sigma(left_bound=0, right_bound=max_time, p=p, median_parameter=median_parameter_adjusted)
+        shift, median, sigma = determine_shift_mu_sigma(
+            left_bound=0, right_bound=max_time, p=p, median_parameter=median_parameter_adjusted
+        )
     rv = scipy.stats.lognorm(s=sigma, loc=shift, scale=median)
     return rv
+
 
 def generate_reaction_delay(reaction_time: int) -> int:
     rng = get_rng()
@@ -93,13 +99,16 @@ def generate_reaction_delay(reaction_time: int) -> int:
     reaction_delay = reaction_delay_random_variable.rvs(random_state=rng)
     return reaction_delay
 
+
 def generate_reaction_delay_vector(reaction_time: np.ndarray):
     rng = get_rng()
-    reaction_delay = np.zeros(len(reaction_time), dtype='uint32')
+    reaction_delay = np.zeros(len(reaction_time), dtype="uint32")
+
     for reaction_time_key, random_variable in reaction_delay_random_variables.items():
         mask = reaction_time == reaction_time_key
         size = np.sum(mask)
-        reaction_delay[mask] = np.ceil(random_variable.rvs(random_state=rng, size=size)).astype('uint32')
+        reaction_delay[mask] = np.ceil(random_variable.rvs(random_state=rng, size=size)).astype("uint32")
+
     return reaction_delay
 
 
@@ -132,11 +141,13 @@ def determine_reaction_time(reactions: ModeledReactions) -> ReactionTime:
             else:
                 return 3
 
+
 def determine_reaction_time_vector(size, reactions: ModeledReactions):
     rng = get_rng()
     reaction_time_values = np.array(rng.normal(0, 1, size=size))
 
-    reaction_times = np.zeros(size, dtype='uint8') + ReactionTime.Slow.value
+    reaction_times = np.zeros(size, dtype="int8") + ReactionTime.Slow.value
+
     match reactions:
         case ModeledReactions.Normal:
             normal_cutoff = 1
@@ -147,8 +158,17 @@ def determine_reaction_time_vector(size, reactions: ModeledReactions):
         case ModeledReactions.Accelerated:
             normal_cutoff = 0.8
             quick_cutoff = 1.6
+
+    normal_mask = np.all(
+        (
+            reaction_time_values >= normal_cutoff,
+            reaction_time_values < quick_cutoff,
+        ),
+        axis=0,
+    )
+
+    reaction_times[normal_mask] = ReactionTime.Normal.value
     reaction_times[reaction_time_values >= quick_cutoff] = ReactionTime.Quick.value
-    reaction_times[reaction_time_values >= normal_cutoff] = ReactionTime.Normal.value
     return reaction_times
 
 
@@ -163,25 +183,29 @@ def determine_governance_participation(reactions: ModeledReactions) -> Governanc
     else:
         return 3
 
+
 def determine_governance_participation_vector(size, reactions):
     rng = get_rng()
     participation_values = np.array(rng.normal(0, 1))
-    participation = np.zeros(size, dtype='uint8') + GovernanceParticipation.Abstaining.value
+    participation = np.zeros(size, dtype="uint8") + GovernanceParticipation.Abstaining.value
     participation[participation_values >= 2] = GovernanceParticipation.Full.value
     participation[participation_values >= 1] = GovernanceParticipation.Normal.value
     return participation
 
+
 class ConstantRandomVariable:
     def __init__(self, value):
         self.value = value
+
     def rvs(self, size=None, random_state=None):
         if size is None:
             return self.value
         return np.repeat(self.value, size)
 
+
 reaction_delay_random_variables = {
-    ReactionTime.NoReaction.value: ConstantRandomVariable(2**32-1), #4
-    ReactionTime.Slow.value: get_reaction_delay_random_variable(normal_actor_max_delay, slow_actor_max_delay), #3
-    ReactionTime.Normal.value: get_reaction_delay_random_variable(quick_actor_max_delay, normal_actor_max_delay), #1
-    ReactionTime.Quick.value: get_reaction_delay_random_variable(0, quick_actor_max_delay) #2
+    ReactionTime.NoReaction.value: ConstantRandomVariable(2**32 - 1),  # 4
+    ReactionTime.Slow.value: get_reaction_delay_random_variable(normal_actor_max_delay, slow_actor_max_delay),  # 3
+    ReactionTime.Normal.value: get_reaction_delay_random_variable(quick_actor_max_delay, normal_actor_max_delay),  # 1
+    ReactionTime.Quick.value: get_reaction_delay_random_variable(0, quick_actor_max_delay),  # 2
 }

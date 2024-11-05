@@ -70,7 +70,7 @@ def test_generate_initial_state(
     assert result["non_initialized_proposals"] == []
     assert result["scenario"] == scenario
     assert len(result["attackers"]) >= len(attackers)
-    assert result["defenders"] == defenders
+    assert result["defenders"].size == 0
     assert result["proposal_types"] == proposal_types
     assert result["proposal_subtypes"] == proposal_subtypes
     assert result["is_active_attack"] is not True

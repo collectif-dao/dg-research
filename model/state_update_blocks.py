@@ -1,9 +1,8 @@
+from model.parts.data_saving import save_data
 from model.parts.dg import (
     add_deltatime_to_dg,
     update_dg_time_manager,
     update_escrow,
-    update_lido_time_manager,
-    update_time_manager,
 )
 from model.parts.proposals import (
     activate_attack,
@@ -23,8 +22,6 @@ from .parts.actors import (
     actor_reset_proposal_reaction,
     lock_or_unlock_stETH,
 )
-
-from .parts.data_saving import save_data
 
 
 def setup_seed(params, substep, state_history, prev_state):
@@ -64,9 +61,7 @@ state_update_blocks = [
         "label": "Spec Timestep",
         "policies": {"add_deltatime_to_dg": add_deltatime_to_dg},
         "variables": {
-            "time_manager": update_time_manager,
             "dual_governance": update_dg_time_manager,
-            "lido": update_lido_time_manager,
         },
     },
     {
@@ -80,9 +75,9 @@ state_update_blocks = [
         },
     },
     {
-        #data_saving.py
+        # data_saving.py
         "label": "Saving data",
         "policies": {"save_data": save_data},
-        "variables": {}
-    }
+        "variables": {},
+    },
 ]

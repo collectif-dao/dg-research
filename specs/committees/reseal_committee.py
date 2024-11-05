@@ -37,7 +37,7 @@ class ResealCommittee(HashConsensus, ProposalsList):
             raise Errors.IsNotMember
 
         proposal_data, key = self.encode_reseal_proposal(sealables)
-        print("key during vote_reseal: ", key)
+        # print("key during vote_reseal: ", key)
 
         self.vote(voter, key, support)
         self._push_proposal(key, 0, proposal_data)
@@ -53,7 +53,7 @@ class ResealCommittee(HashConsensus, ProposalsList):
 
     def get_reseal_state(self, sealables: list[str]) -> Tuple[int, int, bool]:
         _, key = self.encode_reseal_proposal(sealables)
-        print("key in get_reseal_state: ", key)
+        # print("key in get_reseal_state: ", key)
 
         return self.get_hash_state(key)
 

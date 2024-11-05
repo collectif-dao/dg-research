@@ -1,11 +1,8 @@
 #!/bin/bash
 
-# Default value for post_processing
-post_processing=false
-
 # Function to display usage
 usage() {
-  echo "Usage: $0 <simulation_name> [--post_processing]"
+  echo "Usage: $0 <simulation_name> [--post_processing] [--time_profiling]"
   exit 1
 }
 
@@ -13,10 +10,15 @@ usage() {
 [[ -z "$1" ]] && usage
 
 # Parse optional arguments
+simulation_name=""
+
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     --post_processing) post_processing=true ;;
-    *) [[ -z "$simulation_name" ]] && simulation_name=$1 || usage ;;
+    --time_profiling) time_profiling=true ;;
+    *) 
+      [[ -z "$simulation_name" ]] && simulation_name=$1 || usage 
+      ;;
   esac
   shift
 done
@@ -24,5 +26,7 @@ done
 # Check if simulation_name is set
 [[ -z "$simulation_name" ]] && usage
 
-# Run the simulation with the provided name and post_processing flag
-python3 -m cProfile -o 'cprofile' experiments.run --simulation_name "$simulation_name" --post_processing "$post_processing" --time_profiling True
+# Run the simulation with the provided name and flags
+python3 -m experiments.run --simulation_name "$simulation_name" \
+  ${post_processing:+--post_processing} \
+  ${time_profiling:+--time_profiling}

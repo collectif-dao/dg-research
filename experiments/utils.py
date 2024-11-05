@@ -22,8 +22,6 @@ from model.utils.initialization import generate_initial_state
 from model.utils.postprocessing import postprocessing
 from specs.utils import ether_base, percent_base
 
-from profile_run import profile_psubs, profile_state
-
 collections.Hashable = collections.abc.Hashable
 
 
@@ -63,7 +61,8 @@ def setup_simulation(
     max_actors: int = 0,
     institutional_threshold: int = 0,
     labeled_addresses: dict[str, str] = dict(),
-    time_profiling: bool = False
+    time_profiling: bool = False,
+    simulation_test: bool = False,
 ):
     simulations: list[Simulation] = []
     simulation_hashes: list[str] = []
@@ -101,12 +100,6 @@ def setup_simulation(
                 institutional_threshold=institutional_threshold,
                 labeled_addresses=labeled_addresses,
             )
-            if time_profiling:
-                new_state_update_blocks = profile_psubs(state_update_blocks)
-                new_state = profile_state(state)
-            else:
-                new_state_update_blocks = state_update_blocks
-                new_state = state
 
             state_data = construct_state_data(
                 actors=state["actors"],
@@ -126,22 +119,24 @@ def setup_simulation(
 
             simulation_hash = get_simulation_hash(
                 initial_state=state_data,
-                state_update_blocks=new_state_update_blocks,
+                state_update_blocks=state_update_blocks,
                 params=sys_params,
                 timesteps=timesteps,
             )
 
             simulation_hashes.append(simulation_hash)
+            print(f"simulation_hash is {simulation_hash}.")
 
             folder_path = Path(out_dir).joinpath(f"{simulation_hash}/")
             results_file = folder_path / "result.pkl"
             actors_file = folder_path / "actors.pkl"
 
-            folder_path.mkdir(exist_ok=True, parents=True)
+            if not simulation_test:
+                folder_path.mkdir(exist_ok=True, parents=True)
 
-            new_state["outpath"] = folder_path
-            new_state["n_timesteps"] = timesteps
-            model = Model(initial_state=new_state, params=sys_params, state_update_blocks=new_state_update_blocks)
+            state["outpath"] = folder_path
+            state["n_timesteps"] = timesteps
+            model = Model(initial_state=state, params=sys_params, state_update_blocks=state_update_blocks)
             print(time_profiling)
             print(model.state_update_blocks)
             print(list(model.initial_state.keys()))
@@ -370,7 +365,9 @@ def save_combined_actors_simulation_result(simulation_hashes: list[str], simulat
     return combined_df
 
 
-def save_execution_result(experiment, simulation_name, timesteps, out_dir, create_actors_df_flag=True, drop_substeps=True):
+def save_execution_result(
+    experiment, simulation_name, timesteps, out_dir, create_actors_df_flag=True, drop_substeps=True
+):
     if out_dir is None:
         out_dir = Path("")
     experiment_df = pd.DataFrame(experiment.results)
