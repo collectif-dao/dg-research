@@ -51,7 +51,7 @@ def generate_initial_state(
         scenario, reactions, max_actors, attackers, defenders, labeled_addresses, institutional_threshold
     )
 
-    time_manager = TimeManager(current_time=simulation_starting_time)
+    time_manager = TimeManager(current_time=simulation_starting_time, simulation_start_time=simulation_starting_time)
 
     if simulation_starting_time == datetime.min:
         time_manager.initialize()

@@ -92,7 +92,7 @@ def update_dg_time_manager(params, substep, state_history, prev_state, policy_in
     delta = policy_input["timedelta_tick"]
     dual_governance: DualGovernance = prev_state["dual_governance"]
 
-    dual_governance.state.time_manager.shift_current_time(delta)
+    # dual_governance.state.time_manager.shift_current_time(delta)
 
     rage_quit_support = dual_governance.state.signalling_escrow.get_rage_quit_support()
     state = dual_governance.get_current_state()
@@ -122,6 +122,6 @@ def update_dg_time_manager(params, substep, state_history, prev_state, policy_in
 def update_lido_time_manager(params, substep, state_history, prev_state, policy_input):
     delta = policy_input["timedelta_tick"]
     lido: Lido = prev_state["lido"]
-    lido.time_manager.shift_current_time(delta)
+    # lido.time_manager.shift_current_time(delta)
 
     return ("lido", lido)
