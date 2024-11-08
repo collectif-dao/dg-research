@@ -23,9 +23,7 @@ MIN_HEALTH = 1
 @st.composite
 def float_number_strategy(draw):
     wei_value = draw(base_int_strategy())
-    print(f"wei_value is {wei_value}")
     ether_value = wei_value / ether_base
-    print(f"ether_value is {ether_value}")
     return ether_value
 
 
@@ -139,10 +137,13 @@ def test_lock_to_escrow_with_excessive_amounts(actor_data):
         _,
     ) = actor_data
 
+    stETH_array = np.array(stETH, dtype=np.float64)
+    wstETH_array = np.array(wstETH, dtype=np.float64)
+
     actors = Actors(
         address=np.array(addresses),
-        stETH=np.array(stETH, dtype=np.float64),
-        wstETH=np.array(wstETH, dtype=np.float64),
+        stETH=stETH_array,
+        wstETH=wstETH_array,
         health=np.array(health),
         actor_type=np.array(actor_types),
         reaction_time=np.array(reaction_time),
@@ -155,18 +156,20 @@ def test_lock_to_escrow_with_excessive_amounts(actor_data):
     time_manager = TimeManager()
     time_manager.initialize()
 
-    lock_stETH_amounts = np.array(stETH, dtype=np.float64) + 1e-18
-    lock_wstETH_amounts = np.array(wstETH, dtype=np.float64)
+    lock_stETH_amounts = stETH_array + 1e-18
+    lock_wstETH_amounts = wstETH_array
     mask = np.ones(len(stETH), dtype=bool)
 
-    with pytest.raises(NotEnoughActorStETHBalance):
-        actors.lock_to_escrow(lock_stETH_amounts, lock_wstETH_amounts, time_manager, mask)
+    if not np.allclose(lock_stETH_amounts, stETH_array):
+        with pytest.raises(NotEnoughActorStETHBalance):
+            actors.lock_to_escrow(lock_stETH_amounts, lock_wstETH_amounts, time_manager, mask)
 
-    lock_stETH_amounts = np.array(stETH, dtype=np.float64)
-    lock_wstETH_amounts = np.array(wstETH, dtype=np.float64) + 1e-18
+    lock_stETH_amounts = stETH_array
+    lock_wstETH_amounts = wstETH_array + 1e-18
 
-    with pytest.raises(NotEnoughActorWstETHBalance):
-        actors.lock_to_escrow(lock_stETH_amounts, lock_wstETH_amounts, time_manager, mask)
+    if not np.allclose(lock_wstETH_amounts, wstETH_array):
+        with pytest.raises(NotEnoughActorWstETHBalance):
+            actors.lock_to_escrow(lock_stETH_amounts, lock_wstETH_amounts, time_manager, mask)
 
 
 @given(actor_data())

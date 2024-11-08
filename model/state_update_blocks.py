@@ -1,4 +1,4 @@
-from model.parts.data_saving import save_data
+from model.parts.data_saving import save_common_dataframe, save_data, save_timestep_dataframe
 from model.parts.dg import (
     add_deltatime_to_dg,
     update_dg_time_manager,
@@ -78,6 +78,6 @@ state_update_blocks = [
         # data_saving.py
         "label": "Saving data",
         "policies": {"save_data": save_data},
-        "variables": {},
+        "variables": {"common_dataframe": save_common_dataframe, "timestep_dataframe": save_timestep_dataframe},
     },
 ]

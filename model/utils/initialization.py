@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Any, List, Set, Tuple
 
 import numpy as np
+import pandas as pd
 
 from model.actors.actors import Actors
 from model.parts.actors import actor_update_health
@@ -49,7 +50,7 @@ def generate_initial_state(
         scenario, reactions, max_actors, attackers, defenders, labeled_addresses, institutional_threshold
     )
 
-    time_manager = TimeManager(current_time=simulation_starting_time)
+    time_manager = TimeManager(current_time=simulation_starting_time, simulation_start_time=simulation_starting_time)
 
     if simulation_starting_time == datetime.min:
         time_manager.initialize()
@@ -133,6 +134,8 @@ def generate_initial_state(
         "first_seal_rage_quit_support": dual_governance.state.config.first_seal_rage_quit_support,
         "second_seal_rage_quit_support": dual_governance.state.config.second_seal_rage_quit_support,
         "proposals_queue": proposals_queue,
+        "common_dataframe": pd.DataFrame(),
+        "timestep_dataframe": pd.DataFrame(),
     }
 
 
@@ -163,7 +166,7 @@ def generate_actors(
     actor_typestr = []
     actor_label = []
 
-    with open("data/stETH_token_distribution.csv", mode="r") as csv_file:
+    with open("data/stETH token distribution  - stETH+wstETH holders.csv", mode="r") as csv_file:
         csv_reader = csv.DictReader(csv_file, delimiter=",")
         for line_id, row in enumerate(csv_reader):
             if 0 < max_actors < line_id + 1:

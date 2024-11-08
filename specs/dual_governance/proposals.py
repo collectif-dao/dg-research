@@ -56,6 +56,7 @@ class Proposal:
     submittedAt: Timestamp = field(default_factory=lambda: Timestamp(0))
     scheduledAt: Timestamp = field(default_factory=lambda: Timestamp(0))
     executedAt: Timestamp = field(default_factory=lambda: Timestamp(0))
+    cancelledAt: Timestamp = field(default_factory=lambda: Timestamp(0))
     calls: List[ExecutorCall] = field(default_factory=list)
 
 
@@ -117,7 +118,20 @@ class Proposals:
         proposal.executedAt = Timestamp.from_uint256(self.time_manager.get_current_timestamp())
         proposal.status = ProposalStatus.Executed
 
+    def cancel(self, proposal_id: int):
+        proposal = self._get_proposal(proposal_id)
+        if proposal.status == ProposalStatus.Executed:
+            return
+        elif proposal.status == ProposalStatus.Cancelled:
+            return
+        proposal.cancelledAt = Timestamp.from_uint256(self.time_manager.get_current_timestamp())
+        proposal.status = ProposalStatus.Cancelled
+
     def cancel_all(self):
+        for proposal_id in range(self.state.last_canceled_proposal_id + 1):
+            if proposal_id == 0:
+                continue
+            self.cancel(proposal_id)
         last_proposal_id = len(self.state.proposals)
         self.state.last_canceled_proposal_id = last_proposal_id
 
