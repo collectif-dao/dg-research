@@ -84,17 +84,6 @@ def extract_actor_data(state):
     return actors_dict
 
 
-fieldnames = ["unique_run_key", "timestep", "dg_state_value", "dg_state_name", "dg_dynamic_timelock_seconds", "total_balance",
-              "total_locked", "total_health", "total_actors"]
-fieldnames += [f"{value_name}_{kind.name}"
-               for value_name in ("balance", "locked", "health")
-               for enum_type in (ReactionTime, ActorType)
-               for kind in enum_type]
-print()
-print(fieldnames)
-print()
-
-
 def extract_common_data(params, state):
     actors: List[BaseActor] = state["actors"]
 
@@ -120,6 +109,14 @@ def add_unique_run_key_to_dict(params, dict):
 def save_data(params, substep, state_history, prev_state):
     timestep = prev_state["timestep"]
     if timestep == 1:
+        fieldnames = ["unique_run_key", "timestep", "dg_state_value", "dg_state_name", "dg_dynamic_timelock_seconds",
+                      "total_balance",
+                      "total_locked", "total_health", "total_actors"]
+        fieldnames += [f"{value_name}_{kind.name}"
+                       for value_name in ("balance", "locked", "health")
+                       for enum_type in (ReactionTime, ActorType)
+                       for kind in enum_type]
+
         params["unique_run_key"] = 0 # This param needs to be set somewhere. Maybe in experiments/utils.py/setup_simulation from hash.
         # Maybe even remove hashes. Or calculate them here. If we are using a database, we can generate a new key using a DB from current run parameters and program version.
 
