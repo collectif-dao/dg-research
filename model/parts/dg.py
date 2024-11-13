@@ -58,12 +58,6 @@ def update_escrow(params, substep, state_history, prev_state, policy_input):
                 dual_governance.state.signalling_escrow.unlock_stETH(actor_address)
 
         if wstETH_amount < 0 and stETH_amount == 0:
-            if actor_address == "0x0b925ed163218f6662a35e0f0371ac234f9e9371":
-                print(f"wstETH_amount {wstETH_amount}")
-                print(f"stETH_amount {stETH_amount}")
-                print(f"dual_governance.state.signalling_escrow.accounting.state.assets[actor_address] {dual_governance.state.signalling_escrow.accounting.state.assets[
-                actor_address
-            ]}")
             lock_time = int(dual_governance.state.signalling_escrow.signaling_escrow_min_lock_time.total_seconds())
 
             assetsUnlockAllowedAfter = dual_governance.state.signalling_escrow.accounting.state.assets[

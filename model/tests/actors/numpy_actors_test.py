@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import pytest
 from hypothesis import given
@@ -16,6 +18,7 @@ from specs.tests.accounting_test import base_int_strategy, ethereum_address_stra
 from specs.time_manager import TimeManager
 from specs.utils import ether_base
 
+sys.modules["model.actors.utils"].IS_NUMBA = True
 MAX_HEALTH = 100
 MIN_HEALTH = 1
 
@@ -110,12 +113,12 @@ def test_lock_and_unlock(actor_data):
     lock_wstETH_amounts = np.array(wstETH, dtype=np.float64)
     mask = np.ones(len(stETH), dtype=bool)
 
-    actors.lock_to_escrow(lock_stETH_amounts, lock_wstETH_amounts, time_manager, mask)
+    actors.lock_to_escrow(lock_stETH_amounts, lock_wstETH_amounts, time_manager.get_current_timestamp(), mask)
 
     np.testing.assert_array_equal(actors.stETH_locked, lock_stETH_amounts)
     np.testing.assert_array_equal(actors.wstETH_locked, lock_wstETH_amounts)
 
-    actors.unlock_from_escrow(lock_stETH_amounts, lock_wstETH_amounts, time_manager, mask)
+    actors.unlock_from_escrow(lock_stETH_amounts, lock_wstETH_amounts, time_manager.get_current_timestamp(), mask)
 
     np.testing.assert_array_equal(actors.stETH, stETH)
     np.testing.assert_array_equal(actors.wstETH, wstETH)
@@ -162,14 +165,14 @@ def test_lock_to_escrow_with_excessive_amounts(actor_data):
 
     if not np.allclose(lock_stETH_amounts, stETH_array):
         with pytest.raises(NotEnoughActorStETHBalance):
-            actors.lock_to_escrow(lock_stETH_amounts, lock_wstETH_amounts, time_manager, mask)
+            actors.lock_to_escrow(lock_stETH_amounts, lock_wstETH_amounts, time_manager.get_current_timestamp(), mask)
 
     lock_stETH_amounts = stETH_array
     lock_wstETH_amounts = wstETH_array + 1e-18
 
     if not np.allclose(lock_wstETH_amounts, wstETH_array):
         with pytest.raises(NotEnoughActorWstETHBalance):
-            actors.lock_to_escrow(lock_stETH_amounts, lock_wstETH_amounts, time_manager, mask)
+            actors.lock_to_escrow(lock_stETH_amounts, lock_wstETH_amounts, time_manager.get_current_timestamp(), mask)
 
 
 @given(actor_data())
@@ -209,7 +212,7 @@ def test_rebalance_to_stETH(actor_data):
 
     mask = np.ones(len(stETH), dtype=bool)
 
-    actors.lock_to_escrow(lock_stETH_amounts, lock_wstETH_amounts, time_manager, mask)
+    actors.lock_to_escrow(lock_stETH_amounts, lock_wstETH_amounts, time_manager.get_current_timestamp(), mask)
 
     stETH_balances_after_lock = np.array(stETH, dtype=np.float64) - lock_stETH_amounts
     wstETH_balances_after_lock = np.array(wstETH, dtype=np.float64) - lock_wstETH_amounts
@@ -220,7 +223,9 @@ def test_rebalance_to_stETH(actor_data):
     rebalance_stETH_amounts = lock_stETH_amounts
     rebalance_wstETH_amounts = lock_wstETH_amounts
 
-    actors.rebalance_to_stETH(rebalance_stETH_amounts, rebalance_wstETH_amounts, time_manager, mask)
+    actors.rebalance_to_stETH(
+        rebalance_stETH_amounts, rebalance_wstETH_amounts, time_manager.get_current_timestamp(), mask
+    )
 
     expected_stETH = stETH_balances_after_lock + rebalance_stETH_amounts + rebalance_wstETH_amounts
     expected_stETH_locked = lock_stETH_amounts - rebalance_stETH_amounts
@@ -234,7 +239,9 @@ def test_rebalance_to_stETH(actor_data):
     over_rebalance_wstETH_amounts = lock_wstETH_amounts
 
     with pytest.raises(NotEnoughActorStETHBalance):
-        actors.rebalance_to_stETH(over_rebalance_stETH_amounts, over_rebalance_wstETH_amounts, time_manager, mask)
+        actors.rebalance_to_stETH(
+            over_rebalance_stETH_amounts, over_rebalance_wstETH_amounts, time_manager.get_current_timestamp(), mask
+        )
 
 
 @given(
@@ -281,7 +288,7 @@ def test_update_actors_health(actor_data, seed):
     prev_total_damage = actors.total_damage.copy()
     prev_total_recovery = actors.total_recovery.copy()
 
-    actors.update_actor_health(time_manager, damage_array, np.array(mask))
+    actors.update_actor_health(time_manager.get_current_timestamp(), damage_array, np.array(mask))
 
     adjusted_damage = damage_array.copy()
     mask1 = mask & (adjusted_damage > 0) & ((prev_health - adjusted_damage) < 0)
@@ -487,7 +494,7 @@ def test_apply_proposal_damage(actor_data, proposal_type, sub_type):
     expected_health = actors.health.copy()
     damage_array = np.repeat(proposal.damage, len(addresses)).astype(np.int16)
 
-    actors.apply_proposal_damage(time_manager, proposal, True)
+    actors.apply_proposal_damage(time_manager.get_current_timestamp(), proposal, True)
 
     for label, label_damage in proposal.effects.effects.items():
         if label_damage != 0:

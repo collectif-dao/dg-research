@@ -40,7 +40,6 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x5eea56d346aa5bc5aea1786169e1f4b8699e882d,26606.42354,0,26606.42354,Token Millionaire [0x5eea56],Private,
 0x0e774bbed46b477538f5b34c8618858d3d86e530,0,24270.84785,24270.84785,Token Millionaire [0x0e774b],Private,
 0x9d94ef33e7f8087117f85b3ff7b1d8f27e4053d5,13598.03058,10632.6,24230.63058,🤖 Token Millionaire [0x9d94ef],Contract,Other
-0x9d94ef33e7f8087117f85b3ff7b1d8f27e4053d5,13598.03058,10632.6,24230.63058,🤖 Token Millionaire [0x9d94ef],Contract,Other
 0x704377f719651c3ee6902ff3c9d5522e5054d429,23773.35036,0,23773.35036,Elixir: Gnosis Safe Proxy,Contract ,Vault
 0x3afdc9bca9213a35503b077a6072f3d0d5ab0840,0,22258.0687,22258.0687,Compound: CometFactory,Contract,Leverage/Lending
 0xba12222222228d8ba445958a75a0704d566bf2c8,0,21149.58441,21149.58441,🏦 🤖 Balancer: V2 Vault [0xba1222],Contract,DEX
@@ -72,7 +71,7 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x2d018f3602c1185766bc725e3390caab6f44ae5b,11992.48798,0,11992.48798,Token Millionaire [0x2d018f],Private,
 0x21e27a5e5513d6e65c4f830167390997aa84843a,11949.59647,0,11949.59647,🏦 🤖 Curve.fi: stETH-ng Liquidity Pool [0x21e27a],Contract,DEX
 0x2e20ddbf39b813693cae0ec78ae393dc060460e2,11870.44623,0,11870.44623,Token Millionaire [0x2e20dd],Private,
-0xe009367f3892dc4902f94f9a4639917d0a03b616,0,11814,11814,Nexo?,Custody ,
+0xe009367f3892dc4902f94f9a4639917d0a03b616,0,118140,118140,Nexo?,Custody,
 0x3c0aea3576b0d70e581ff613248a74d56cde0853,11222.21428,0,11222.21428,Token Millionaire [0x3c0aea],Private,
 0x57823baebaa86724839902e0d8efab7e0cfb31b0,10974.25406,0,10974.25406,🤖 Token Millionaire [0x57823b],Contract,Other
 0x41c59bf14d1407311aaa1b91eee6d2d441a3ec52,10746.58044,0,10746.58044,Token Millionaire [0x41c59b],Private,
@@ -81,7 +80,6 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x8b9f7fcf8338b1dc9d0bc8be1558dbef6e0c481d,10512.27279,0,10512.27279,Token Millionaire,Private,
 0x334f889fbc9884a1d6acfb50dfc57213589f7d13,10468.84662,0,10468.84662,Token Millionaire [0x334f88],Private,
 0x36ed8dda673bec4f95babe8f122e6f88cf72d0fb,10425.77163,0,10425.77163,Token Millionaire [0x36ed8d],Private,
-0xfcba81c19b20d2f2d7cea6e10647803ede7697c0,10098.25703,200.6979198,10298.95495,Medium Uniswap V3 LP [0xfcba81],Private,
 0xfcba81c19b20d2f2d7cea6e10647803ede7697c0,10098.25703,200.6979198,10298.95495,Medium Uniswap V3 LP [0xfcba81],Private,
 0xeb9c1ce881f0bdb25eac4d74fccbacf4dd81020a,10266.47027,0,10266.47027,Token Millionaire [0xeb9c1c],Private,
 0xff4606bd3884554cdbdabd9b6e25e2fad4f6fc54,10221.69291,0,10221.69291,Token Millionaire [0xff4606],Private,
@@ -142,7 +140,7 @@ address,stETH,wstETH,total,label,type,protocol_type
 0xf18337bfb2c0a97221ba78fe813441834469dbfc,6020.059108,0,6020.059108,Token Millionaire,Private,
 0xab917dabdf1f598e88f80e39942ae4fe00658e43,6008.317293,0,6008.317293,Token Millionaire [0xab917d],Private,
 0x7fc386640f349e8f9c683a91b5848b0b2db21bb6,5998.775688,0,5998.775688,Gnosis Safe Proxy,Private,
-0x04b35d8eb17729b2c4a4224d07727e2f71283b73,0,5907,5907,Token Millionaire [0x04b35d],Private,
+0x04b35d8eb17729b2c4a4224d07727e2f71283b73,0,59070,59070,Token Millionaire [0x04b35d],Private,
 0xb5092c5916354d48d36d069c5deea488c2d194de,5895.322388,0,5895.322388,Token Millionaire,Private,
 0xdc7b28976d6eb13082a5be7c66f9dcfe0115738f,5875.278404,0,5875.278404,🤖 Private Transactions Miner [0xdc7b28],Contract,Other
 0x8429eaa03f90bd6dfccc64863d02a9c34ae81187,0,5808.385807,5808.385807,Token Millionaire,Private,
@@ -186,11 +184,10 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x044b48e46b0b7b8b639364cc90875a0f7d4537ec,4726.77859,0,4726.77859,🤖 Token Millionaire [0x044b48],Contract,Other
 0x0cb1d4a24292bb89862f599ac5b10f42b6de07e4,4679.87529,0,4679.87529,Gnosis Safe Proxy,Private,
 0x574f858c5bd468c955b200a83362d99eac106737,4676.915713,0,4676.915713,Token Millionaire [0x574f85],Private,
-0x5a8e9774d67fe846c6f4311c073e2ac34b33646f,4671,0,4671,Token Millionaire,Private,
+0x5a8e9774d67fe846c6f4311c073e2ac34b33646f,46710,0,46710,Token Millionaire,Private,
 0xce9d724d4577907e75d264ac05f3832d5c2f6bc9,4661.411977,0,4661.411977,Token Millionaire [0xce9d72],Private,
 0xb3d402fecd8257a2809b11af78c1eab41cc3e57d,4630.826079,0,4630.826079,ETH Millionaire [0xb3d402],Private,
 0xff72243c5d7373f8ac9ccf4ccd226301dc213a70,4630.679571,0,4630.679571,Token Millionaire [0xff7224],Private,
-0x5d7aaa862681920ea4f350a670816b0977c80b37,2163.379518,2449.360256,4612.739774,@luggisdoteth [0x5d7aaa],Private,
 0x5d7aaa862681920ea4f350a670816b0977c80b37,2163.379518,2449.360256,4612.739774,@luggisdoteth [0x5d7aaa],Private,
 0x6cc5f688a315f3dc28a7781717a9a798a59fda7b,4603.025086,0,4603.025086,🏦 OKX: Hot Wallet 0x6cc [0x6cc5f6],CEX,
 0x9d6c9e135f96e5317f58b7b5bf49c0d5db03f3c1,4588.113637,0,4588.113637,Token Millionaire,Private,
@@ -267,7 +264,7 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x2674341d40b445c21287b81c4bc95ec8e358f7e8,3191.103544,0,3191.103544,No label,No label,No label
 0x6fcfb789a593762557177fe9548e44d166f91ed4,0,3189.069652,3189.069652,No label,No label,No label
 0x5ef0f3c15b2371e7355f5b6594f706ab7417655e,0,3135.988494,3135.988494,Token Millionaire [0x5ef0f3],Private,
-0x3ec92c9d09403a76bda445ffdfaf6de59717219f,3125,0,3125,Medium Uniswap V3 LP [0x3ec92c],Private,
+0x3ec92c9d09403a76bda445ffdfaf6de59717219f,31250,0,31250,Medium Uniswap V3 LP [0x3ec92c],Private,
 0x051f1d88f0af5763fb888ec4378b4d8b29ea3319,0,3119.940677,3119.940677,No label,No label,No label
 0xe313ba733305a6c0571aa0d8b2a2b9cab0e18dc3,3102.602552,0,3102.602552,No label,No label,No label
 0x4d0dc4ce441d25657e3d9aa9c57fc6e499e28f69,3091.035773,0,3091.035773,Token Millionaire [0x4d0dc4],Private,
@@ -277,7 +274,7 @@ address,stETH,wstETH,total,label,type,protocol_type
 0xb400aba2b84825cc5acf8ffeb26c1028d6dd270f,3052.143227,0,3052.143227,🤓 Smart Dex Trader [0xb400ab],Private,
 0x7d3df6dc59992463f4776214f93bd70ef6ed11ee,3048.970532,0,3048.970532,ETH Millionaire [0x7d3df6],Private,
 0x4b1f8d3b7ff5c840d62c792ca74f097e1501b898,3047.361775,0,3047.361775,No label,No label,No label
-0xeeec037f6d17a99f759dcfa3f435ea56abc408ce,3030,0,3030,Token Millionaire [0xeeec03],Private,
+0xeeec037f6d17a99f759dcfa3f435ea56abc408ce,30300,0,30300,Token Millionaire [0xeeec03],Private,
 0xb1a32fc9f9d8b2cf86c068cae13108809547ef71,3008.189442,15.70159952,3023.891042,🤖 Nouns DAO: Executor Proxy [0xb1a32f],Contract,DAO
 0x32ec02800cb7bec5d44b7f97148627c4df5b6c23,3011.463602,0,3011.463602,ETH Millionaire [0x32ec02],Private,
 0xb92792552e590339a7dbf1e0d6114fbc7395c86b,3004.542592,0,3004.542592,No label,No label,No label
@@ -302,7 +299,6 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x3cba04009e19a27eb3033c27d0a4b04d67cdbd45,2764.989282,0,2764.989282,Token Millionaire [0x3cba04],Private,
 0xa2f987a546d4cd1c607ee8141276876c26b72bdf,2730.469198,0,2730.469198,No label,No label,No label
 0x849d52316331967b6ff1198e5e32a0eb168d039d,2436.981713,292.3977279,2729.379441,🤖 Gnosis: Daughter Safe [0x849d52],Private,
-0x849d52316331967b6ff1198e5e32a0eb168d039d,2436.981713,292.3977279,2729.379441,🤖 Gnosis: Daughter Safe [0x849d52],Private,
 0x6fffe084f6413fa400bdb93b951e71e190d5d18a,0,2681.424835,2681.424835,Token Millionaire [0x6fffe0],Private,
 0xc2f18062d275211dbf5fa76daa21475a7da95c7a,2678.070382,0,2678.070382,Token Millionaire [0xc2f180],Private,
 0x49f2a0d1629c30df629898fb811ef43ab8d437a1,2660.135631,0,2660.135631,Token Millionaire [0x49f2a0],Private,
@@ -324,7 +320,7 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x0459dda9eb7062e6fdca6293a4c363722fca6102,2488.173194,0,2488.173194,ctt.eth [0x0459dd],Private,
 0xad534bc6e6a6e9bc221e5122dc1bf42474d528c3,2463.248951,0,2463.248951,No label,No label,No label
 0x77ac670612da8c6392eabf0bf356c6fc0297c991,2461.224324,0,2461.224324,ETH Millionaire [0x77ac67],Private,
-0xde53067117188e1b0cef1ca7c44ad8ba668bc073,2450,0,2450,No label,No label,No label
+0xde53067117188e1b0cef1ca7c44ad8ba668bc073,24500,0,24500,No label,No label,No label
 0x10f93739eb197de914d425795dc2e1f7064a7dba,0,2447.575418,2447.575418,euanmaciver.eth* [0x10f937],Private,
 0x51427a30c32d7f414e4ffcbe84feb4537b4c063a,2427.454364,0,2427.454364,No label,No label,No label
 0x651ffaef6f02f50f36d8daf3a38f72de499f72b0,2409.9,0,2409.9,No label,No label,No label
@@ -395,7 +391,7 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x722bdd265d29a4d6e820c680a8594a968ff24d72,2001.146516,0,2001.146516,No label,No label,No label
 0x4df0bd70dc9ad30f5c742a4bd2c0ec1b4b1af965,2000.006728,0,2000.006728,No label,No label,No label
 0x14e87402b71dea9c1ead6fd5cfab4a8810024ca2,2000.000965,0,2000.000965,No label,No label,No label
-0xbfe137d104b5b2dfd0af806941c6d0ed94d16a62,2000,0,2000,No label,No label,No label
+0xbfe137d104b5b2dfd0af806941c6d0ed94d16a62,20000,0,20000,No label,No label,No label
 0x880a1ab227b5f4a0de0020785d73f0990af5e217,1994.506296,0,1994.506296,No label,No label,No label
 0x753179af057a83c599469775efad73158d9ba679,1993.106462,0,1993.106462,No label,No label,No label
 0xf9b36e0b1ed967ee09884e5dc98d22ec6da19f2a,0,1992.951779,1992.951779,🤖 Token Millionaire [0xf9b36e],Contract,Other
@@ -408,7 +404,6 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x41935c5a13fc74a3534ab93b2e49f0960c5177ad,0,1956.954839,1956.954839,No label,No label,No label
 0xbfbf368a15f057558b7b0bc601923fa072039e9e,0,1956.303888,1956.303888,High Balance [0xbfbf36],Private,
 0x5e4211bb8548645d01f10d403cea9b6ee1c27636,1953.643815,0,1953.643815,Token Millionaire [0x5e4211],Private,
-0xe68d7a6c421e2d220b5840116008c9abdbcf53b2,722.8443152,1227.301122,1950.145437,Token Millionaire [0xe68d7a],Private,
 0xe68d7a6c421e2d220b5840116008c9abdbcf53b2,722.8443152,1227.301122,1950.145437,Token Millionaire [0xe68d7a],Private,
 0x349c34f2bba369d87d5dffba37e296c2559d05d7,1942.248121,0,1942.248121,Token Millionaire [0x349c34],Private,
 0x01fc5e5b73a58e9525cdc9975210d27e095760db,0,1936.303967,1936.303967,No label,No label,No label
@@ -445,10 +440,10 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x82966904586dc68864a73bd3627cbb90eca208fb,1724.698392,0,1724.698392,Token Millionaire [0x829669],Private,
 0xe952f7baf89076886a3fa0b9ab9b0fe504572728,0,1698.783497,1698.783497,No label,No label,No label
 0x82e71b5f1dfe6a197fa0a8ff7149e9f29c99cae7,0,1688.458061,1688.458061,No label,No label,No label
-0x9ec7868ebae98a73cb65711f6fc941436187a3c9,1684,0,1684,No label,No label,No label
+0x9ec7868ebae98a73cb65711f6fc941436187a3c9,16840,0,16840,No label,No label,No label
 0x38d43a6cb8da0e855a42fb6b0733a0498531d774,0,1683.709871,1683.709871,No label,No label,No label
 0x11110a1e22c2b9d147909436d1f58303eee34971,1681.601021,0,1681.601021,No label,No label,No label
-0xbb01a8e26512659c3b9808f51e2ac5490b72fe8d,1668,0,1668,No label,No label,No label
+0xbb01a8e26512659c3b9808f51e2ac5490b72fe8d,16680,0,16680,No label,No label,No label
 0x86df8bd858b16393f0cfb4066f02065a221c4fe4,1662.781502,0,1662.781502,Token Millionaire [0x86df8b],Private,
 0xd071e27e0b51ea73df46ed5617cc1081b363749b,1661.146727,0,1661.146727,No label,No label,No label
 0xe1d3c71f9b2628ebc3c4c215608442813f3fa0dd,1658.578184,0,1658.578184,Token Millionaire [0xe1d3c7],Private,
@@ -507,13 +502,11 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x1457526c758ac3767bb65746820f6b258e357b6b,0,1485.931509,1485.931509,Token Millionaire [0x145752],Private,
 0x4b594728ee803cfa68407c5d597167f24f71dcbb,1484.704195,0,1484.704195,No label,No label,No label
 0xe0a6e44f649144c9cdaeda53536f4fc08d900a83,811.7771122,666.5610865,1478.338199,No label,No label,No label
-0xe0a6e44f649144c9cdaeda53536f4fc08d900a83,811.7771122,666.5610865,1478.338199,No label,No label,No label
 0x7c1593c39b048bb19e255679ba8505ac7e5f4d12,1477.461402,0,1477.461402,Token Millionaire [0x7c1593],Private,
 0x27be856e8b8d24220e53b933e29d46a477858ce7,1476.809055,0,1476.809055,🤖 Token Millionaire [0x27be85],Contract,Other
 0xcebbba0c2e6095935adaee707d1660d401c3e70e,0,1475.95092,1475.95092,No label,No label,No label
 0x7eaafd601977d0f1aae82e05461d23c0701bb6a5,1475.412841,0,1475.412841,🤖 Token Millionaire [0x7eaafd],Contract,Other
 0x9e0173dae7f9bb6ec3d59a07f4558451a3aaac4c,1474.114633,0,1474.114633,No label,No label,No label
-0x51c72848c68a965f66fa7a88855f9f7784502a7f,1321.414668,151.2063033,1472.620971,No label,No label,No label
 0x51c72848c68a965f66fa7a88855f9f7784502a7f,1321.414668,151.2063033,1472.620971,No label,No label,No label
 0x476be4e3773737e653bdc1eae9b568b19197cc84,1467.338079,0,1467.338079,No label,No label,No label
 0xbe505649b2cf63f3b40726218293fa7a3365c275,1454.121095,0,1454.121095,No label,No label,No label
@@ -524,7 +517,7 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x0581cfaffbe7b4ad2ddc160536a107f551fae0df,1432.814464,0,1432.814464,No label,No label,No label
 0x7e78c3d929ae1bcd052a563bd38af31914061724,0,1429.362576,1429.362576,Token Millionaire [0x7e78c3],Private,
 0x64d1d23045b863c7e08e63367a0bb3a71afebf79,1427.111425,0,1427.111425,Token Millionaire [0x64d1d2],Private,
-0x02c7fe6103a3313bae4e6bc4631c37d50954ee07,1427,0,1427,No label,No label,No label
+0x02c7fe6103a3313bae4e6bc4631c37d50954ee07,14270,0,14270,No label,No label,No label
 0x951d22ce3c3e1351d0303107f56fbbef7c3846ac,0,1420.846152,1420.846152,No label,No label,No label
 0x607ebc72f74e00a348b77358b3da31b31ecfad44,1420.116273,0,1420.116273,Token Millionaire [0x607ebc],Private,
 0x6a4d361b7d0dadf8146dcfe6258a8699ea35eb81,0,1404.6846,1404.6846,Token Millionaire [0x6a4d36],Private,
@@ -536,7 +529,6 @@ address,stETH,wstETH,total,label,type,protocol_type
 0xff052381092420b7f24cc97fded9c0c17b2cbbb9,0,1372.820831,1372.820831,Token Millionaire [0xff0523],Private,
 0xa4a6cda668853590465b8141485b0a390d436293,1366.67576,0,1366.67576,No label,No label,No label
 0x8b55856a445d02a047afea1b377cfc45edfeb9a7,1366.053696,0,1366.053696,ETH Millionaire [0x8b5585],Private,
-0x1d778d3c6cb658c56be571425f69eff809fdc1eb,1025.29511,330.3972355,1355.692346,🤖 Token Millionaire [0x1d778d],Contract,Other
 0x1d778d3c6cb658c56be571425f69eff809fdc1eb,1025.29511,330.3972355,1355.692346,🤖 Token Millionaire [0x1d778d],Contract,Other
 0xe76e7d05707e4f78a57941d230fe356bccd74731,1354.377645,0,1354.377645,Token Millionaire [0xe76e7d],Private,
 0xcc852afb9297a22b716767772b9d72319238dc93,1352.873151,0,1352.873151,No label,No label,No label
@@ -568,7 +560,6 @@ address,stETH,wstETH,total,label,type,protocol_type
 0xaea4ed44299dafc9f5ff568306a124a38957a09d,1264.936941,0,1264.936941,Token Millionaire [0xaea4ed],Private,
 0x9cc63fd864e7ff6b839602854a5f7abcacb5a31d,1264.45366,0,1264.45366,Token Millionaire [0x9cc63f],Private,
 0x70f979db5da1ec899b3b4f05d64b871e774704b2,1258.256862,0,1258.256862,Token Millionaire [0x70f979],Private,
-0x8180d59b7175d4064bdfa8138a58e9babffda44a,1176.590651,80.3352,1256.925851,🤖 UMA: Risk Labs Wallet [0x8180d5],Contract,Other
 0x8180d59b7175d4064bdfa8138a58e9babffda44a,1176.590651,80.3352,1256.925851,🤖 UMA: Risk Labs Wallet [0x8180d5],Contract,Other
 0x556bd626535022cb854e297ada4f46807da54b2c,1254.81059,0,1254.81059,Hugh Karp [0x556bd6],Private,
 0xc89b3bd0e352448eea82f36028da2dcff8525fed,1252.028837,0,1252.028837,Token Millionaire [0xc89b3b],Private,
@@ -684,7 +675,7 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x157753217d6eee6d0b175e4f06f4ed562f93e1b8,0,1025.354407,1025.354407,No label,No label,No label
 0x6019dba2406a9bdda24174124097f4d0ec1a0388,1025.248876,0,1025.248876,No label,No label,No label
 0x35dbd07f4c7ce04583d38849df5257f02e6f1469,1024.060584,0,1024.060584,Token Millionaire [0x35dbd0],Private,
-0x61a025fa7cbd8b7413bf84fe2d9ae9e169187db1,1024,0,1024,No label,No label,No label
+0x61a025fa7cbd8b7413bf84fe2d9ae9e169187db1,10240,0,10240,No label,No label,No label
 0x3b327e969e3b987861f94f0ec0c0a7f4750d198b,1023.97829,0,1023.97829,No label,No label,No label
 0x8fec0a3520019963740e1c772303d56fbf6a92e9,1023.000271,0,1023.000271,No label,No label,No label
 0x2e71c5d5b52cf925428437e3245d540b0d6750cc,0,1022.468118,1022.468118,No label,No label,No label
@@ -714,7 +705,7 @@ address,stETH,wstETH,total,label,type,protocol_type
 0xb18a84980c009a2f958cf3db1bad7b592613c45c,1006.921164,0,1006.921164,No label,No label,No label
 0xfe297e657b839303e8d47a3c2c18a228e3c63863,1006.667001,0,1006.667001,No label,No label,No label
 0xa797e11333f432c1e0d46e392b7269308b5d9b48,1005.896629,0,1005.896629,Token Millionaire [0xa797e1],Private,
-0xae60b82236e91b5e9a60fbe3840e3f7cc60a815f,1005,0,1005,No label,No label,No label
+0xae60b82236e91b5e9a60fbe3840e3f7cc60a815f,10050,0,10050,No label,No label,No label
 0x378bcce7235d53bbc3774bff8559191f06e6818e,1004.95927,0,1004.95927,No label,No label,No label
 0xa7752076c01b43ff55dc453ec7d89607668dac7c,1004.882103,0,1004.882103,dltcitizen.eth [0xa77520],Private,
 0x0ffda70f485c2f67af22a221596bc2aaeb79cd1a,1004.709641,0,1004.709641,Token Millionaire [0x0ffda7],Private,
@@ -738,15 +729,15 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x3cd48a0cb9c82608e743086b1ffda59741beef3f,1000.088518,0,1000.088518,No label,No label,No label
 0xbc783e229f2237351aa4bf9c8c03066fe956aa26,1000.037785,0,1000.037785,No label,No label,No label
 0x2d1b3bcf508999f41510bfc2c5bbb58c9f979d8f,1000.005068,0,1000.005068,No label,No label,No label
-0xc6a1d927d7b27a5606a7ca9d46ecd04c63a5eb62,1000,0,1000,Token Millionaire,Private,
-0xd7042769b6437d39a298b92ae4737bb6d83a1a54,1000,0,1000,Token Millionaire [0xd70427],Private,
+0xc6a1d927d7b27a5606a7ca9d46ecd04c63a5eb62,10000,0,10000,Token Millionaire,Private,
+0xd7042769b6437d39a298b92ae4737bb6d83a1a54,10000,0,10000,Token Millionaire [0xd70427],Private,
 0x0b12967e2cdaafe4fe863273133fa2e45e612e20,999.7359946,0,999.7359946,blade1.eth [0x0b1296],Private,
 0xfb718878bd2bea9f7a76add81b4d3ed567f3cd50,999.7122426,0,999.7122426,No label,No label,No label
 0xd5c392f161aa7945203d2ba6734b43dc1f8536b1,998.563824,0,998.563824,No label,No label,No label
 0xc54c27d2588fe79aa26758a9d25a1a03165f6ab5,996.9971506,0,996.9971506,Token Millionaire [0xc54c27],Private,
 0xbaba0c6b1e2c43a8e08341cc80fc03e91eb87906,996.7754376,0,996.7754376,"""Smarter LP"" on Fantom [0xbaba0c]",Private,
 0x16065b17ae6d3adb0cf32f6edb53886b95b2bf26,996.4511575,0,996.4511575,Token Millionaire [0x16065b],Private,
-0xfde2583b0a85f36e62d0652c4a8d71d5cad125b2,995,0,995,No label,No label,No label
+0xfde2583b0a85f36e62d0652c4a8d71d5cad125b2,9950,0,9950,No label,No label,No label
 0x5f662e4eed3ee260133a78a25a1fb1cbeee0660d,994.109931,0,994.109931,Token Millionaire [0x5f662e],Private,
 0xb22617d19826ed2352a961ef9d7f070608037ef5,993.87,0,993.87,No label,No label,No label
 0x82b663b7f3a30519a582f34463fc2a44acde77cd,992.8482045,0,992.8482045,No label,No label,No label
@@ -754,7 +745,7 @@ address,stETH,wstETH,total,label,type,protocol_type
 0xaffd962dc623e65d01dd2f8e1ffb672e7e3fe968,0,990.0457913,990.0457913,No label,No label,No label
 0xb8981d01a9106585f540016e2059ee5873518ceb,989.5628146,0,989.5628146,No label,No label,No label
 0x9a00011fef9bf6472ce92eb397cc39446162ac72,988.9889341,0,988.9889341,No label,No label,No label
-0x6565dd14d843df8c12496b7070b3bce4c85d3636,988,0,988,No label,No label,No label
+0x6565dd14d843df8c12496b7070b3bce4c85d3636,9880,0,9880,No label,No label,No label
 0xe18704cff60c544c392cf13063652d0804b9d218,987.2357614,0,987.2357614,No label,No label,No label
 0xbdcc8546d6fb1c0d28ddcd20c880f17188973a65,0,985.1742406,985.1742406,🤖 Token Millionaire [0xbdcc85],Contract,Other
 0xd3eb8e906b0f6f24e204f355427280495ca1d650,983.2248726,0,983.2248726,Token Millionaire [0xd3eb8e],Private,
@@ -808,7 +799,7 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x030d9f55c7f7589034b829a87bf3bd84d6682a18,915.9870457,0,915.9870457,No label,No label,No label
 0x79457a036ba1c59399353233c765f004e7c06adf,913.3533288,0,913.3533288,Token Millionaire [0x79457a],Private,
 0xf6e2efdf175e7a91c8847dade42f2d39a9ae57d4,0,909.7599297,909.7599297,No label,No label,No label
-0x53721fd918e3c5fa7c86cf78982b1f75ecda4a37,906,0,906,Token Millionaire [0x53721f],Private,
+0x53721fd918e3c5fa7c86cf78982b1f75ecda4a37,9060,0,9060,Token Millionaire [0x53721f],Private,
 0x091945df89b98a8085af60a90e17d30abba119f4,905.1618313,0,905.1618313,Token Millionaire [0x091945],Private,
 0x69881012ed610df5be5711edd70b50eb1ed2b8f2,902.0606869,0,902.0606869,🤖 Token Millionaire [0x698810],Contract,Other
 0x2cfdf288444867f81a347dad4c89cebeb3b91ea9,901.6295419,0,901.6295419,No label,No label,No label
@@ -866,11 +857,11 @@ address,stETH,wstETH,total,label,type,protocol_type
 0xdda32f05690d185468629966e1415cf87bc7424c,0,822.6709953,822.6709953,aoqi.eth [0xdda32f],Private,
 0x8b923db19785583585bbce5bf3596021a913673c,822.0461792,0,822.0461792,mjanzen.eth [0x8b923d],Private,
 0xfeef177e6168f9b7fd59e6c5b6c2d87ff398c6fd,821.2582762,0,821.2582762,No label,No label,No label
-0x1aabf70de648bc9990b13742a94917bd0e25ab91,821,0,821,No label,No label,No label
+0x1aabf70de648bc9990b13742a94917bd0e25ab91,8210,0,8210,No label,No label,No label
 0x8b428170d365113efee4be84469e732a97a4ac9b,820.3103559,0,820.3103559,No label,No label,No label
 0xb7e9eaabcc063d3d4b4df7cd75d1db8041f8dd36,814.2537786,0,814.2537786,🤖 Token Millionaire [0xb7e9ea],Contract,Other
 0xf0b3ca6fb280e8833407c16880455b82e71700b7,0,812.4722105,812.4722105,Token Millionaire [0xf0b3ca],Private,
-0xb4dd537b6af2b32010307092144b73fb20a8ff40,810,0,810,Token Millionaire [0xb4dd53],Private,
+0xb4dd537b6af2b32010307092144b73fb20a8ff40,8100,0,8100,Token Millionaire [0xb4dd53],Private,
 0x70f5d7f0f7b70edecfc1d8e9b8650d1c994d913c,809.2244028,0,809.2244028,Token Millionaire [0x70f5d7],Private,
 0x44c31fdb0fb6c0a6ab92c4ffc8ffa90a39f862b8,806.9022365,0,806.9022365,No label,No label,No label
 0x6d2550425f320386cc1d2318f022fda748a524a7,805.5375159,0,805.5375159,No label,No label,No label
@@ -888,7 +879,7 @@ address,stETH,wstETH,total,label,type,protocol_type
 0xb7206be7c3dce4b9a3d3e9693075a349b2194954,800.2648123,0,800.2648123,Token Millionaire [0xb7206b],Private,
 0x18732905045969237a24e7900b362adbbff283a0,800.0297605,0,800.0297605,Token Millionaire [0x187329],Private,
 0x912807ca5f7f004dd0567eff6b8f6d2715529c87,800.0072875,0,800.0072875,Token Millionaire [0x912807],Private,
-0x1661380ee8154e39404ee32e07a4a8940c193e06,800,0,800,No label,No label,No label
+0x1661380ee8154e39404ee32e07a4a8940c193e06,8000,0,8000,No label,No label,No label
 0xb02def47ad31e4612c3256e1bde6d2d3166ed3f5,798.8975075,0,798.8975075,Token Millionaire [0xb02def],Private,
 0xd34427950f74a15bd18d1be4cb3dd5dd65f9eb1f,0,798.1416959,798.1416959,CDP Creator [0xd34427],Private,
 0x7bc58279dbfcd62d08e3092b691b0d46014ae451,797.4505836,0,797.4505836,Token Millionaire [0x7bc582],Private,
@@ -899,7 +890,6 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x73285701a30176b545f889e2dc3bae33313f05f7,792.006692,0,792.006692,Token Millionaire [0x732857],Private,
 0x02dddc0504d48726fcdd68716652f80fa95ad626,0,791.538,791.538,No label,No label,No label
 0x77bd7ae6193f030363b8fcbf28e43ee8aead70c0,790.5807033,0,790.5807033,No label,No label,No label
-0xc4e24ff2dee71ff59a3bbb84989a1d2d2426b201,658.5885128,131.6752289,790.2637416,No label,No label,No label
 0xc4e24ff2dee71ff59a3bbb84989a1d2d2426b201,658.5885128,131.6752289,790.2637416,No label,No label,No label
 0x99b95c60b2d68db15dffb11a71076a31ccaf1487,0,789.2522846,789.2522846,No label,No label,No label
 0x2c75b416db1b52c5ddd9a4265630ba36457218d2,787.5703229,0,787.5703229,Token Millionaire [0x2c75b4],Private,
@@ -914,7 +904,7 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x7ac83183e8e6b54baed8bddbd0970936ed275a79,773.5771352,0,773.5771352,No label,No label,No label
 0x6724f3fbb16f542401bfc42c464ce91b6c31001e,0,772.0463543,772.0463543,No label,No label,No label
 0xf9c8b051234f8b43306d099044451c02857719eb,765.2718171,0,765.2718171,ETH Millionaire [0xf9c8b0],Private,
-0xdd5672a609fdd393e669572e9e34806e0ee0f9bc,765,0,765,No label,No label,No label
+0xdd5672a609fdd393e669572e9e34806e0ee0f9bc,7650,0,7650,No label,No label,No label
 0x7b5cd2b653998355350e3810dbd3c9cbc19b25f0,761.8639642,0,761.8639642,Token Millionaire [0x7b5cd2],Private,
 0xaa669f6724558a5a267f716237799e4f7f17ea31,759.6153717,0,759.6153717,Token Millionaire [0xaa669f],Private,
 0x0d18d7c855668eb1ba06005b199838f38e00d7e3,757.7769432,0,757.7769432,Token Millionaire [0x0d18d7],Private,
@@ -923,7 +913,7 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x22eeabbbb492b9b228efac243b453cf40a8c972c,753.1832168,0,753.1832168,No label,No label,No label
 0x7485f46d920c6445f6dd37bbe12bddb3c2bf8f10,752.3711646,0,752.3711646,No label,No label,No label
 0x6781d33165dc0fc27e2a512c91bc36f076d52f69,752.349561,0,752.349561,Token Millionaire [0x6781d3],Private,
-0x77021d475e36b3ab1921a0e3a8380f069d3263de,750,0,750,No label,No label,No label
+0x77021d475e36b3ab1921a0e3a8380f069d3263de,7500,0,7500,No label,No label,No label
 0x4897cbf21a958cfcece8f259c72f31b2325abde8,744.9654534,0,744.9654534,No label,No label,No label
 0xcce91e213ffc4014742739f2a892d207365d1542,744.4711593,0,744.4711593,Token Millionaire [0xcce91e],Private,
 0xc18972211c09813e686bd81009576af9e41a863c,740.0288827,0,740.0288827,No label,No label,No label
@@ -970,10 +960,10 @@ address,stETH,wstETH,total,label,type,protocol_type
 0xb8c4cae6a321c4e76a1573465961215da7eeadc9,700.0000009,0,700.0000009,No label,No label,No label
 0x9e507542b1e8753a842ea487825acb944f2bced8,699.9986975,0,699.9986975,No label,No label,No label
 0x86538ce8fe26b991af2e8d6dac21e575673c95bb,695.7687637,0,695.7687637,Token Millionaire [0x86538c],Private,
-0x0fc6d91cd7f404acdcccbfd3edccd85a6acc2201,695,0,695,No label,No label,No label
+0x0fc6d91cd7f404acdcccbfd3edccd85a6acc2201,6950,0,6950,No label,No label,No label
 0x69ee6036f3508fc349b234d5a24acbc0a9038d01,692.9072212,0,692.9072212,No label,No label,No label
 0x666d91da9159710d3a4669dc9a82122baa598374,691.2815592,0,691.2815592,No label,No label,No label
-0xf1be2972a659c93c3ebe23318181fa34711ca889,690,0,690,No label,No label,No label
+0xf1be2972a659c93c3ebe23318181fa34711ca889,6900,0,6900,No label,No label,No label
 0x1ebfd36223079dc79fefc62260db9e25f3f5e2c7,0,689.7230606,689.7230606,No label,No label,No label
 0x4bb7f4c3d47c4b431cb0658f44287d52006fb506,0,689.0280319,689.0280319,ETH Millionaire [0x4bb7f4],Private,
 0x3ed9fdc5279e167e185bcd6a2ac751c241815c77,688.9,0,688.9,No label,No label,No label
@@ -1054,7 +1044,7 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x43cb54c706faf6780dd89cc9186f8dabfad1834c,623.3653513,0,623.3653513,Private Transactions Miner [0x43cb54],Private,
 0x1229a70535ab7cf4b102405ed36e23c9d69ec0f9,0,622.9186258,622.9186258,Token Millionaire [0x1229a7],Private,
 0xc006544b93e86e8999623c1d12d2e352c61c8123,622.4060383,0,622.4060383,No label,No label,No label
-0x0cdf071dec3f9c652e25c847970a39af3e3c2e6f,620,0,620,No label,No label,No label
+0x0cdf071dec3f9c652e25c847970a39af3e3c2e6f,6200,0,6200,No label,No label,No label
 0x096a738ad7196fbeaaa206affd5a220b7236eb05,618.545915,0,618.545915,No label,No label,No label
 0xd9f6df93ada472a7feb59a61465b3d612e0522ee,617.7504669,0,617.7504669,No label,No label,No label
 0x445add25b6e6fe2d812df29e10eebc74d5fe5d1f,615.4186633,0,615.4186633,No label,No label,No label
@@ -1094,8 +1084,8 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x8c324f6640d90fb027a64e85909f57d06881974a,600.3308918,0,600.3308918,No label,No label,No label
 0x1f31b61a966b73dc110e0bc3e1a3bf8f55ba46f8,600.3255951,0,600.3255951,Millionaire [0x1f31b6],Private,
 0x6ff6dfac4b8bea957dc48aad626d7631c2ba208c,600.1496563,0,600.1496563,No label,No label,No label
-0x10d6c2d05a79145e830086be7d0cda951a692a84,600,0,600,No label,No label,No label
-0xcbb818779f3446522c323266623d15ad7e0544f0,600,0,600,No label,No label,No label
+0x10d6c2d05a79145e830086be7d0cda951a692a84,6000,0,6000,No label,No label,No label
+0xcbb818779f3446522c323266623d15ad7e0544f0,6000,0,6000,No label,No label,No label
 0x010004532f3c6528982bb2bfd9ae97cdd934bd70,599.9684688,0,599.9684688,Token Millionaire [0x010004],Private,
 0xa3cd33f9201d1e1641616774e48ab12f8d2bda63,598.5529349,0,598.5529349,No label,No label,No label
 0x37ad9f5cb15867156bd75e76b8d9edc40fc077a8,598.2145448,0,598.2145448,Heavy Dex Trader [0x37ad9f],Private,
@@ -1114,7 +1104,7 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x067f9b748699f3c3764bfab0651f00631cd614ec,590.1716289,0,590.1716289,No label,No label,No label
 0x5934807cc0654d46755ebd2848840b616256c6ef,0,589.1036506,589.1036506,🤖 Opyn: Margin Pool [0x593480],Contract,Leverage/Lending
 0x13bf7db96762ce2d96818298634f86c952b9a9ea,588.2833434,0,588.2833434,No label,No label,No label
-0xde8dd6e13082c16103ba95ea43636aa314e47d29,588,0,588,No label,No label,No label
+0xde8dd6e13082c16103ba95ea43636aa314e47d29,5880,0,5880,No label,No label,No label
 0xa397d02928acaaf6553fd7e832413c5a732cf559,0,587.9970175,587.9970175,CDP Creator [0xa397d0],Private,
 0xe389b7f43dc6f382309abf2b5fd5e629703f9696,587.7376265,0,587.7376265,No label,No label,No label
 0x916792f7734089470de27297903bed8a4630b26d,0,587.0042731,587.0042731,Token Millionaire [0x916792],Private,
@@ -1198,7 +1188,7 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x0e98b46e51407a5c6e562c252db1eb2f2768b227,537.2297061,0,537.2297061,No label,No label,No label
 0x381dc97d51be47423393939f2c3d01727b2bbf8b,535.4807586,0,535.4807586,No label,No label,No label
 0x7111bf41e36f24b869a1ace40edda961741f8d94,535.4804963,0,535.4804963,No label,No label,No label
-0xa39e9062dd831740a8818771d31e792d63e19080,535,0,535,No label,No label,No label
+0xa39e9062dd831740a8818771d31e792d63e19080,5350,0,5350,No label,No label,No label
 0xb5a46f712f03808ae5c4b885c6f598fa06442684,0,534.7211013,534.7211013,No label,No label,No label
 0x956bfb31a3b814ba2f95641bf37f03f50939681c,534.7045687,0,534.7045687,Token Millionaire [0x956bfb],Private,
 0x279818c822e5c6135d989df50d0bba96e9564ce5,0,534.2306947,534.2306947,CDP Creator [0x279818],Private,

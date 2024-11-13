@@ -38,13 +38,17 @@ def actor_lock_or_unlock_in_escrow(params, substep, state_history, prev_state, p
     mask1 = (stETH_amounts > 0) + (wstETH_amounts > 0)
     # if np.sum(mask1) > 0:
     #     print(f"mask 1 in actor_lock_or_unlock_in_escrow is {np.sum(mask1)}")
-    actors.lock_to_escrow(stETH_amounts, wstETH_amounts, dual_governance.time_manager, mask1)
+    actors.lock_to_escrow(stETH_amounts, wstETH_amounts, dual_governance.time_manager.get_current_timestamp(), mask1)
 
     mask2 = (stETH_amounts < 0) * (wstETH_amounts < 0)
-    actors.rebalance_to_stETH(stETH_amounts, wstETH_amounts, dual_governance.time_manager, mask2)
+    actors.rebalance_to_stETH(
+        stETH_amounts, wstETH_amounts, dual_governance.time_manager.get_current_timestamp(), mask2
+    )
 
     mask3 = np.logical_not(mask2) * ((stETH_amounts < 0) + (wstETH_amounts < 0))
-    actors.unlock_from_escrow(stETH_amounts, wstETH_amounts, dual_governance.time_manager, mask3)
+    actors.unlock_from_escrow(
+        stETH_amounts, wstETH_amounts, dual_governance.time_manager.get_current_timestamp(), mask3
+    )
 
     return ("actors", actors)
 
@@ -85,8 +89,12 @@ def actor_update_health(
 
             if proposal.id > last_canceled_proposal:
                 if scenario in [Scenario.HappyPath, Scenario.VetoSignallingLoop]:
-                    actors.simulate_proposal_effect(proposal)
-                    actors.apply_proposal_damage(time_manager, proposal, True)
+                    mask = (actors.actor_type == ActorType.HonestActor.value) * (actors.entity != "Contract") + np.isin(
+                        actors.actor_type, [ActorType.SingleDefender.value, ActorType.CoordinatedDefender.value]
+                    )
+
+                    actors.simulate_proposal_effect(proposal, mask)
+                    actors.apply_proposal_damage(time_manager.get_current_timestamp(), proposal, True, mask)
 
                 elif scenario in (Scenario.SingleAttack, Scenario.CoordinatedAttack):
                     total_stETH_gains, total_wstETH_gains = calculate_attack_gains(
@@ -120,7 +128,7 @@ def actor_update_health(
                     # print(f"mask312 is {np.sum(mask312)}")
 
                     actors.simulate_proposal_effect(proposal, mask1)
-                    actors.apply_proposal_damage(time_manager, proposal, True, mask1)
+                    actors.apply_proposal_damage(time_manager.get_current_timestamp(), proposal, True, mask1)
                     actors.after_simulate_proposal_effect(mask1)
 
                     mask2 = (scenario == Scenario.CoordinatedAttack) * np.isin(actors.address, list(attackers)) + (
@@ -233,7 +241,7 @@ def actor_recover_health(cancel_proposal_ids, actors: Actors, proposals: List[Pr
             proposal = get_proposal_by_id(proposals, proposal_id)
             if proposal.damage != 0:
                 mask = (actors.actor_type == ActorType.HonestActor.value) * (actors.entity != "Contract")
-                actors.apply_proposal_damage(time_manager, proposal, False, mask=mask)
+                actors.apply_proposal_damage(time_manager.get_current_timestamp(), proposal, False, mask=mask)
 
     return actors
 

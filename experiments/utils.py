@@ -44,6 +44,13 @@ def get_simulation_hash(initial_state=None, state_update_blocks=None, params=Non
     return simulation_hash + "-" + str(timesteps)
 
 
+def get_batch_hash(simulation_hashes: list[str], timesteps=None):
+    combined_hash = "".join(simulation_hashes).encode("utf-8")
+    batch_hash = sha256(combined_hash).hexdigest()
+
+    return batch_hash + "-" + str(timesteps)
+
+
 def setup_simulation(
     timesteps: int,
     monte_carlo_runs: int,
@@ -62,7 +69,8 @@ def setup_simulation(
     institutional_threshold: int = 0,
     labeled_addresses: dict[str, str] = dict(),
     time_profiling: bool = False,
-    simulation_test: bool = False,
+    save_files: bool = True,
+    batch_size: int = 100,
 ):
     simulations: list[Simulation] = []
     simulation_hashes: list[str] = []
@@ -125,39 +133,49 @@ def setup_simulation(
             )
 
             simulation_hashes.append(simulation_hash)
-            print(f"simulation_hash is {simulation_hash}.")
 
-            folder_path = Path(out_dir).joinpath(f"{simulation_hash}/")
-            results_file = folder_path / "result.pkl"
-            actors_file = folder_path / "actors.pkl"
-
-            if not simulation_test:
-                folder_path.mkdir(exist_ok=True, parents=True)
-
-            state["outpath"] = folder_path
+            state["outpath"] = ""
+            state["simulation_hash"] = simulation_hash
             state["n_timesteps"] = timesteps
             model = Model(initial_state=state, params=sys_params, state_update_blocks=state_update_blocks)
-            print(time_profiling)
-            print(model.state_update_blocks)
-            print(list(model.initial_state.keys()))
             simulation = Simulation(model=model, timesteps=timesteps, runs=1)
-
-            print(simulation.timesteps)
-            print(len(model.state_update_blocks))
-            print()
-
-            if folder_path.exists() and results_file.is_file() and actors_file.is_file():
-                print(f"Skipping simulation {simulation_hash} as it already exists with required files.")
-                continue
 
             simulations.append(simulation)
 
+    total_simulations = len(simulations)
+    batch_count = (total_simulations + batch_size - 1) // batch_size
+    batch_simulations = []
+
+    skipped_simulations = set()
+    for batch_idx in range(batch_count):
+        start_idx = batch_idx * batch_size
+        end_idx = min((batch_idx + 1) * batch_size, total_simulations)
+
+        batch_simulations = simulations[start_idx:end_idx]
+        batch_hash = get_batch_hash(simulation_hashes[start_idx:end_idx], timesteps)
+
+        batch_folder_path = Path(out_dir).joinpath(f"batch_{batch_hash}/")
+        common_file = batch_folder_path / "common_data.parquet"
+        proposals_file = batch_folder_path / "proposals_data.parquet"
+        timestep_file = batch_folder_path / "timestep_data.parquet"
+
+        if batch_folder_path.exists() and all(f.is_file() for f in [common_file, proposals_file, timestep_file]):
+            print(f"Skipping batch {batch_hash} as it already exists with required files.")
+            skipped_simulations.update(batch_simulations)
+            continue
+
+        if save_files:
+            batch_folder_path.mkdir(exist_ok=True, parents=True)
+
+        for simulation in batch_simulations:
+            simulation.model.initial_state["outpath"] = batch_folder_path
+            simulation.model.state["outpath"] = batch_folder_path
+
+    simulations = [sim for sim in simulations if sim not in skipped_simulations]
+
     experiment = Experiment(simulations)
 
-    if time_profiling:
-        drop_substeps = False
-    else:
-        drop_substeps = True
+    drop_substeps = not time_profiling
     experiment.engine = Engine(backend=Backend.MULTIPROCESSING, raise_exceptions=False, drop_substeps=drop_substeps)
 
     return experiment, simulation_hashes

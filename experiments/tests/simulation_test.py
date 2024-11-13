@@ -54,7 +54,7 @@ def test_setup_simulation(
         simulation_starting_time=simulation_starting_time,
         out_dir=out_path.joinpath("simulation_test"),
         dual_governance_params=dual_governance_params,
-        simulation_test=True,
+        save_files=False,
     )
 
     assert len(simulation_hashes) == monte_carlo_runs * len(dual_governance_params)

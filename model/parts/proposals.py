@@ -1,5 +1,5 @@
 import copy
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import List, Set
 
 from model.sys_params import cancellation_delay_days
@@ -38,10 +38,6 @@ def generate_proposal(params, substep, state_history, prev_state):
         + queue.count()
     )
     proposals: List[Proposal | None] = []
-
-    # if timestep == 2:
-    # print(f"non_initialized_proposals is {non_initialized_proposals}")
-    # print(f"proposals is {proposals}")
 
     if len(non_initialized_proposals) > 0:
         for proposal in non_initialized_proposals:
@@ -190,8 +186,8 @@ def cancel_all_pending_proposals(params, substep, state_history, prev_state):
 def submit_proposal(params, substep, state_history, prev_state, policy_input):
     dual_governance: DualGovernance = prev_state["dual_governance"]
     proposals: List[Proposal | None] = policy_input["proposal_create"]
-    queue: ProposalQueueManager = prev_state["proposals_queue"]
-    timestep: int = prev_state["timestep"]
+    # queue: ProposalQueueManager = prev_state["proposals_queue"]
+    # timestep: int = prev_state["timestep"]
 
     if proposals is not None and len(proposals) > 0:
         # print(f"current timestep is {timestep}")
@@ -199,13 +195,13 @@ def submit_proposal(params, substep, state_history, prev_state, policy_input):
 
         for proposal in proposals:
             if proposal is not None:
-                print(
-                    "submitting proposal with ID",
-                    proposal.id,
-                    "at ",
-                    dual_governance.time_manager.get_current_time(),
-                    prev_state["timestep"],
-                )
+                # print(
+                #     "submitting proposal with ID",
+                #     proposal.id,
+                #     "at ",
+                #     dual_governance.time_manager.get_current_time(),
+                #     prev_state["timestep"],
+                # )
                 # print(proposal)
                 dual_governance.submit_proposal("", [ExecutorCall("", "", [])])
 
@@ -286,30 +282,30 @@ def schedule_and_execute_proposals(params, substep, state_history, prev_state, p
         if dual_governance.can_schedule(proposal.id) and dual_governance.state.can_schedule_proposal(
             proposal.submittedAt
         ):
-            print(
-                "scheduling proposal with ID",
-                proposal.id,
-                "at ",
-                dual_governance.time_manager.get_current_time(),
-                prev_state["timestep"],
-                "that has been submitted at ",
-                datetime.fromtimestamp(proposal.submittedAt.value),
-            )
+            # print(
+            #     "scheduling proposal with ID",
+            #     proposal.id,
+            #     "at ",
+            #     dual_governance.time_manager.get_current_time(),
+            #     prev_state["timestep"],
+            #     "that has been submitted at ",
+            #     datetime.fromtimestamp(proposal.submittedAt.value),
+            # )
             dual_governance.schedule_proposal(proposal.id)
 
     for proposal in dual_governance.timelock.proposals.state.proposals:
         if dual_governance.can_execute(proposal.id):
-            print(
-                "executing proposal with ID",
-                proposal.id,
-                "at ",
-                dual_governance.time_manager.get_current_time(),
-                prev_state["timestep"],
-                "that has been scheduled at ",
-                datetime.fromtimestamp(proposal.scheduledAt.value),
-                "and submitted at ",
-                datetime.fromtimestamp(proposal.submittedAt.value),
-            )
+            # print(
+            #     "executing proposal with ID",
+            #     proposal.id,
+            #     "at ",
+            #     dual_governance.time_manager.get_current_time(),
+            #     prev_state["timestep"],
+            #     "that has been scheduled at ",
+            #     datetime.fromtimestamp(proposal.scheduledAt.value),
+            #     "and submitted at ",
+            #     datetime.fromtimestamp(proposal.submittedAt.value),
+            # )
 
             dual_governance.execute_proposal(proposal.id)
 

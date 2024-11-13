@@ -1,9 +1,11 @@
+import logging
 from argparse import ArgumentError
 from typing import List, Tuple
 
 import numpy as np
 
 from model.actors.errors import NotEnoughActorStETHBalance, NotEnoughActorWstETHBalance
+from model.actors.utils import update_actor_health
 from model.types.actors import ActorType
 from model.types.proposal_type import ProposalType
 from model.types.proposals import Proposal, ProposalSubType
@@ -12,8 +14,10 @@ from model.utils.proposals import get_first_proposal_timestamp
 from model.utils.reactions import generate_reaction_delay_vector
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.proposals import ProposalStatus
-from specs.time_manager import TimeManager
+from specs.dual_governance.state import State
 from specs.utils import generate_address
+
+logging.getLogger("numba").setLevel(logging.WARNING)
 
 
 class Actors:
@@ -65,7 +69,7 @@ class Actors:
         self.reaction_time = reaction_time
         self.governance_participation = governance_participation
 
-        self.reaction_delay = np.zeros(shape=self.amount, dtype="uint32") - 1
+        self.reaction_delay = np.zeros(shape=self.amount, dtype=np.int64)
         self.recovery_time = np.zeros_like(self.reaction_delay)
         self.last_locked_tx_timestamp = np.zeros_like(self.reaction_delay)
 
@@ -79,7 +83,7 @@ class Actors:
         pass
 
     def lock_to_escrow(
-        self, stETH_amounts: np.ndarray, wstETH_amounts: np.ndarray, time_manager: TimeManager, mask: np.ndarray
+        self, stETH_amounts: np.ndarray, wstETH_amounts: np.ndarray, current_timestamp: int, mask: np.ndarray
     ):
         if np.any(self.stETH[mask] < stETH_amounts[mask]):
             raise NotEnoughActorStETHBalance
@@ -87,7 +91,7 @@ class Actors:
         if np.any(self.wstETH[mask] < wstETH_amounts[mask]):
             raise NotEnoughActorWstETHBalance
 
-        self.last_locked_tx_timestamp[mask] = time_manager.get_current_timestamp()
+        self.last_locked_tx_timestamp[mask] = current_timestamp
 
         self.stETH[mask] -= stETH_amounts[mask]
         self.stETH_locked[mask] += stETH_amounts[mask]
@@ -96,7 +100,7 @@ class Actors:
         self.wstETH_locked[mask] += wstETH_amounts[mask]
 
     def unlock_from_escrow(
-        self, stETH_amounts: np.ndarray, wstETH_amounts: np.ndarray, time_manager: TimeManager, mask: np.ndarray
+        self, stETH_amounts: np.ndarray, wstETH_amounts: np.ndarray, current_timestamp: int, mask: np.ndarray
     ):
         if np.any(self.stETH_locked[mask] < np.abs(stETH_amounts[mask])):
             raise NotEnoughActorStETHBalance
@@ -104,7 +108,7 @@ class Actors:
         if np.any(self.wstETH_locked[mask] < np.abs(wstETH_amounts[mask])):
             raise NotEnoughActorWstETHBalance
 
-        self.last_locked_tx_timestamp[mask] = time_manager.get_current_timestamp()
+        self.last_locked_tx_timestamp[mask] = current_timestamp
 
         self.stETH[mask] += np.abs(stETH_amounts[mask])
         self.stETH_locked[mask] -= np.abs(stETH_amounts[mask])
@@ -113,7 +117,7 @@ class Actors:
         self.wstETH_locked[mask] -= np.abs(wstETH_amounts[mask])
 
     def rebalance_to_stETH(
-        self, stETH_amounts: np.ndarray, wstETH_amounts: np.ndarray, time_manager: TimeManager, mask: np.ndarray
+        self, stETH_amounts: np.ndarray, wstETH_amounts: np.ndarray, current_timestamp: int, mask: np.ndarray
     ):
         if np.any(
             (self.stETH_locked[mask] + self.wstETH_locked[mask])
@@ -121,58 +125,50 @@ class Actors:
         ):
             raise NotEnoughActorStETHBalance
 
-        self.last_locked_tx_timestamp[mask] = time_manager.get_current_timestamp()
+        self.last_locked_tx_timestamp[mask] = current_timestamp
 
         self.stETH[mask] += np.abs(stETH_amounts[mask]) + np.abs(wstETH_amounts[mask])
         self.stETH_locked[mask] -= np.abs(stETH_amounts[mask])
         self.wstETH_locked[mask] -= np.abs(wstETH_amounts[mask])
 
-    def update_actor_health(self, time_manager: TimeManager, damage: np.ndarray, mask: np.ndarray = None):
+    def update_actor_health_vector(self, current_timestamp: int, damage: np.ndarray, mask: np.ndarray = None):
         if mask is None:
             mask = np.repeat(True, self.amount)
 
-        initial_health = self.health.copy()
+        initial_health = self.health.view()
 
         mask1 = mask * (damage > 0) * ((self.health - damage) < 0)
-        # print(f"damage before [mask1] {damage}")
-        # print(f"[mask1] {mask1}")
         damage[mask1] = self.health[mask1]
-        # print(f"damage after [mask1] {damage[mask1]}")
 
         mask2 = mask * (damage > 0)
         self.total_damage[mask2] += damage[mask2]
-        # print(f"health before mask2 {self.health[mask2]}")
         self.health[mask2] -= damage[mask2]
-        # print(f"health after mask2 {self.health[mask2]}")
-        # print(f"[mask2] {mask2}")
 
         mask3 = mask * (damage < 0) * ((self.health + np.abs(damage)) > 100)
-        # print(f"health before mask3 {self.health[mask3]}")
         damage[mask3] = -(100 - self.health[mask3])
-        # print(f"damage after mask3 {damage[mask3]}")
-        # print(f"[mask3] {mask3}")
 
         mask4 = mask * (damage < 0) * (self.total_damage > 0)
-        # print(f"health before mask4 {self.health[mask4]}")
         self.total_recovery[mask4] += np.abs(damage[mask4])
-        self.recovery_time[mask4] = time_manager.get_current_timestamp()
-        # print(f"health after mask4 {self.health[mask4]}")
-        # print(f"[mask4] {mask4}")
+        self.recovery_time[mask4] = current_timestamp
 
         mask5 = mask * (damage < 0)
-        # print(f"health before mask5 {self.health[mask5]}")
         self.health[mask5] += np.abs(damage[mask5])
-        # print(f"health after mask5 {self.health[mask5]}")
-        # print(f"[mask5] {mask5}")
 
         self.health[mask] = np.maximum(np.minimum(self.health[mask], 100), 0)
         self.total_recovery[mask] = np.minimum(self.total_recovery[mask], self.total_damage[mask])
 
-        # print(f"[mask] {mask}")
-
         health_changed_mask = self.health != initial_health
         self.update_reaction_delay(health_changed_mask)
-        # print(f"[health_changed_mask] {health_changed_mask}")
+
+    def update_actor_health(self, current_timestamp: int, damage: np.ndarray, mask: np.ndarray = None):
+        if mask is None:
+            mask = np.repeat(True, self.amount)
+
+        health_changed_mask = update_actor_health(
+            self.health, self.total_damage, self.total_recovery, self.recovery_time, damage, current_timestamp, mask
+        )
+
+        self.update_reaction_delay(health_changed_mask)
 
     def simulate_proposal_effect(self, proposal: Proposal, mask: np.ndarray = None):
         if len(proposal.attack_targets) == 0:
@@ -195,16 +191,12 @@ class Actors:
         self.hypothetical_wstETH[affected_actors_mask] = 0
 
     def apply_proposal_damage(
-        self, time_manager: TimeManager, proposal: Proposal, is_damage: bool, mask: np.ndarray = None
+        self, current_timestamp: int, proposal: Proposal, is_damage: bool, mask: np.ndarray = None
     ):
         if mask is None:
             mask = np.repeat(True, self.amount)
 
-        # print(f"proposal.damage is {proposal.damage}")
-
         damage = np.repeat(proposal.damage, self.amount)
-
-        # print(f"damage is {damage}")
 
         for label, label_damage in proposal.effects.effects.items():
             if label_damage != 0:
@@ -212,20 +204,12 @@ class Actors:
 
         damage[np.logical_not(mask)] = 0
 
-        self.update_actor_health(time_manager, damage if is_damage else -damage, mask)
+        self.update_actor_health(current_timestamp, damage if is_damage else -damage, mask)
 
     def update_reaction_delay(self, mask: np.ndarray = None):
         if mask is None:
             self.reaction_delay = generate_reaction_delay_vector(self.reaction_time)
         else:
-            # mask_equal_to_2 = self.reaction_time == 2
-            # mask_equal_to_1 = self.reaction_time == 1
-            # mask_equal_to_3 = self.reaction_time == 3
-
-            # print(f"quick mask in update_reaction_delay is {np.sum(mask_equal_to_2)}")
-            # print(f"normal mask in update_reaction_delay is {np.sum(mask_equal_to_1)}")
-            # print(f"slow mask in update_reaction_delay is {np.sum(mask_equal_to_3)}")
-
             self.reaction_delay[mask] = generate_reaction_delay_vector(self.reaction_time[mask])
 
     def after_simulate_proposal_effect(self, mask: np.ndarray = None):
@@ -283,7 +267,6 @@ class Actors:
             return
 
         mask1 = mask * (self.health <= 0) * (self.total_damage > 0)
-        # print(f"calculate_lock_amount_HonestActor mask is {np.sum(mask1)}")
 
         self.calculate_lock_into_escrow_HonestActor(dual_governance, stETH_amounts, wstETH_amounts, mask1)
 
@@ -295,6 +278,7 @@ class Actors:
             * ((self.stETH_locked > 0) + (self.wstETH_locked > 0))
             * (self.recovery_time > 0)
         )
+
         self.calculate_unlock_from_escrow_HonestActor(dual_governance, stETH_amounts, wstETH_amounts, mask2)
 
     def calculate_lock_into_escrow_HonestActor(
@@ -308,17 +292,9 @@ class Actors:
             mask = np.repeat(True, self.amount)
 
         first_proposal_timestamp = get_first_proposal_timestamp(dual_governance.timelock.proposals)
-
-        # print(f"first_proposal_timestamp is {first_proposal_timestamp}")
-        # print(f"first_proposal_timestamp + self.reaction_delay is {first_proposal_timestamp + self.reaction_delay}")
-
         current_timestamp = dual_governance.time_manager.get_current_timestamp()
-        # print(f"current_timestamp is {current_timestamp}")
-        # print("")
 
         mask1 = mask & ((first_proposal_timestamp + self.reaction_delay) <= current_timestamp)
-
-        # print(f"number of actors in mask1 is {np.sum(mask1)}")
 
         stETH_amounts[mask1] = self.stETH[mask1]
         wstETH_amounts[mask1] = self.wstETH[mask1]
@@ -330,11 +306,16 @@ class Actors:
         wstETH_amounts: np.ndarray,
         mask: np.ndarray = None,
     ):
+        if dual_governance.get_current_state() == State.RageQuit:
+            return
+
         if mask is None:
             mask = np.repeat(True, self.amount)
+
         mask1 = mask * (
             (self.recovery_time + self.reaction_delay) <= dual_governance.time_manager.get_current_timestamp()
         )
+
         stETH_amounts[mask1] = -self.stETH_locked[mask1]
         wstETH_amounts[mask1] = -self.wstETH_locked[mask1]
 

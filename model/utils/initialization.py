@@ -80,7 +80,6 @@ def generate_initial_state(
             lido._mint_shares(actors.address[i], actors.wstETH[i])
             lido.set_buffered_ether(buffered_ether + actors.wstETH[i])
             lido.approve(actors.address[i], Address.wstETH, actors.wstETH[i])
-
             lido.wrap(actors.address[i], actors.wstETH[i])
 
     proposals_queue: ProposalQueueManager = ProposalQueueManager()
@@ -213,15 +212,6 @@ def generate_actors(
 
     actor_reaction_time = determine_reaction_time_vector(len(actor_addresses), reactions)
     actor_participation = determine_governance_participation_vector(len(actor_addresses), reactions)
-    # print(f"actor_reaction_time is {actor_reaction_time}")
-
-    # mask_equal_to_2 = actor_reaction_time == 2
-    # mask_equal_to_1 = actor_reaction_time == 1
-    # mask_equal_to_3 = actor_reaction_time == 3
-
-    # print(f"quick mask is {np.sum(mask_equal_to_2)}")
-    # print(f"normal mask is {np.sum(mask_equal_to_1)}")
-    # print(f"slow mask is {np.sum(mask_equal_to_3)}")
 
     abstaining_mask = np.all(
         (
@@ -234,7 +224,6 @@ def generate_actors(
 
     actor_reaction_time[abstaining_mask] = ReactionTime.NoReaction.value
     actor_participation[abstaining_mask] = GovernanceParticipation.Abstaining.value
-    # print(f"abstaining_mask is {np.sum(abstaining_mask)}")
 
     if institutional_threshold != 0:
         institutional_mask = actor_stETH + actor_wstETH >= institutional_threshold * ether_base
@@ -251,15 +240,6 @@ def generate_actors(
     )
     actor_reaction_time[override_mask] = ReactionTime.Quick.value
     actor_participation[override_mask] = GovernanceParticipation.Full.value
-    # print(f"override_mask is {np.sum(override_mask)}")
-
-    # mask_equal_to_2 = actor_reaction_time == 2
-    # mask_equal_to_1 = actor_reaction_time == 1
-    # mask_equal_to_3 = actor_reaction_time == 3
-
-    # print(f"quick mask after override is {np.sum(mask_equal_to_2)}")
-    # print(f"normal mask after override is {np.sum(mask_equal_to_1)}")
-    # print(f"slow mask after override is {np.sum(mask_equal_to_3)}")
 
     actors = Actors(
         address=actor_addresses,
@@ -273,16 +253,6 @@ def generate_actors(
         reaction_time=actor_reaction_time,
         governance_participation=actor_participation,
     )
-
-    # mask1 = (actors.actor_type == ActorType.HonestActor.value) * (actors.entity != "Contract") + np.isin(
-    #     actors.actor_type, [ActorType.SingleDefender, ActorType.CoordinatedDefender]
-    # )
-    # mask2 = (actors.actor_type == ActorType.HonestActor.value) * (actors.entity != "Contract")
-    # mask3 = actors.actor_type == ActorType.HonestActor.value
-
-    # print(f"np.sum(mask1) is {np.sum(mask1)}")
-    # print(f"np.sum(mask2) is {np.sum(mask2)}")
-    # print(f"np.sum(mask3) is {np.sum(mask3)}")
 
     return actors
 
