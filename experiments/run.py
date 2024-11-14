@@ -11,11 +11,11 @@ from experiments.templates.rage_quit_scenario import create_experiment as rage_q
 from experiments.templates.signalling_thresholds_sweep_under_proposal_with_attack import (
     create_experiment as signalling_thresholds_sweep_under_proposal_with_attack,
 )
-from experiments.templates.single_attack_sweep_first_threshold1 import (
-    create_experiment as single_attack_sweep_first_threshold1,
+from experiments.templates.single_attack_sweep_first_threshold import (
+    create_experiment as single_attack_sweep_first_threshold,
 )
-from experiments.templates.single_attack_sweep_second_threshold1 import (
-    create_experiment as single_attack_sweep_second_threshold1,
+from experiments.templates.single_attack_sweep_second_threshold import (
+    create_experiment as single_attack_sweep_second_threshold,
 )
 from experiments.templates.veto_signalling_loop import create_experiment as veto_signalling_loop
 from experiments.templates.withdrawal_queue_replacement import create_experiment as withdrawal_queue_experiment
@@ -58,8 +58,8 @@ def run(
             "rage_quit": rage_quit_experiment,
             "withdrawal_queue_replacement_institutional": withdrawal_queue_replacement_institutional,
             "signalling_thresholds_sweep_under_proposal_with_attack": signalling_thresholds_sweep_under_proposal_with_attack,
-            "single_attack_sweep_first_threshold1": single_attack_sweep_first_threshold1,
-            "single_attack_sweep_second_threshold1": single_attack_sweep_second_threshold1,
+            "single_attack_sweep_first_threshold": single_attack_sweep_first_threshold,
+            "single_attack_sweep_second_threshold": single_attack_sweep_second_threshold,
             "veto_signalling_loop": veto_signalling_loop,
             "actors_labelling": actors_labelling,
         }

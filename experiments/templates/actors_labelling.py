@@ -1,11 +1,11 @@
 from experiments.simulation_configuration import SIMULATION_TIME, calculate_timesteps, get_path
-from experiments.utils import DualGovernanceParameters, save_execution_result, setup_simulation
+from experiments.utils import DualGovernanceParameters, setup_simulation
 from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
 from model.types.proposals import Proposal, ProposalsEffect
 from model.types.scenario import Scenario
 from model.utils.address_labeling import assign_labels_by_funds_threshold
 
-MONTE_CARLO_RUNS = 1
+MONTE_CARLO_RUNS = 100
 SEED = 188
 SCENARIO = Scenario.HappyPath
 TIMESTEPS = calculate_timesteps(1)
@@ -35,28 +35,30 @@ dual_governance_params = [
 ]
 
 
-def create_experiment(simulation_name: str = "actors_labelling"):
+def create_experiment(simulation_name: str = "actors_labelling", return_template: bool = False):
     out_path = get_path()
 
-    experiment, simulation_hashes = setup_simulation(
-        timesteps=TIMESTEPS,
-        monte_carlo_runs=MONTE_CARLO_RUNS,
-        scenario=SCENARIO,
-        proposal_types=ProposalType.Positive,
-        proposal_subtypes=ProposalSubType.NoEffect,
-        proposals_generation=ProposalGeneration.NoGeneration,
-        proposals=proposals,
-        attackers=attackers,
-        defenders=defenders,
-        seed=SEED,
-        simulation_starting_time=SIMULATION_TIME,
-        out_dir=out_path.joinpath(simulation_name),
-        dual_governance_params=dual_governance_params,
-        labeled_addresses=labeled_addresses,
-    )
+    template_params = {
+        "timesteps": TIMESTEPS,
+        "monte_carlo_runs": MONTE_CARLO_RUNS,
+        "scenario": SCENARIO,
+        "proposal_types": ProposalType.Positive,
+        "proposal_subtypes": ProposalSubType.NoEffect,
+        "proposals_generation": ProposalGeneration.NoGeneration,
+        "proposals": proposals,
+        "attackers": attackers,
+        "defenders": defenders,
+        "seed": SEED,
+        "simulation_starting_time": SIMULATION_TIME,
+        "dual_governance_params": dual_governance_params,
+        "labeled_addresses": labeled_addresses,
+    }
 
-    experiment.after_experiment = lambda experiment=None: save_execution_result(
-        experiment, simulation_name, TIMESTEPS, out_path
-    )
+    if return_template:
+        return None, template_params
+
+    experiment, simulation_hashes = setup_simulation(**template_params, out_dir=out_path.joinpath(simulation_name))
+
+    experiment.after_experiment = None
 
     return experiment, simulation_hashes
