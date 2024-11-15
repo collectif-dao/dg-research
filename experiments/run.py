@@ -40,6 +40,7 @@ def run(
     simulation_name: str = None,
     post_processing: bool = False,
     time_profiling: bool = False,
+    processes=-1,
     batch_size: int = 100,
     template_override=None,
     skip_existing_batches: bool = False,
@@ -82,6 +83,7 @@ def run(
     try:
         simulation_hashes = run_simulation_batches(
             **template_params,
+            processes=processes,
             batch_size=batch_size,
             time_profiling=time_profiling,
             out_dir=out_path.joinpath(simulation_name),

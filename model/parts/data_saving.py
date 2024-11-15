@@ -158,7 +158,6 @@ def save_data(params, substep, state_history, prev_state):
     timestep_data_df = pd.DataFrame([timestep_data])
 
     if timestep == prev_state["n_timesteps"]:
-        proposal_data = {}
         proposal_data = extract_proposal_data(params, prev_state)
         proposal_data_df = pd.DataFrame(proposal_data)
 

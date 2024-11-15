@@ -29,6 +29,7 @@ def setup_simulation_batch(
     proposals: list[Proposal] = [],
     attackers: set[str] = set(),
     defenders: set[str] = set(),
+    processes: int = -1,
     seed: int = 0,
     simulation_starting_time: datetime = datetime.min,
     out_dir: str = "",
@@ -40,7 +41,7 @@ def setup_simulation_batch(
     save_files: bool = True,
     skip_existing_batches: bool = False,
 ):
-    """Setup a single batch of simulations"""
+    """Set up a single batch of simulations"""
     if dual_governance_params is None:
         dual_governance_params = [DualGovernanceParameters()]
 
@@ -144,7 +145,7 @@ def setup_simulation_batch(
 
     experiment = Experiment(simulations)
     experiment.engine = Engine(
-        backend=Backend.MULTIPROCESSING, raise_exceptions=False, drop_substeps=not time_profiling, deepcopy=False
+        backend=Backend.MULTIPROCESSING, raise_exceptions=False, drop_substeps=not time_profiling, deepcopy=False, processes=processes
     )
 
     return experiment, simulation_hashes
@@ -169,6 +170,7 @@ def run_simulation_batches(
     labeled_addresses: dict[str, str] = dict(),
     time_profiling: bool = False,
     save_files: bool = True,
+    processes: int = -1,
     batch_size: int = 100,
     skip_existing_batches: bool = False,
     execute_simulations: bool = True,
@@ -192,6 +194,7 @@ def run_simulation_batches(
         experiment, simulation_hashes = setup_simulation_batch(
             batch_index=batch_idx,
             batch_size=batch_size,
+            processes=processes,
             timesteps=timesteps,
             monte_carlo_runs=monte_carlo_runs,
             scenario=scenario,
