@@ -133,8 +133,7 @@ def generate_initial_state(
         "first_seal_rage_quit_support": dual_governance.state.config.first_seal_rage_quit_support,
         "second_seal_rage_quit_support": dual_governance.state.config.second_seal_rage_quit_support,
         "proposals_queue": proposals_queue,
-        "common_dataframe": pd.DataFrame(),
-        "timestep_dataframe": pd.DataFrame(),
+        "timestep_data": {},
     }
 
 

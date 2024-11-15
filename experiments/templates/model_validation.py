@@ -5,7 +5,9 @@ from model.types.proposals import Proposal
 from model.types.scenario import Scenario
 
 MONTE_CARLO_RUNS = 500
+# MONTE_CARLO_RUNS = 100
 SEED = 6050
+# SEED = 10000
 TIMESTEPS = calculate_timesteps(3)
 # TIMESTEPS = 2
 
