@@ -184,6 +184,7 @@ def write_data_fastparquet(params, substep, state_history, prev_state, policy_in
                         combined_df,
                         append=parquet_path.exists(),
                         compression="SNAPPY",
+                        stats=False
                     )
         except Exception as e:
             print(f"Error while saving timestep data: {e}")
@@ -201,6 +202,7 @@ def write_data_fastparquet(params, substep, state_history, prev_state, policy_in
                         common_data_df,
                         append=common_data_path.exists(),
                         compression="SNAPPY",
+                        stats=False
                     )
 
             if proposal_data:
@@ -215,6 +217,7 @@ def write_data_fastparquet(params, substep, state_history, prev_state, policy_in
                         proposal_data_df,
                         append=proposal_data_path.exists(),
                         compression="SNAPPY",
+                        stats=False
                     )
         except Exception as e:
             print(f"Error while saving data: {e}")
