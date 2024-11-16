@@ -93,13 +93,13 @@ def get_first_proposal_timestamp(proposals: Proposals):
         proposal.submittedAt.value
         for proposal in proposal_list
         if (proposal.status == ProposalStatus.Submitted or proposal.status == ProposalStatus.Scheduled)
-        and not proposals._is_proposal_marked_cancelled(proposal.id)
+        and not proposals.is_proposal_marked_cancelled(proposal.id)
     ]
     scheduled_timestamps = [
         proposal.scheduledAt.value
         for proposal in proposal_list
         if (proposal.status == ProposalStatus.Scheduled or proposal.status == ProposalStatus.Executed)
-        and not proposals._is_proposal_marked_cancelled(proposal.id)
+        and not proposals.is_proposal_marked_cancelled(proposal.id)
     ]
 
     all_timestamps = submitted_timestamps + scheduled_timestamps

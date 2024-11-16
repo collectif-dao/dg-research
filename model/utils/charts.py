@@ -1,5 +1,6 @@
 from matplotlib import pyplot as plt
 from pandas import DataFrame
+# noinspection PyProtectedMember
 from pandas._typing import Scalar
 
 from specs.dual_governance.state import State

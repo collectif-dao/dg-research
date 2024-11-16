@@ -25,7 +25,7 @@ def generate_proposal(params, substep, state_history, prev_state):
 
     if (
         dual_governance.get_current_state() == State.VetoSignalling
-        and dual_governance.state._is_veto_signalling_reactivation_duration_passed()
+        and dual_governance.state.is_veto_signalling_reactivation_duration_passed()
     ):
         return {"proposal_create": None}
 

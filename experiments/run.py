@@ -22,11 +22,6 @@ from experiments.templates.withdrawal_queue_replacement import create_experiment
 from experiments.templates.withdrawal_queue_replacement_institutional import (
     create_experiment as withdrawal_queue_replacement_institutional,
 )
-from experiments.utils import (
-    merge_simulation_results,
-    save_combined_actors_simulation_result,
-    save_postprocessing_result,
-)
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -38,8 +33,6 @@ logger.addHandler(handler)
 
 def run(
     simulation_name: str = None,
-    post_processing: bool = False,
-    time_profiling: bool = False,
     processes=-1,
     batch_size: int = 100,
     template_override=None,
@@ -85,24 +78,12 @@ def run(
             **template_params,
             processes=processes,
             batch_size=batch_size,
-            time_profiling=time_profiling,
             out_dir=out_path.joinpath(simulation_name),
             skip_existing_batches=skip_existing_batches,
         )
 
         experiment_duration = time.time() - start_time
         logging.info(f"Experiment complete in {experiment_duration} seconds")
-
-        if simulation_hashes and post_processing:
-            logging.info("Post-processing results")
-            post_process_start = time.time()
-
-            result = merge_simulation_results(simulation_hashes, simulation_name, out_path)
-            save_combined_actors_simulation_result(simulation_hashes, simulation_name, out_path)
-            save_postprocessing_result(result, simulation_name, out_path)
-
-            post_processing_duration = time.time() - post_process_start
-            logging.info(f"Post-processing complete in {post_processing_duration} seconds")
 
     except Exception as e:
         logging.error(f"Error during simulation execution: {e}")
@@ -117,9 +98,7 @@ def run(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run a simulation")
     parser.add_argument("--simulation_name", type=str, help="Name of the simulation to run", required=True)
-    parser.add_argument("--post_processing", action="store_true", help="Enable post-processing result")
-    parser.add_argument("--time_profiling", action="store_true", help="Profile time usage")
 
     args = parser.parse_args()
 
-    run(args.simulation_name, args.post_processing, args.time_profiling)
+    run(args.simulation_name)

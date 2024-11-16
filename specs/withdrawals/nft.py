@@ -123,9 +123,8 @@ class WithdrawalQueueERC721(WithdrawalQueue):
 
     def _existsAndNotClaimed(self, request_id: int) -> bool:
         return (
-            request_id > 0
-            and request_id <= self.get_last_request_id()
-            and not self.queue.get(request_id, WithdrawalRequest()).claimed
+                0 < request_id <= self.get_last_request_id()
+                and not self.queue.get(request_id, WithdrawalRequest()).claimed
         )
 
     def _constructTokenUri(self, request_id: int) -> str:

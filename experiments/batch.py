@@ -17,6 +17,7 @@ from specs.utils import percent_base
 collections.Hashable = collections.abc.Hashable
 
 
+# noinspection PyDefaultArgument
 def setup_simulation_batch(
     batch_index: int,
     batch_size: int,
@@ -37,7 +38,6 @@ def setup_simulation_batch(
     max_actors: int = 0,
     institutional_threshold: int = 0,
     labeled_addresses: dict[str, str] = dict(),
-    time_profiling: bool = False,
     save_files: bool = True,
     skip_existing_batches: bool = False,
 ):
@@ -145,12 +145,13 @@ def setup_simulation_batch(
 
     experiment = Experiment(simulations)
     experiment.engine = Engine(
-        backend=Backend.MULTIPROCESSING, raise_exceptions=False, drop_substeps=not time_profiling, deepcopy=False, processes=processes
+        backend=Backend.MULTIPROCESSING, raise_exceptions=False, drop_substeps=True, deepcopy=False, processes=processes
     )
 
     return experiment, simulation_hashes
 
 
+# noinspection PyDefaultArgument
 def run_simulation_batches(
     timesteps: int,
     monte_carlo_runs: int,
@@ -168,7 +169,6 @@ def run_simulation_batches(
     max_actors: int = 0,
     institutional_threshold: int = 0,
     labeled_addresses: dict[str, str] = dict(),
-    time_profiling: bool = False,
     save_files: bool = True,
     processes: int = -1,
     batch_size: int = 100,
@@ -211,7 +211,6 @@ def run_simulation_batches(
             max_actors=max_actors,
             institutional_threshold=institutional_threshold,
             labeled_addresses=labeled_addresses,
-            time_profiling=time_profiling,
             save_files=save_files,
             skip_existing_batches=skip_existing_batches,
         )

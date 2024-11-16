@@ -14,3 +14,10 @@ pytest==8.2.2
 radcad==0.13.0
 scipy==1.14.0
 seaborn==0.13.2
+
+fastparquet~=2024.5.0
+filelock~=3.16.1
+psutil~=6.0.0
+pympler~=1.1
+numba~=0.60.0
+eth-abi~=5.1.0

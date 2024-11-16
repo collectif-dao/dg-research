@@ -7,8 +7,6 @@ def main():
     run_benchmark(
         template_func=create_experiment,
         simulation_name="memory_profiling_benchmark",
-        post_processing=False,
-        time_profiling=False,
         batch_size=100,
     )
 

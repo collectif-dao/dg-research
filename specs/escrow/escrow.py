@@ -232,7 +232,7 @@ class Escrow:
             raise Errors.UnexpectedUnstETHId
 
         if len(hints) != len(unstETH_ids):
-            Errors.InvalidHintsLength
+            raise Errors.InvalidHintsLength
 
         self._claim_next_withdrawals_batch(unstETH_ids, hints)
 

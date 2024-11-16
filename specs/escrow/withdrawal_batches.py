@@ -30,6 +30,7 @@ class State:
     batches: list[SequentialBatch] = field(default_factory=list)
 
 
+# noinspection PyMethodMayBeStatic
 @dataclass
 class WithdrawalsBatchesQueue:
     state: State = field(default_factory=lambda: State())

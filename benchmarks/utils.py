@@ -6,8 +6,6 @@ import time
 def run_benchmark(
     template_func,
     simulation_name: str,
-    post_processing: bool = False,
-    time_profiling: bool = False,
     batch_size: int = 100,
 ):
     """
@@ -16,8 +14,6 @@ def run_benchmark(
     Args:
         template_func: The template function to use (e.g., model_validation)
         simulation_name: Name for the benchmark simulation
-        post_processing: Whether to run post-processing
-        time_profiling: Whether to enable time profiling
         batch_size: Size of simulation batches
     """
     from experiments.run import run  # Import here to avoid circular imports
@@ -28,8 +24,6 @@ def run_benchmark(
     try:
         run(
             simulation_name=simulation_name,
-            post_processing=post_processing,
-            time_profiling=time_profiling,
             batch_size=batch_size,
             template_override=template_func,
             skip_existing_batches=True,

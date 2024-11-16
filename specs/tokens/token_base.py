@@ -4,6 +4,7 @@ from typing import Dict
 from specs.types.address import Address
 
 
+# noinspection PyMethodMayBeStatic
 @dataclass
 class TokenBase:
     name: str = "Token"

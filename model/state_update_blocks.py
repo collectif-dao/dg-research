@@ -3,7 +3,7 @@ from model.parts.data_saving import (
     write_data_fastparquet,
 )
 from model.parts.dg import (
-    add_deltatime_to_dg,
+    add_timedelta_to_dg,
     update_dg_time_manager,
     update_escrow,
 )
@@ -62,7 +62,7 @@ state_update_blocks = [
     {
         # dg.py
         "label": "Spec Timestep",
-        "policies": {"add_deltatime_to_dg": add_deltatime_to_dg},
+        "policies": {"add_timedelta_to_dg": add_timedelta_to_dg},
         "variables": {
             "dual_governance": update_dg_time_manager,
         },

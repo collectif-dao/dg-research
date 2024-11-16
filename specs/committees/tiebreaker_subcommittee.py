@@ -10,6 +10,7 @@ from specs.committees.tiebreaker_core import ProposalType, TiebreakerCore
 from specs.time_manager import TimeManager
 
 
+# noinspection PyMethodMayBeStatic
 @dataclass
 class TiebreakerSubCommittee(HashConsensus, ProposalsList):
     tiebreaker_core: TiebreakerCore = None

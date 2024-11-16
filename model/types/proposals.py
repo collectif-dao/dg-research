@@ -30,6 +30,7 @@ class Proposal:
     cancelable: bool = True
 
 
+# noinspection PyDefaultArgument
 def new_proposal(
     timestep: int,
     id: int,

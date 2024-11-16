@@ -10,6 +10,7 @@ from model.utils.seed import get_rng
 ### TODO: 2. Reaction delay needs to be dependent on params on specs/parameters.py. But the relationship is yet to be defined.
 
 
+# noinspection GrazieInspection
 def determine_shift_mu_sigma(left_bound, right_bound, p=0.99, median_parameter=0.5):
     """
     Calculates parameters (shift, mu, sigma) for shifted log-normal distribution.
@@ -83,23 +84,6 @@ def get_reaction_delay_random_variable(min_time, max_time, p=0.99, median_parame
     return rv
 
 
-def generate_reaction_delay(reaction_time: int) -> int:
-    rng = get_rng()
-    # match reaction:
-    #     case 2:
-    #         left_bound, right_bound = 0, quick_actor_max_delay
-    #     case 1:
-    #         left_bound, right_bound = quick_actor_max_delay, normal_actor_max_delay
-    #     case 3:
-    #         left_bound, right_bound = normal_actor_max_delay, slow_actor_max_delay
-    #     case 4:
-    #         return Timestamp.MAX_VALUE
-    # reaction_delay_random_variable = get_reaction_delay_random_variable(left_bound, right_bound)
-    reaction_delay_random_variable = reaction_delay_random_variables[reaction_time]
-    reaction_delay = reaction_delay_random_variable.rvs(random_state=rng)
-    return reaction_delay
-
-
 def generate_reaction_delay_vector(reaction_time: np.ndarray):
     rng = get_rng()
     reaction_delay = np.zeros(len(reaction_time), dtype="uint32")
@@ -110,36 +94,6 @@ def generate_reaction_delay_vector(reaction_time: np.ndarray):
         reaction_delay[mask] = np.ceil(random_variable.rvs(random_state=rng, size=size)).astype("uint32")
 
     return reaction_delay
-
-
-def determine_reaction_time(reactions: ModeledReactions) -> ReactionTime:
-    rng = get_rng()
-    reaction_time_value = rng.normal(0, 1)
-
-    match reactions:
-        case ModeledReactions.Normal:
-            if reaction_time_value >= 2:
-                return 2
-            elif reaction_time_value >= 1:
-                return 1
-            else:
-                return 3
-
-        case ModeledReactions.Accelerated:
-            if reaction_time_value >= 1.6:
-                return 2
-            elif reaction_time_value >= 0.8:
-                return 1
-            else:
-                return 3
-
-        case ModeledReactions.Slowed:
-            if reaction_time_value >= 2.2:
-                return 2
-            elif reaction_time_value >= 1.25:
-                return 1
-            else:
-                return 3
 
 
 def determine_reaction_time_vector(size, reactions: ModeledReactions):
@@ -158,6 +112,9 @@ def determine_reaction_time_vector(size, reactions: ModeledReactions):
         case ModeledReactions.Accelerated:
             normal_cutoff = 0.8
             quick_cutoff = 1.6
+        case _:
+            normal_cutoff = 1
+            quick_cutoff = 2
 
     normal_mask = np.all(
         (
@@ -170,18 +127,6 @@ def determine_reaction_time_vector(size, reactions: ModeledReactions):
     reaction_times[normal_mask] = ReactionTime.Normal.value
     reaction_times[reaction_time_values >= quick_cutoff] = ReactionTime.Quick.value
     return reaction_times
-
-
-def determine_governance_participation(reactions: ModeledReactions) -> GovernanceParticipation:
-    rng = get_rng()
-    participation_value = rng.normal(0, 1)
-
-    if participation_value >= 2:
-        return 2
-    elif participation_value >= 1:
-        return 1
-    else:
-        return 3
 
 
 def determine_governance_participation_vector(size, reactions):

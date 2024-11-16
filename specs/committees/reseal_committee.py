@@ -16,6 +16,7 @@ class ResealCommittee(HashConsensus, ProposalsList):
     address: str = ""
     reseal_nonces: Dict[bytes, int] = field(default_factory=dict)
 
+    # noinspection PyDefaultArgument
     def initialize(
         self,
         new_members: List[str],
@@ -32,6 +33,7 @@ class ResealCommittee(HashConsensus, ProposalsList):
         self.time_manager = time_manager
         self.address = address
 
+    # noinspection GrazieInspection
     def vote_reseal(self, voter: str, sealables: list[str], support: bool):
         if voter not in self.members:
             raise Errors.IsNotMember
@@ -51,6 +53,7 @@ class ResealCommittee(HashConsensus, ProposalsList):
         reseal_nonce_hash = keccak(encode(["address[]"], [sealables]))
         self.reseal_nonces[reseal_nonce_hash] += 1
 
+    # noinspection GrazieInspection
     def get_reseal_state(self, sealables: list[str]) -> Tuple[int, int, bool]:
         _, key = self.encode_reseal_proposal(sealables)
         # print("key in get_reseal_state: ", key)

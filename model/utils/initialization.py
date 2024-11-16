@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import Any, List, Set, Tuple
 
 import numpy as np
-import pandas as pd
 
 from model.actors.actors import Actors
 from model.parts.actors import actor_update_health
@@ -25,6 +24,7 @@ from specs.types.timestamp import Timestamp
 from specs.utils import ether_base
 
 
+# noinspection PyDefaultArgument
 def generate_initial_state(
     scenario: Scenario = Scenario.HappyPath,
     reactions: ModeledReactions = ModeledReactions.Normal,
@@ -72,11 +72,13 @@ def generate_initial_state(
     for i in range(actors.amount):
         if actors.stETH[i] > 0:
             buffered_ether = lido.get_buffered_ether()
+            # noinspection PyProtectedMember
             lido._mint_shares(actors.address[i], actors.stETH[i])
             lido.set_buffered_ether(buffered_ether + actors.stETH[i])
 
         if actors.wstETH[i] > 0:
             buffered_ether = lido.get_buffered_ether()
+            # noinspection PyProtectedMember
             lido._mint_shares(actors.address[i], actors.wstETH[i])
             lido.set_buffered_ether(buffered_ether + actors.wstETH[i])
             lido.approve(actors.address[i], Address.wstETH, actors.wstETH[i])

@@ -14,6 +14,7 @@ class ProposalType:
     ResumeSealable = 2
 
 
+# noinspection PyMethodMayBeStatic
 @dataclass
 class TiebreakerCore(HashConsensus, ProposalsList):
     dual_governance: Any = None

@@ -14,7 +14,3 @@ simulations = experiment.get_simulations()
 
 if len(simulations) != 0:
     result = experiment.run()
-
-    # result = merge_simulation_results(simulation_hashes, simulation_name, out_path)
-    # save_combined_actors_simulation_result(simulation_hashes, simulation_name, out_path)
-    # save_postprocessing_result(result, simulation_name, out_path)

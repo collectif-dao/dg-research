@@ -15,6 +15,7 @@ class ProposalType:
     EmergencyReset = 2
 
 
+# noinspection PyMethodMayBeStatic
 @dataclass
 class EmergencyExecutionCommittee(HashConsensus, ProposalsList):
     timelock: EmergencyProtectedTimelock = None

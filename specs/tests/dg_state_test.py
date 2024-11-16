@@ -95,7 +95,7 @@ def test_state_transitions(holder_addr, lock):
         with pytest.raises(Errors.ProposalsAdoptionSuspended):
             dgState.check_proposals_adoption_allowed()
 
-        timelock_duration = dgState._calc_dynamic_timelock_duration(rage_quit_support)
+        timelock_duration = dgState.calc_dynamic_timelock_duration(rage_quit_support)
 
         time_manager.shift_current_timestamp(
             timelock_duration - Timestamp.from_uint256(int((timedelta(minutes=1).total_seconds())))

@@ -46,7 +46,8 @@ class Actors:
             or (len(reaction_time) != n)
             or (len(governance_participation) != n)
         ):
-            raise ArgumentError(message="All arrays must be the same length")
+            # noinspection PyArgumentList
+            raise ValueError(message="All arrays must be the same length")
         self.amount = n
 
         self.address = address
@@ -333,7 +334,7 @@ class Actors:
 
         if len(proposals) > 0:
             all_negative_proposals_canceled = all(
-                dual_governance.timelock.proposals._is_proposal_marked_cancelled(proposal.id)
+                dual_governance.timelock.proposals.is_proposal_marked_cancelled(proposal.id)
                 for proposal in proposals
                 if proposal.proposal_type in [ProposalType.Negative, ProposalType.Danger, ProposalType.Hack]
             )
@@ -362,7 +363,7 @@ class Actors:
 
         if len(proposals) > 0:
             positive_proposals_pending = any(
-                (not dual_governance.timelock.proposals._is_proposal_marked_cancelled(proposal.id))
+                (not dual_governance.timelock.proposals.is_proposal_marked_cancelled(proposal.id))
                 and (dual_governance.timelock.get_proposal_status(proposal.id) is not ProposalStatus.Executed)
                 for proposal in proposals
                 if proposal.proposal_type in [ProposalType.Positive, ProposalType.NoImpact, ProposalType.Random]

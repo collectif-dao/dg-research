@@ -74,13 +74,13 @@ def actor_react_on_proposal(params, substep, state_history, prev_state, policy_i
 
 
 def actor_update_health(
-    scenario: Scenario,
-    proposals: List[Proposal | None],
-    dual_governance: DualGovernance,
-    lido: Lido,
-    actors: Actors,
-    attackers: Set[str],
-    time_manager: TimeManager,
+        scenario: Scenario,
+        proposals: List[Proposal | None],
+        dual_governance: DualGovernance,
+        lido: Lido,
+        actors: Actors,
+        attackers: Set[str],
+        time_manager: TimeManager,
 ):
     # print(f"actor_update_health proposals is {proposals}")
     for proposal in proposals:
@@ -110,55 +110,23 @@ def actor_update_health(
                     else:
                         num_attackers = 0
 
-                    if num_attackers > 0:
-                        stETH_gain_per_attacker = total_stETH_gains / num_attackers
-                        wstETH_gain_per_attacker = total_wstETH_gains / num_attackers
-
-                    # print(f"num_attackers is {num_attackers}")
-
                     mask1 = (actors.actor_type == ActorType.HonestActor.value) * (
-                        actors.entity != "Contract"
+                            actors.entity != "Contract"
                     ) + np.isin(
                         actors.actor_type, [ActorType.SingleDefender.value, ActorType.CoordinatedDefender.value]
                     )
-
-                    # print(np.sum(mask1))
-
-                    # mask312 = actors.health == 0
-                    # print(f"mask312 is {np.sum(mask312)}")
 
                     actors.simulate_proposal_effect(proposal, mask1)
                     actors.apply_proposal_damage(time_manager.get_current_timestamp(), proposal, True, mask1)
                     actors.after_simulate_proposal_effect(mask1)
 
                     mask2 = (scenario == Scenario.CoordinatedAttack) * np.isin(actors.address, list(attackers)) + (
-                        scenario == Scenario.SingleAttack
+                            scenario == Scenario.SingleAttack
                     ) * (proposal.proposer in attackers) * (actors.address == proposal.proposer)
-                    # mask4 = (
-                    #     (scenario == Scenario.SingleAttack)
-                    #     * (proposal.proposer in attackers)
-                    #     * (actors.address == proposal.proposer)
-                    # )
-                    # mask67 = (scenario == Scenario.CoordinatedAttack) * np.isin(actors.address, list(attackers))
-                    # if scenario == Scenario.SingleAttack:
-                    # print(f"attackers are {attackers}")
-                    # print(f"proposal.proposer is {proposal.proposer}")
-                    # mask3 = (
-                    #     (scenario == Scenario.SingleAttack)
-                    #     * (proposal.proposer in attackers)
-                    #     * (actors.address == proposal.proposer)
-                    # )
-                    # print(f"mask3 is {np.sum(mask3)}")
-
-                    # print(f"mask2 is {np.sum(mask2)}")
-
-                    # mask512 = actors.health == 0
-                    # print(f"mask512 is {np.sum(mask512)}")
-                    # print(f"mask4 is {np.sum(mask4)}")
-                    # print(f"mask2 is {np.sum(mask2)}")
-                    # print(f"mask67 is {np.sum(mask67)}")
 
                     if np.sum(mask2) > 0:
+                        stETH_gain_per_attacker = total_stETH_gains / num_attackers
+                        wstETH_gain_per_attacker = total_wstETH_gains / num_attackers
                         print(
                             "stealing from honest actors ",
                             stETH_gain_per_attacker,
@@ -173,11 +141,11 @@ def actor_update_health(
 
 
 def calculate_attack_gains(
-    proposal: Proposal | None,
-    dual_governance: DualGovernance,
-    lido: Lido,
-    actors: Actors,
-    coordinated_attackers: Set[str],
+        proposal: Proposal | None,
+        dual_governance: DualGovernance,
+        lido: Lido,
+        actors: Actors,
+        coordinated_attackers: Set[str],
 ) -> (int, int):
     n_attackers = np.sum(
         np.isin(actors.actor_type, [ActorType.SingleAttacker.value, ActorType.CoordinatedAttacker.value])

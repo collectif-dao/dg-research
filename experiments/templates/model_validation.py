@@ -4,7 +4,7 @@ from model.types.proposal_type import ProposalGeneration, ProposalSubType, Propo
 from model.types.proposals import Proposal
 from model.types.scenario import Scenario
 
-MONTE_CARLO_RUNS = 500
+MONTE_CARLO_RUNS = 1
 # MONTE_CARLO_RUNS = 100
 SEED = 6050
 # SEED = 10000

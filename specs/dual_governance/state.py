@@ -124,7 +124,7 @@ class DualGovernanceState:
 
     def get_veto_signalling_duration(self):
         total_support = self.signalling_escrow.get_rage_quit_support()
-        return self._calc_dynamic_timelock_duration(total_support)
+        return self.calc_dynamic_timelock_duration(total_support)
 
     def get_veto_signalling_deactivation_state(self):
         is_active = self.state == State.VetoSignallingDeactivation
@@ -141,28 +141,28 @@ class DualGovernanceState:
 
     def _from_veto_signalling_state(self):
         rage_quit_support = self.signalling_escrow.get_rage_quit_support()
-        if not self._is_dynamic_timelock_duration_passed(rage_quit_support):
+        if not self.is_dynamic_timelock_duration_passed(rage_quit_support):
             return State.VetoSignalling
-        if self._is_second_seal_rage_quit_support_crossed(rage_quit_support):
+        if self.is_second_seal_rage_quit_support_crossed(rage_quit_support):
             return State.RageQuit
         return (
             State.VetoSignallingDeactivation
-            if self._is_veto_signalling_reactivation_duration_passed()
+            if self.is_veto_signalling_reactivation_duration_passed()
             else State.VetoSignalling
         )
 
     def _from_veto_signalling_deactivation_state(self):
         rage_quit_support = self.signalling_escrow.get_rage_quit_support()
-        if not self._is_dynamic_timelock_duration_passed(rage_quit_support):
+        if not self.is_dynamic_timelock_duration_passed(rage_quit_support):
             return State.VetoSignalling
-        if self._is_second_seal_rage_quit_support_crossed(rage_quit_support):
+        if self.is_second_seal_rage_quit_support_crossed(rage_quit_support):
             return State.RageQuit
-        if self._is_veto_signalling_deactivation_max_duration_passed():
+        if self.is_veto_signalling_deactivation_max_duration_passed():
             return State.VetoCooldown
         return State.VetoSignallingDeactivation
 
     def _from_veto_cooldown_state(self):
-        if not self._is_veto_cooldown_duration_passed():
+        if not self.is_veto_cooldown_duration_passed():
             return State.VetoCooldown
 
         return (
@@ -208,7 +208,7 @@ class DualGovernanceState:
     def _is_first_seal_rage_quit_support_crossed(self, rage_quit_support):
         return rage_quit_support > self.config.first_seal_rage_quit_support
 
-    def _is_second_seal_rage_quit_support_crossed(self, rage_quit_support):
+    def is_second_seal_rage_quit_support_crossed(self, rage_quit_support):
         return rage_quit_support > self.config.second_seal_rage_quit_support
 
     def _is_dynamic_timelock_max_duration_passed(self):
@@ -217,23 +217,23 @@ class DualGovernanceState:
             > self.config.dynamic_timelock_max_duration + self.veto_signalling_activation_time
         )
 
-    def _is_dynamic_timelock_duration_passed(self, rage_quit_support):
-        dynamic_timelock = self._calc_dynamic_timelock_duration(rage_quit_support)
+    def is_dynamic_timelock_duration_passed(self, rage_quit_support):
+        dynamic_timelock = self.calc_dynamic_timelock_duration(rage_quit_support)
         return self.time_manager.get_current_timestamp_value() > dynamic_timelock + self.veto_signalling_activation_time
 
-    def _is_veto_signalling_reactivation_duration_passed(self):
+    def is_veto_signalling_reactivation_duration_passed(self):
         return (
             self.time_manager.get_current_timestamp_value()
             > self.config.veto_signalling_min_active_duration + self.veto_signalling_reactivation_time
         )
 
-    def _is_veto_signalling_deactivation_max_duration_passed(self):
+    def is_veto_signalling_deactivation_max_duration_passed(self):
         return (
             self.time_manager.get_current_timestamp_value()
             > self.config.veto_signalling_deactivation_max_duration + self.entered_at
         )
 
-    def _is_veto_cooldown_duration_passed(self):
+    def is_veto_cooldown_duration_passed(self):
         return self.time_manager.get_current_timestamp_value() > self.config.veto_cooldown_duration + self.entered_at
 
     def _deploy_new_signalling_escrow(self, escrow_master_copy, time_manager: TimeManager, lido: Lido):
@@ -258,7 +258,7 @@ class DualGovernanceState:
 
         return self.config.rage_quit_eth_withdrawals_min_timelock + Timestamp.from_uint256(time)
 
-    def _calc_dynamic_timelock_duration(self, rage_quit_support) -> Timestamp:
+    def calc_dynamic_timelock_duration(self, rage_quit_support) -> Timestamp:
         first_seal_rage_quit_support = self.config.first_seal_rage_quit_support
         second_seal_rage_quit_support = self.config.second_seal_rage_quit_support
         dynamic_timelock_min_duration = self.config.dynamic_timelock_min_duration

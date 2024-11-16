@@ -42,7 +42,7 @@ def extract_dg_state_data(state):
         "dg_state_value": dual_governance.state.state.value,
         "dg_state_name": dual_governance.state.state.name,
         "dg_rage_quit_support": dual_governance.state.signalling_escrow.get_rage_quit_support(),
-        "dg_dynamic_timelock_seconds": dual_governance.state._calc_dynamic_timelock_duration(
+        "dg_dynamic_timelock_seconds": dual_governance.state.calc_dynamic_timelock_duration(
             dual_governance.state.signalling_escrow.get_rage_quit_support()
         ).to_seconds(),
     }

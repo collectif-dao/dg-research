@@ -73,6 +73,7 @@ def test_now():
 def test_frozen(value):
     ts = Timestamp(value)
     with pytest.raises(FrozenInstanceError):
+        # noinspection PyDataclass
         ts.value = value + 1
 
 

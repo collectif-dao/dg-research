@@ -12,6 +12,7 @@ class Checkpoint:
     value: int
 
 
+# noinspection PyMethodMayBeStatic
 @dataclass
 class LDO_Token:
     name: str = "Lido DAO Token"

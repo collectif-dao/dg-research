@@ -9,7 +9,7 @@ from specs.tokens.wstETH import wstETH_Token
 @dataclass
 class Lido(stETH_Token):
     wstETH: wstETH_Token = None
-    ldo_token: LDO_Token = None
+    ldo: LDO_Token = None
     time_manager: TimeManager = None
 
     buffered_ether: int = 0
