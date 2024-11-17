@@ -333,12 +333,12 @@ class Actors:
             return
 
         if len(proposals) > 0:
-            all_negative_proposals_canceled = all(
+            all_negative_proposals_cancelled = all(
                 dual_governance.timelock.proposals.is_proposal_marked_cancelled(proposal.id)
                 for proposal in proposals
                 if proposal.proposal_type in [ProposalType.Negative, ProposalType.Danger, ProposalType.Hack]
             )
-            if all_negative_proposals_canceled:
+            if all_negative_proposals_cancelled:
                 mask1 = mask * ((self.stETH_locked > 0) + (self.wstETH_locked > 0))
                 self.calculate_unlock_from_escrow_HonestActor(dual_governance, stETH_amounts, wstETH_amounts, mask1)
             else:

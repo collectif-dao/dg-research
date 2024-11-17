@@ -18,7 +18,7 @@ proposals = [
         proposal_type=ProposalType.Positive,
         sub_type=ProposalSubType.NoEffect,
         proposer="0xae09915bc866661c2a6f93c51356216c2895f9aa",
-        cancelable=True,
+        cancellable=True,
     ),
 ]
 

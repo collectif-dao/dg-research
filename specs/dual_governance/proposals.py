@@ -62,7 +62,7 @@ class Proposal:
 
 @dataclass
 class ProposalState:
-    last_canceled_proposal_id: int = field(default_factory=lambda: 0)
+    last_cancelled_proposal_id: int = field(default_factory=lambda: 0)
     proposals: List[Proposal] = field(default_factory=list)
 
 
@@ -128,12 +128,12 @@ class Proposals:
         proposal.status = ProposalStatus.Cancelled
 
     def cancel_all(self):
-        for proposal_id in range(self.state.last_canceled_proposal_id + 1):
+        for proposal_id in range(self.state.last_cancelled_proposal_id + 1):
             if proposal_id == 0:
                 continue
             self.cancel(proposal_id)
         last_proposal_id = len(self.state.proposals)
-        self.state.last_canceled_proposal_id = last_proposal_id
+        self.state.last_cancelled_proposal_id = last_proposal_id
 
     ## ---
     ## getter functions
@@ -213,4 +213,4 @@ class Proposals:
     def is_proposal_marked_cancelled(self, proposal_id: int) -> bool:
         proposal = self._get_proposal(proposal_id)
 
-        return proposal_id <= self.state.last_canceled_proposal_id and proposal.status != ProposalStatus.Executed
+        return proposal_id <= self.state.last_cancelled_proposal_id and proposal.status != ProposalStatus.Executed

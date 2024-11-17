@@ -85,9 +85,9 @@ def actor_update_health(
     # print(f"actor_update_health proposals is {proposals}")
     for proposal in proposals:
         if proposal is not None:
-            last_canceled_proposal = dual_governance.timelock.proposals.state.last_canceled_proposal_id
+            last_cancelled_proposal = dual_governance.timelock.proposals.state.last_cancelled_proposal_id
 
-            if proposal.id > last_canceled_proposal:
+            if proposal.id > last_cancelled_proposal:
                 if scenario in [Scenario.HappyPath, Scenario.VetoSignallingLoop]:
                     mask = (actors.actor_type == ActorType.HonestActor.value) * (actors.entity != "Contract") + np.isin(
                         actors.actor_type, [ActorType.SingleDefender.value, ActorType.CoordinatedDefender.value]

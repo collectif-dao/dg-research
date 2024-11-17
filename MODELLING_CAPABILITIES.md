@@ -31,7 +31,7 @@ To further understand model capabilities, the list of main variable parameters f
 - Proposal parameters
   - Defined attackers/beneficiaries
   - Defined protectors of protocol
-  - Cancelation point (After signaling, no cancelation, ...)
+  - Cancellation point (After signaling, no cancellation, ...)
   - Attack vector (Value capture, DG lock, ...)
   - Scenario duration (Number of timesteps)
  

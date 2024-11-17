@@ -145,20 +145,20 @@ def cancel_all_pending_proposals(params, substep, state_history, prev_state):
         timedelta(days=cancellation_delay_days).total_seconds()
     ):
         total_num_of_proposals = dual_governance.timelock.proposals.count()
-        last_canceled_proposal = dual_governance.timelock.proposals.state.last_canceled_proposal_id
+        last_cancelled_proposal = dual_governance.timelock.proposals.state.last_cancelled_proposal_id
 
-        if total_num_of_proposals == last_canceled_proposal:
+        if total_num_of_proposals == last_cancelled_proposal:
             return {"cancel_all_pending_proposals": []}
 
-        start_proposal_id = last_canceled_proposal + 1
+        start_proposal_id = last_cancelled_proposal + 1
 
         proposals_iterable = iterable_proposals(
             dual_governance.timelock.proposals.state.proposals,
             start_proposal_id,
-            total_num_of_proposals - last_canceled_proposal,
+            total_num_of_proposals - last_cancelled_proposal,
         )
 
-        canceled_proposals = []
+        cancelled_proposals = []
 
         if proposals_iterable is not None:
             for proposal in proposals_iterable:
@@ -168,14 +168,14 @@ def cancel_all_pending_proposals(params, substep, state_history, prev_state):
                     model_proposal = get_proposal_by_id(proposals, timelock_proposal.id)
 
                     if model_proposal.proposal_type in [ProposalType.Negative, ProposalType.Danger, ProposalType.Hack]:
-                        if timelock_proposal.id <= last_canceled_proposal:
+                        if timelock_proposal.id <= last_cancelled_proposal:
                             continue
                         else:
-                            if model_proposal.cancelable:
+                            if model_proposal.cancellable:
                                 # print(model_proposal)
-                                canceled_proposals.append(timelock_proposal.id)
+                                cancelled_proposals.append(timelock_proposal.id)
 
-        return {"cancel_all_pending_proposals": canceled_proposals}
+        return {"cancel_all_pending_proposals": cancelled_proposals}
 
     return {"cancel_all_pending_proposals": []}
 

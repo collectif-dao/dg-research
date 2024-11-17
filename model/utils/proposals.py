@@ -107,9 +107,9 @@ def get_first_proposal_timestamp(proposals: Proposals):
     return min(all_timestamps, default=0)
 
 
-def iterable_proposals(proposals, last_canceled_proposal_id, total_count):
+def iterable_proposals(proposals, last_cancelled_proposal_id, total_count):
     start_index = next(
-        (index for index, proposal in enumerate(proposals) if proposal.id == last_canceled_proposal_id), None
+        (index for index, proposal in enumerate(proposals) if proposal.id == last_cancelled_proposal_id), None
     )
 
     if start_index is None:

@@ -54,7 +54,7 @@ def test_initialize():
     assert dual_governance.timelock.after_submit_delay == int(timedelta(days=3).total_seconds())
 
     proposals = dual_governance.timelock.proposals
-    assert proposals.state.last_canceled_proposal_id == 0
+    assert proposals.state.last_cancelled_proposal_id == 0
     assert proposals.proposal_id_offset == 1
     assert len(proposals.state.proposals) == 0
 
