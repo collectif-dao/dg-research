@@ -29,6 +29,18 @@ class Proposal:
     attack_targets: Set[str] = field(default_factory=lambda: set())
     cancelable: bool = True
 
+    def __eq__(self, other):
+        if (self.timestep == other.timestep
+            and self.damage == other.damage
+            and self.effects == other.effects
+            and self.proposal_type == other.proposal_type
+            and self.sub_type == other.subtype
+            and self.attack_targets == other.attack_targets
+            and self.cancelable == other.cancelable
+        ):
+            return True
+        return False
+
 
 def new_proposal(
     timestep: int,
