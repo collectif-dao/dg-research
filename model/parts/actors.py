@@ -51,14 +51,18 @@ def actor_lock_or_unlock_in_escrow(params, substep, state_history, prev_state, p
     )
 
     return ("actors", actors)
-
+## ---
+## proposal execution effects
+def actor_execute_proposals(params, substep, state_history, prev_state, policy_input):
+    # raise NotImplementedError()
+    return ("actors", prev_state["actors"])
 
 ## ---
 ## proposals creation effects
 ## ---
 
 
-def actor_react_on_proposal(params, substep, state_history, prev_state, policy_input):
+def actor_react_on_proposals(params, substep, state_history, prev_state, policy_input):
     proposals: List[Proposal] = policy_input["proposal_create"]
     actors: Actors = prev_state["actors"]
     lido: Lido = prev_state["lido"]
@@ -83,89 +87,86 @@ def actor_update_health(
 ):
     # print(f"actor_update_health proposals is {proposals}")
     for proposal in proposals:
-        last_canceled_proposal = dual_governance.timelock.proposals.state.last_canceled_proposal_id
+        if scenario in [Scenario.HappyPath, Scenario.VetoSignallingLoop]:
+            mask = (actors.actor_type == ActorType.HonestActor.value) * (actors.entity != "Contract") + np.isin(
+                actors.actor_type, [ActorType.SingleDefender.value, ActorType.CoordinatedDefender.value]
+            )
 
-        if proposal.id > last_canceled_proposal:
-            if scenario in [Scenario.HappyPath, Scenario.VetoSignallingLoop]:
-                mask = (actors.actor_type == ActorType.HonestActor.value) * (actors.entity != "Contract") + np.isin(
-                    actors.actor_type, [ActorType.SingleDefender.value, ActorType.CoordinatedDefender.value]
+            actors.simulate_proposal_effect(proposal, mask)
+            actors.apply_proposal_damage(time_manager.get_current_timestamp(), proposal, True, mask)
+
+        elif scenario in (Scenario.SingleAttack, Scenario.CoordinatedAttack):
+            total_stETH_gains, total_wstETH_gains = calculate_attack_gains(
+                proposal, dual_governance, lido, actors, attackers
+            )
+            # print(f"total_stETH_gains is {total_stETH_gains}")
+            # print(f"total_wstETH_gains is {total_wstETH_gains}")
+
+            if scenario == Scenario.SingleAttack:
+                num_attackers = 1
+            elif scenario == Scenario.CoordinatedAttack:
+                num_attackers = len(attackers)
+            else:
+                num_attackers = 0
+
+            if num_attackers > 0:
+                stETH_gain_per_attacker = total_stETH_gains / num_attackers
+                wstETH_gain_per_attacker = total_wstETH_gains / num_attackers
+
+            # print(f"num_attackers is {num_attackers}")
+
+            mask1 = (actors.actor_type == ActorType.HonestActor.value) * (
+                actors.entity != "Contract"
+            ) + np.isin(
+                actors.actor_type, [ActorType.SingleDefender.value, ActorType.CoordinatedDefender.value]
+            )
+
+            # print(np.sum(mask1))
+
+            # mask312 = actors.health == 0
+            # print(f"mask312 is {np.sum(mask312)}")
+
+            actors.simulate_proposal_effect(proposal, mask1)
+            actors.apply_proposal_damage(time_manager.get_current_timestamp(), proposal, True, mask1)
+            actors.after_simulate_proposal_effect(mask1)
+
+            mask2 = (scenario == Scenario.CoordinatedAttack) * np.isin(actors.address, list(attackers)) + (
+                scenario == Scenario.SingleAttack
+            ) * (proposal.proposer in attackers) * (actors.address == proposal.proposer)
+            # mask4 = (
+            #     (scenario == Scenario.SingleAttack)
+            #     * (proposal.proposer in attackers)
+            #     * (actors.address == proposal.proposer)
+            # )
+            # mask67 = (scenario == Scenario.CoordinatedAttack) * np.isin(actors.address, list(attackers))
+            # if scenario == Scenario.SingleAttack:
+            # print(f"attackers are {attackers}")
+            # print(f"proposal.proposer is {proposal.proposer}")
+            # mask3 = (
+            #     (scenario == Scenario.SingleAttack)
+            #     * (proposal.proposer in attackers)
+            #     * (actors.address == proposal.proposer)
+            # )
+            # print(f"mask3 is {np.sum(mask3)}")
+
+            # print(f"mask2 is {np.sum(mask2)}")
+
+            # mask512 = actors.health == 0
+            # print(f"mask512 is {np.sum(mask512)}")
+            # print(f"mask4 is {np.sum(mask4)}")
+            # print(f"mask2 is {np.sum(mask2)}")
+            # print(f"mask67 is {np.sum(mask67)}")
+
+            if np.sum(mask2) > 0:
+                print(
+                    "stealing from honest actors ",
+                    stETH_gain_per_attacker,
+                    " stETH and ",
+                    wstETH_gain_per_attacker,
+                    " wstETH",
                 )
-
-                actors.simulate_proposal_effect(proposal, mask)
-                actors.apply_proposal_damage(time_manager.get_current_timestamp(), proposal, True, mask)
-
-            elif scenario in (Scenario.SingleAttack, Scenario.CoordinatedAttack):
-                total_stETH_gains, total_wstETH_gains = calculate_attack_gains(
-                    proposal, dual_governance, lido, actors, attackers
-                )
-                # print(f"total_stETH_gains is {total_stETH_gains}")
-                # print(f"total_wstETH_gains is {total_wstETH_gains}")
-
-                if scenario == Scenario.SingleAttack:
-                    num_attackers = 1
-                elif scenario == Scenario.CoordinatedAttack:
-                    num_attackers = len(attackers)
-                else:
-                    num_attackers = 0
-
-                if num_attackers > 0:
-                    stETH_gain_per_attacker = total_stETH_gains / num_attackers
-                    wstETH_gain_per_attacker = total_wstETH_gains / num_attackers
-
-                # print(f"num_attackers is {num_attackers}")
-
-                mask1 = (actors.actor_type == ActorType.HonestActor.value) * (
-                    actors.entity != "Contract"
-                ) + np.isin(
-                    actors.actor_type, [ActorType.SingleDefender.value, ActorType.CoordinatedDefender.value]
-                )
-
-                # print(np.sum(mask1))
-
-                # mask312 = actors.health == 0
-                # print(f"mask312 is {np.sum(mask312)}")
-
-                actors.simulate_proposal_effect(proposal, mask1)
-                actors.apply_proposal_damage(time_manager.get_current_timestamp(), proposal, True, mask1)
-                actors.after_simulate_proposal_effect(mask1)
-
-                mask2 = (scenario == Scenario.CoordinatedAttack) * np.isin(actors.address, list(attackers)) + (
-                    scenario == Scenario.SingleAttack
-                ) * (proposal.proposer in attackers) * (actors.address == proposal.proposer)
-                # mask4 = (
-                #     (scenario == Scenario.SingleAttack)
-                #     * (proposal.proposer in attackers)
-                #     * (actors.address == proposal.proposer)
-                # )
-                # mask67 = (scenario == Scenario.CoordinatedAttack) * np.isin(actors.address, list(attackers))
-                # if scenario == Scenario.SingleAttack:
-                # print(f"attackers are {attackers}")
-                # print(f"proposal.proposer is {proposal.proposer}")
-                # mask3 = (
-                #     (scenario == Scenario.SingleAttack)
-                #     * (proposal.proposer in attackers)
-                #     * (actors.address == proposal.proposer)
-                # )
-                # print(f"mask3 is {np.sum(mask3)}")
-
-                # print(f"mask2 is {np.sum(mask2)}")
-
-                # mask512 = actors.health == 0
-                # print(f"mask512 is {np.sum(mask512)}")
-                # print(f"mask4 is {np.sum(mask4)}")
-                # print(f"mask2 is {np.sum(mask2)}")
-                # print(f"mask67 is {np.sum(mask67)}")
-
-                if np.sum(mask2) > 0:
-                    print(
-                        "stealing from honest actors ",
-                        stETH_gain_per_attacker,
-                        " stETH and ",
-                        wstETH_gain_per_attacker,
-                        " wstETH",
-                    )
-                    actors.attack_honest_actors(proposal, stETH_gain_per_attacker, wstETH_gain_per_attacker, mask2)
-                    actors.after_simulate_proposal_effect(mask2)
+                actors.attack_honest_actors(proposal, stETH_gain_per_attacker, wstETH_gain_per_attacker, mask2)
+                actors.after_simulate_proposal_effect(mask2)
 
     return actors
 
@@ -234,12 +235,11 @@ def actor_reset_proposal_reaction(params, substep, state_history, prev_state, po
 
 
 def actor_recover_health(cancel_proposal_ids, actors: Actors, proposals: List[Proposal], time_manager: TimeManager):
-    if len(cancel_proposal_ids) != 0:
-        for proposal_id in cancel_proposal_ids:
-            proposal = get_proposal_by_id(proposals, proposal_id)
-            if proposal.damage != 0:
-                mask = (actors.actor_type == ActorType.HonestActor.value) * (actors.entity != "Contract")
-                actors.apply_proposal_damage(time_manager.get_current_timestamp(), proposal, False, mask=mask)
+    for proposal_id in cancel_proposal_ids:
+        proposal = get_proposal_by_id(proposals, proposal_id)
+        if proposal.damage != 0:
+            mask = (actors.actor_type == ActorType.HonestActor.value) * (actors.entity != "Contract")
+            actors.apply_proposal_damage(time_manager.get_current_timestamp(), proposal, False, mask=mask)
 
     return actors
 
@@ -249,15 +249,15 @@ def actor_reset_proposal_effect(cancel_proposal_ids, actors: Actors, proposals: 
 
     if len(cancel_proposal_ids) != 0:
         print("actor_reset_proposal_effect", cancel_proposal_ids)
-        for proposal_id in cancel_proposal_ids:
-            if reset:
-                break
+    for proposal_id in cancel_proposal_ids:
+        if reset:
+            break
 
-            proposal = get_proposal_by_id(proposals, proposal_id)
-            if proposal.sub_type in [ProposalSubType.FundsStealing, ProposalSubType.Bribing]:
-                actors.reset_proposal_effect()
-                actors.after_reset_proposal_effect()
+        proposal = get_proposal_by_id(proposals, proposal_id)
+        if proposal.sub_type in [ProposalSubType.FundsStealing, ProposalSubType.Bribing]:
+            actors.reset_proposal_effect()
+            actors.after_reset_proposal_effect()
 
-                reset = True
+            reset = True
 
     return actors

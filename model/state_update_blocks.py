@@ -9,21 +9,24 @@ from model.parts.dg import (
 )
 from model.parts.proposals import (
     activate_attack,
-    cancel_all_pending_proposals,
+    get_proposals_to_cancel,
     deactivate_attack,
     generate_proposal,
-    initialize_proposal,
-    register_proposal,
+    initialize_proposals,
+    register_proposals,
     schedule_and_execute_proposals,
-    submit_proposal,
+    submit_proposals,
+    cancel_proposals,
+    get_proposals_to_schedule_and_execute
 )
 from model.utils.seed import initialize_seed
 
 from .parts.actors import (
     actor_lock_or_unlock_in_escrow,
-    actor_react_on_proposal,
+    actor_react_on_proposals,
     actor_reset_proposal_reaction,
     lock_or_unlock_stETH,
+    actor_execute_proposals
 )
 
 
@@ -46,11 +49,11 @@ state_update_blocks = [
         "label": "Proposal Generation",
         "policies": {"generate_proposal": generate_proposal},
         "variables": {
-            "dual_governance": submit_proposal,
-            "proposals": register_proposal,
-            "actors": actor_react_on_proposal,
+            "dual_governance": submit_proposals,
+            "proposals": register_proposals,
+            "actors": actor_react_on_proposals,
             "is_active_attack": activate_attack,
-            "non_initialized_proposals": initialize_proposal,
+            "non_initialized_proposals": initialize_proposals,
         },
     },
     {
@@ -69,13 +72,21 @@ state_update_blocks = [
     },
     {
         # proposals.py
-        "label": "System Acts On Proposals",
-        "policies": {"cancel_all_pending_proposals": cancel_all_pending_proposals},
+        "label": "Proposal Cancellation",
+        "policies": {"cancel_all_pending_proposals": get_proposals_to_cancel},
         "variables": {
-            "dual_governance": schedule_and_execute_proposals,
+            "dual_governance": cancel_proposals,
             "is_active_attack": deactivate_attack,
             "actors": actor_reset_proposal_reaction,
         },
+    },
+    {
+        "label": "Proposal Scheduling and Execution",
+        "policies": {"get_proposals_to_schedule_and_execute": get_proposals_to_schedule_and_execute},
+        "variables": {
+            "dual_governance": schedule_and_execute_proposals,
+            "actors": actor_execute_proposals
+        }
     },
     {
         # data_saving.py

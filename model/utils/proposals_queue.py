@@ -4,7 +4,7 @@ import datetime
 from model.types.proposals import Proposal
 from model import sys_params
 
-monthly_timesteps = int(datetime.timedelta(days=30) / sys_params["timedelta_tick"])
+monthly_timesteps = int(datetime.timedelta(days=30) / sys_params.sys_params["timedelta_tick"])
 
 
 class ProposalQueueManager:
