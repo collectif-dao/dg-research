@@ -14,15 +14,13 @@ class ProposalQueueManager:
         if proposal is not None:
             self.proposal_queue.append(proposal)
 
-    def proposals_for_registration(self, timestep) -> List[Proposal] | None:
-        if self.last_registration_timestep + monthly_timesteps <= timestep:
-            if len(self.proposal_queue):
-                self.last_registration_timestep = timestep
-                return self.proposal_queue
-            else:
-                return None
-
-        return None
+    def pop_proposals_for_registration(self, timestep) -> List[Proposal] | None:
+        if (self.last_registration_timestep + monthly_timesteps <= timestep) and self.proposal_queue:
+            self.last_registration_timestep = timestep
+            proposal_queue = [proposal for proposal in self.proposal_queue]
+            self.clear_queue()
+            return proposal_queue
+        return []
 
     def clear_queue(self):
         self.proposal_queue.clear()

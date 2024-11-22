@@ -7,3 +7,4 @@ class Scenario(Enum):
     CoordinatedAttack = 3
     SmartContractHack = 4
     VetoSignallingLoop = 5
+    ConstantVetoSignallingLoop = 6
