@@ -10,6 +10,7 @@ sys_params = {
     "slow_actor_max_delay": 604800,
     "normal_actor_max_delay": 86400,
     "quick_actor_max_delay": 7200,
+    "max_damage": 100_000,
 }
 
 slow_actor_max_delay = 3600 * 24 * 15

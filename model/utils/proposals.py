@@ -37,6 +37,11 @@ def determine_proposal_type(scenario: Scenario) -> ProposalType:
         case Scenario.VetoSignallingLoop:
             if distribution >= 2 or distribution <= -2:
                 return ProposalType.Random
+
+        case Scenario.ConstantVetoSignallingLoop:
+            if distribution >= 2 or distribution <= -2:
+                return ProposalType.Random
+
             else:
                 return ProposalType.Positive
 
@@ -62,6 +67,9 @@ def determine_proposal_subtype(scenario: Scenario) -> ProposalSubType:
                 return ProposalSubType.FundsStealing
 
         case Scenario.VetoSignallingLoop:
+            return ProposalType.NoImpact
+
+        case Scenario.ConstantVetoSignallingLoop:
             return ProposalType.NoImpact
 
 

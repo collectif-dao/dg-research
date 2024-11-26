@@ -4,11 +4,11 @@ from typing import List, Tuple
 
 import numpy as np
 
+from model import sys_params
 from model.actors.errors import NotEnoughActorStETHBalance, NotEnoughActorWstETHBalance
-from model.actors.utils import update_actor_health
 from model.types.actors import ActorType
-from model.types.proposal_type import ProposalType
-from model.types.proposals import Proposal, ProposalSubType
+from model.types.proposal_type import ProposalSubType, ProposalType
+from model.types.proposals import Proposal
 from model.types.scenario import Scenario
 from model.utils.proposals import get_first_proposal_timestamp
 from model.utils.reactions import generate_reaction_delay_vector
@@ -62,8 +62,11 @@ class Actors:
         self.label = label
         self.entity = entity
         self.health = health
+        self.hypothetical_health = np.copy(self.health)
+        self.cropped_health = np.copy(self.health)
         self.initial_health = np.copy(self.health)
         self.total_damage = np.zeros_like(self.health)
+        self.total_healing = np.zeros_like(self.health)
         self.total_recovery = np.zeros_like(self.health)
         self.actor_type = actor_type
         self.reaction_time = reaction_time
@@ -79,8 +82,9 @@ class Actors:
         empty_address = self.address == ""
         self.address[empty_address] = [generate_address() for _ in range(np.sum(empty_address))]
 
-    def simulation_copy(self):
-        pass
+    ## ---
+    ## Funds movement section
+    ## ---
 
     def lock_to_escrow(
         self, stETH_amounts: np.ndarray, wstETH_amounts: np.ndarray, current_timestamp: int, mask: np.ndarray
@@ -95,9 +99,11 @@ class Actors:
 
         self.stETH[mask] -= stETH_amounts[mask]
         self.stETH_locked[mask] += stETH_amounts[mask]
+        self.hypothetical_stETH[mask] -= stETH_amounts[mask]
 
         self.wstETH[mask] -= wstETH_amounts[mask]
         self.wstETH_locked[mask] += wstETH_amounts[mask]
+        self.hypothetical_wstETH[mask] -= wstETH_amounts[mask]
 
     def unlock_from_escrow(
         self, stETH_amounts: np.ndarray, wstETH_amounts: np.ndarray, current_timestamp: int, mask: np.ndarray
@@ -112,9 +118,11 @@ class Actors:
 
         self.stETH[mask] += np.abs(stETH_amounts[mask])
         self.stETH_locked[mask] -= np.abs(stETH_amounts[mask])
+        self.hypothetical_stETH[mask] += np.abs(stETH_amounts[mask])
 
         self.wstETH[mask] += np.abs(wstETH_amounts[mask])
         self.wstETH_locked[mask] -= np.abs(wstETH_amounts[mask])
+        self.hypothetical_wstETH[mask] += np.abs(wstETH_amounts[mask])
 
     def rebalance_to_stETH(
         self, stETH_amounts: np.ndarray, wstETH_amounts: np.ndarray, current_timestamp: int, mask: np.ndarray
@@ -127,76 +135,79 @@ class Actors:
 
         self.last_locked_tx_timestamp[mask] = current_timestamp
 
-        self.stETH[mask] += np.abs(stETH_amounts[mask]) + np.abs(wstETH_amounts[mask])
+        total_amount = np.abs(stETH_amounts[mask]) + np.abs(wstETH_amounts[mask])
+        self.stETH[mask] += total_amount
         self.stETH_locked[mask] -= np.abs(stETH_amounts[mask])
         self.wstETH_locked[mask] -= np.abs(wstETH_amounts[mask])
+        self.hypothetical_stETH[mask] += total_amount
+        self.hypothetical_wstETH[mask] -= np.abs(wstETH_amounts[mask])
 
-    def update_actor_health_vector(self, current_timestamp: int, damage: np.ndarray, mask: np.ndarray = None):
-        if mask is None:
-            mask = np.repeat(True, self.amount)
+    ## ---
+    ## Proposal effects section
+    ## ---
 
-        initial_health = self.health.view()
-
-        mask1 = mask * (damage > 0) * ((self.health - damage) < 0)
-        damage[mask1] = self.health[mask1]
-
-        mask2 = mask * (damage > 0)
-        self.total_damage[mask2] += damage[mask2]
-        self.health[mask2] -= damage[mask2]
-
-        mask3 = mask * (damage < 0) * ((self.health + np.abs(damage)) > 100)
-        damage[mask3] = -(100 - self.health[mask3])
-
-        mask4 = mask * (damage < 0) * (self.total_damage > 0)
-        self.total_recovery[mask4] += np.abs(damage[mask4])
-        self.recovery_time[mask4] = current_timestamp
-
-        mask5 = mask * (damage < 0)
-        self.health[mask5] += np.abs(damage[mask5])
-
-        self.health[mask] = np.maximum(np.minimum(self.health[mask], 100), 0)
-        self.total_recovery[mask] = np.minimum(self.total_recovery[mask], self.total_damage[mask])
-
-        health_changed_mask = self.health != initial_health
-        self.update_reaction_delay(health_changed_mask)
-
-    def update_actor_health(self, current_timestamp: int, damage: np.ndarray, mask: np.ndarray = None):
-        if mask is None:
-            mask = np.repeat(True, self.amount)
-
-        health_changed_mask = update_actor_health(
-            self.health, self.total_damage, self.total_recovery, self.recovery_time, damage, current_timestamp, mask
-        )
-
-        self.update_reaction_delay(health_changed_mask)
-
-    def simulate_proposal_effect(self, proposal: Proposal, mask: np.ndarray = None):
-        if len(proposal.attack_targets) == 0:
-            affected_actors_mask = np.repeat(True, self.amount)
-        else:
-            affected_actors_mask = np.isin(self.address, list(proposal.attack_targets))
-
-        if mask is not None:
-            affected_actors_mask *= mask
+    def simulate_proposal_effect(
+        self,
+        proposal: Proposal,
+        victims_mask: np.ndarray = None,
+        attackers_mask: np.ndarray = None,
+    ):
+        if victims_mask is None:
+            victims_mask = proposal.get_victims_mask(self, include_contracts=True)
 
         match proposal.sub_type:
-            case ProposalSubType.NoEffect:
-                affected_actors_mask = np.repeat(False, self.amount)
             case ProposalSubType.FundsStealing:
-                affected_actors_mask *= self.entity != "Contract"
-            case ProposalSubType.Hack:
-                affected_actors_mask *= self.entity == "Contract"
+                current_stETH = np.copy(self.hypothetical_stETH)
+                current_wstETH = np.copy(self.hypothetical_wstETH)
 
-        self.hypothetical_stETH[affected_actors_mask] = 0
-        self.hypothetical_wstETH[affected_actors_mask] = 0
+                proposal.register_fund_changes(
+                    actors_amount=self.amount,
+                    victims_mask=victims_mask,
+                    victims_stETH=current_stETH,
+                    victims_wstETH=current_wstETH,
+                    attackers_mask=attackers_mask,
+                )
 
-    def apply_proposal_damage(
-        self, current_timestamp: int, proposal: Proposal, is_damage: bool, mask: np.ndarray = None
-    ):
+                self.hypothetical_stETH += proposal.stETH_changes
+                self.hypothetical_wstETH += proposal.wstETH_changes
+
+    def reset_proposal_effect(self, proposal: Proposal):
+        """Reset only the changes from this specific proposal"""
+        if hasattr(proposal, "stETH_changes") and hasattr(proposal, "wstETH_changes"):
+            self.hypothetical_stETH -= proposal.stETH_changes
+            self.hypothetical_wstETH -= proposal.wstETH_changes
+
+    def finalize_proposal_effect(self, proposal: Proposal):
+        """Finalize balance changes when a proposal is executed"""
+        if not proposal.is_active:
+            return
+
+        if proposal.stETH_changes is not None:
+            if np.sum(proposal.stETH_changes) > 0:
+                self.stETH += proposal.stETH_changes
+
+        if proposal.wstETH_changes is not None:
+            if np.sum(proposal.wstETH_changes) > 0:
+                self.wstETH += proposal.wstETH_changes
+
+    ## ---
+    ## Proposal damage section
+    ## ---
+
+    def apply_proposal_damage(self, proposal: Proposal, mask: np.ndarray = None):
         if mask is None:
             mask = np.repeat(True, self.amount)
 
+        initial_health = self.hypothetical_health.copy()
         damage = np.repeat(proposal.damage, self.amount)
+
+        if proposal.sub_type == ProposalSubType.FundsStealing:
+            if proposal.attack_targets:
+                target_mask = np.isin(self.address, list(proposal.attack_targets))
+                damage[target_mask] = sys_params.sys_params["max_damage"]
+            else:
+                target_mask = self.entity != "Contract"
+                damage[target_mask] = sys_params.sys_params["max_damage"]
 
         for label, label_damage in proposal.effects.effects.items():
             if label_damage != 0:
@@ -204,40 +215,63 @@ class Actors:
 
         damage[np.logical_not(mask)] = 0
 
-        self.update_actor_health(current_timestamp, damage if is_damage else -damage, mask)
+        self.hypothetical_health = initial_health - damage
+
+        proposal.store_damage_effect(damage)
+
+        damage_mask = damage != 0
+        if np.any(damage_mask):
+            damage_is_positive = damage > 0
+            self.total_damage[damage_mask & damage_is_positive] += np.abs(damage[damage_mask & damage_is_positive])
+            self.total_healing[damage_mask & ~damage_is_positive] += np.abs(damage[damage_mask & ~damage_is_positive])
+
+        self.update_reaction_delay(damage_mask)
+
+        return damage_mask
+
+    def remove_proposal_damage(self, current_timestamp: int, proposal: Proposal):
+        if not proposal.is_active or proposal.damage_amounts is None:
+            return
+
+        damage_mask = proposal.get_damage_mask()
+        if not np.any(damage_mask):
+            return
+
+        initial_health = self.hypothetical_health.copy()
+        self.hypothetical_health[damage_mask] += proposal.damage_amounts[damage_mask]
+
+        health_change = self.hypothetical_health - initial_health
+
+        if proposal.damage > 0:
+            recovery_mask = damage_mask & (health_change > 0)
+            if np.any(recovery_mask):
+                self.total_recovery[recovery_mask] += np.abs(health_change[recovery_mask])
+                self.recovery_time[recovery_mask] = current_timestamp
+
+        self.update_reaction_delay(damage_mask & (health_change != 0))
+        proposal.clear_damage_effect()
+
+    def finalize_proposal_damage(self, proposal: Proposal):
+        if not proposal.is_active or proposal.damage_amounts is None:
+            return
+
+        damage_mask = proposal.get_damage_mask()
+        if not np.any(damage_mask):
+            return
+
+        self.health[damage_mask] -= proposal.damage_amounts[damage_mask]
+        self.cropped_health = np.clip(self.health, 0, 100)
+
+    ## ---
+    ## Actor's reaction section
+    ## ---
 
     def update_reaction_delay(self, mask: np.ndarray = None):
-        if mask is None:
-            self.reaction_delay = generate_reaction_delay_vector(self.reaction_time)
-        else:
-            self.reaction_delay[mask] = generate_reaction_delay_vector(self.reaction_time[mask])
+        self.reaction_delay[mask] = generate_reaction_delay_vector(self.reaction_time[mask])
 
-    def after_simulate_proposal_effect(self, mask: np.ndarray = None):
-        if mask is None:
-            mask = np.repeat(True, self.amount)
-
-        mask1 = mask * (self.hypothetical_stETH < self.initial_stETH) + (self.hypothetical_wstETH < self.initial_wstETH)
-        self.health[mask1] = 0
-
-        total_initial_balance = self.initial_stETH + self.initial_wstETH
-        total_hypothetical_balance = self.hypothetical_stETH + self.hypothetical_wstETH
-        total_balance_increase = total_hypothetical_balance - total_initial_balance
-
-        mask2 = mask * np.logical_not(mask1) * (total_initial_balance > 0) * (total_balance_increase > 0)
-
-        multiplier = 1 + (total_balance_increase[mask2] / total_initial_balance[mask2])
-        multiplier = np.minimum(multiplier, 2)
-
-        multiplier_real = multiplier.real.astype(np.float64)
-
-        self.health = self.health.astype(np.int32)
-        self.health[mask2] = (self.health[mask2] * multiplier_real).astype(np.int32)
-
-    def attack_honest_actors(self, proposal: Proposal, stETH_gain: int, wstETH_gain: int, mask: np.ndarray = None):
-        if mask is None:
-            mask = np.repeat(True, self.amount)
-        self.hypothetical_stETH[mask] = self.stETH + stETH_gain
-        self.hypothetical_wstETH[mask] = self.wstETH + wstETH_gain
+    ## ---
+    ## Lock/unlock actor's logic
+    ## ---
 
     def calculate_lock_amount(
         self, scenario: Scenario, dual_governance: DualGovernance, proposals: List[Proposal]
@@ -253,6 +287,10 @@ class Actors:
 
         return stETH_amounts, wstETH_amounts
 
+    ## ---
+    ## Honest actors implementation
+    ## ---
+
     def calculate_lock_amount_HonestActor(
         self,
         scenario: Scenario,
@@ -266,13 +304,13 @@ class Actors:
         if np.sum(mask) < 1:
             return
 
-        mask1 = mask * (self.health <= 0) * (self.total_damage > 0)
+        mask1 = mask * (self.hypothetical_health <= 0) * (self.total_damage > 0)
 
         self.calculate_lock_into_escrow_HonestActor(dual_governance, stETH_amounts, wstETH_amounts, mask1)
 
         mask2 = (
             mask
-            * (self.health > 0)
+            * (self.hypothetical_health > 0)
             * (self.total_damage > 0)
             * (self.total_recovery > 0)
             * ((self.stETH_locked > 0) + (self.wstETH_locked > 0))
@@ -319,6 +357,10 @@ class Actors:
         stETH_amounts[mask1] = -self.stETH_locked[mask1]
         wstETH_amounts[mask1] = -self.wstETH_locked[mask1]
 
+    ## ---
+    ## Defenders actors implementation
+    ## ---
+
     def calculate_lock_amount_SingleDefender(
         self,
         scenario: Scenario,
@@ -328,21 +370,37 @@ class Actors:
         wstETH_amounts: np.ndarray,
     ):
         mask = self.actor_type == ActorType.SingleDefender.value
-        if np.sum(mask) < 1:
+        if not np.any(mask):
             return
 
-        if len(proposals) > 0:
-            all_negative_proposals_canceled = all(
-                dual_governance.timelock.proposals._is_proposal_marked_cancelled(proposal.id)
-                for proposal in proposals
-                if proposal.proposal_type in [ProposalType.Negative, ProposalType.Danger, ProposalType.Hack]
-            )
-            if all_negative_proposals_canceled:
-                mask1 = mask * ((self.stETH_locked > 0) + (self.wstETH_locked > 0))
-                self.calculate_unlock_from_escrow_HonestActor(dual_governance, stETH_amounts, wstETH_amounts, mask1)
-            else:
-                mask1 = mask * (self.stETH_locked == 0) * (self.wstETH_locked == 0)
-                self.calculate_lock_into_escrow_HonestActor(dual_governance, stETH_amounts, wstETH_amounts, mask1)
+        if not proposals:
+            return
+
+        timelock_proposals = dual_governance.timelock.proposals
+        negative_types = {ProposalType.Negative, ProposalType.Danger, ProposalType.Hack}
+
+        all_negative_proposals_canceled = all(
+            timelock_proposals._is_proposal_marked_cancelled(proposal.id)
+            for proposal in proposals
+            if proposal.proposal_type in negative_types
+        )
+
+        if all_negative_proposals_canceled:
+            locked_mask = mask & ((self.stETH_locked > 0) | (self.wstETH_locked > 0))
+            if np.any(locked_mask):
+                self.calculate_unlock_from_escrow_HonestActor(
+                    dual_governance, stETH_amounts, wstETH_amounts, locked_mask
+                )
+        else:
+            unlocked_mask = mask & (self.stETH_locked == 0) & (self.wstETH_locked == 0)
+            if np.any(unlocked_mask):
+                self.calculate_lock_into_escrow_HonestActor(
+                    dual_governance, stETH_amounts, wstETH_amounts, unlocked_mask
+                )
+
+    ## ---
+    ## Attackers actors implementation
+    ## ---
 
     def calculate_lock_amount_CoordinatedAttacker(
         self,
@@ -352,33 +410,38 @@ class Actors:
         stETH_amounts: np.ndarray,
         wstETH_amounts: np.ndarray,
     ):
-        if scenario != Scenario.VetoSignallingLoop:
+        if scenario not in [Scenario.VetoSignallingLoop, Scenario.ConstantVetoSignallingLoop]:
             return
 
         mask = self.actor_type == ActorType.CoordinatedAttacker.value
 
-        if np.sum(mask) == 0:
+        if not np.any(mask):
             return
 
-        if len(proposals) > 0:
-            positive_proposals_pending = any(
-                (not dual_governance.timelock.proposals._is_proposal_marked_cancelled(proposal.id))
-                and (dual_governance.timelock.get_proposal_status(proposal.id) is not ProposalStatus.Executed)
-                for proposal in proposals
-                if proposal.proposal_type in [ProposalType.Positive, ProposalType.NoImpact, ProposalType.Random]
-            )
+        if not proposals:
+            return
 
-            if positive_proposals_pending:
-                mask1 = mask * (self.stETH_locked == 0) * (self.wstETH_locked == 0)
-                self.calculate_lock_into_escrow_HonestActor(dual_governance, stETH_amounts, wstETH_amounts, mask1)
-            else:
-                mask1 = mask * ((self.stETH_locked > 0) + (self.wstETH_locked > 0))
-                self.calculate_unlock_from_escrow_HonestActor(dual_governance, stETH_amounts, wstETH_amounts, mask1)
+        timelock_proposals = dual_governance.timelock.proposals
+        proposal_status = dual_governance.timelock.get_proposal_status
+        positive_types = {ProposalType.Positive, ProposalType.NoImpact, ProposalType.Random}
 
-    def reset_proposal_effect(self):
-        self.hypothetical_stETH = self.initial_stETH
-        self.hypothetical_wstETH = self.initial_wstETH
+        positive_proposals_pending = any(
+            not timelock_proposals._is_proposal_marked_cancelled(p.id)
+            and proposal_status(p.id) is not ProposalStatus.Executed
+            for p in proposals
+            if p.proposal_type in positive_types
+        )
 
-    def after_reset_proposal_effect(self):
-        mask = (self.hypothetical_stETH == self.initial_stETH) * (self.hypothetical_wstETH == self.initial_wstETH)
-        self.health[mask] = self.initial_health
+        if positive_proposals_pending:
+            unlocked_mask = mask & (self.stETH_locked == 0) & (self.wstETH_locked == 0)
+            if np.any(unlocked_mask):
+                self.calculate_lock_into_escrow_HonestActor(
+                    dual_governance, stETH_amounts, wstETH_amounts, unlocked_mask
+                )
+
+        elif scenario == Scenario.VetoSignallingLoop:
+            locked_mask = mask & ((self.stETH_locked > 0) | (self.wstETH_locked > 0))
+            if np.any(locked_mask):
+                self.calculate_unlock_from_escrow_HonestActor(
+                    dual_governance, stETH_amounts, wstETH_amounts, locked_mask
+                )

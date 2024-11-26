@@ -5,52 +5,42 @@ from model.types.proposals import Proposal
 from model.types.scenario import Scenario
 
 MONTE_CARLO_RUNS = 1
-SEED = 141
-SCENARIO = Scenario.SingleAttack
+SEED = 188
+SCENARIO = Scenario.ConstantVetoSignallingLoop
 TIMESTEPS = calculate_timesteps(3)
 
 proposals = [
     Proposal(
         timestep=2,
-        damage=50,
-        proposal_type=ProposalType.Danger,
-        sub_type=ProposalSubType.FundsStealing,
-        proposer="0xc329400492c6ff2438472d4651ad17389fcb843a",
-        attack_targets={
-            "0xb671e841a8e6db528358ed385983892552ef422f",
-            "0x4b4eec1ddc9420a5cc35a25f5899dc5993f9e586",
-            "0x47176b2af9885dc6c4575d4efd63895f7aaa4790",
-        },
+        damage=-15,
+        proposal_type=ProposalType.Positive,
+        sub_type=ProposalSubType.NoEffect,
+        proposer="0x6625c6332c9f91f2d27c304e729b86db87a3f504",
     ),
-    # Proposal(
-    #     timestep=2,
-    #     damage=25,
-    #     proposal_type=ProposalType.Negative,
-    #     sub_type=ProposalSubType.NoEffect,
-    #     proposer="0xc329400492c6ff2438472d4651ad17389fcb843a",
-    #     # cancelable=False,
-    # ),
 ]
 
-attackers = {"0xc329400492c6ff2438472d4651ad17389fcb843a"}
+attackers = {
+    "0x5eea56d346aa5bc5aea1786169e1f4b8699e882d",
+    "0x6625c6332c9f91f2d27c304e729b86db87a3f504",
+    "0x5313b39bf226ced2332c81eb97bb28c6fd50d1a3",
+}
 defenders = {}
 
 dual_governance_params = [
     DualGovernanceParameters(first_rage_quit_support=1, second_rage_quit_support=10),
-    DualGovernanceParameters(first_rage_quit_support=2, second_rage_quit_support=12),
 ]
 
 
-def create_experiment(simulation_name: str = "withdrawal_queue_replacement", return_template: bool = False):
+def create_experiment(simulation_name: str = "constant_veto_signalling_loop", return_template: bool = False):
     out_path = get_path()
 
     template_params = {
         "timesteps": TIMESTEPS,
         "monte_carlo_runs": MONTE_CARLO_RUNS,
         "scenario": SCENARIO,
-        "proposal_types": ProposalType.Danger,
-        "proposal_subtypes": ProposalSubType.FundsStealing,
-        "proposals_generation": ProposalGeneration.NoGeneration,
+        "proposal_types": ProposalType.Positive,
+        "proposal_subtypes": ProposalSubType.NoEffect,
+        "proposals_generation": ProposalGeneration.Random,
         "proposals": proposals,
         "attackers": attackers,
         "defenders": defenders,

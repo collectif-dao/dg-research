@@ -9,24 +9,24 @@ from model.parts.dg import (
 )
 from model.parts.proposals import (
     activate_attack,
-    get_proposals_to_cancel,
+    cancel_proposals,
     deactivate_attack,
     generate_proposal,
+    get_proposals_to_cancel,
+    get_proposals_to_schedule_and_execute,
     initialize_proposals,
     register_proposals,
     schedule_and_execute_proposals,
     submit_proposals,
-    cancel_proposals,
-    get_proposals_to_schedule_and_execute
 )
 from model.utils.seed import initialize_seed
 
 from .parts.actors import (
+    actor_execute_proposals,
     actor_lock_or_unlock_in_escrow,
     actor_react_on_proposals,
     actor_reset_proposal_reaction,
     lock_or_unlock_stETH,
-    actor_execute_proposals
 )
 
 
@@ -83,16 +83,12 @@ state_update_blocks = [
     {
         "label": "Proposal Scheduling and Execution",
         "policies": {"get_proposals_to_schedule_and_execute": get_proposals_to_schedule_and_execute},
-        "variables": {
-            "dual_governance": schedule_and_execute_proposals,
-            "actors": actor_execute_proposals
-        }
+        "variables": {"dual_governance": schedule_and_execute_proposals, "actors": actor_execute_proposals},
     },
     {
         # data_saving.py
         "label": "Saving data",
         "policies": {"save_data": save_data},
-        # "variables": {"common_dataframe": save_common_dataframe, "timestep_dataframe": save_timestep_dataframe},
         "variables": {
             "timestep_data": write_data_fastparquet,
         },

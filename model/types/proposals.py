@@ -1,6 +1,9 @@
 from dataclasses import dataclass, field
 from typing import Dict, List, Set
 
+import numpy as np
+
+from model.types.actors import ActorType
 from model.types.proposal_type import ProposalSubType, ProposalType
 from model.types.scenario import Scenario
 from model.utils.proposals import determine_proposal_damage, determine_proposal_subtype, determine_proposal_type
@@ -28,13 +31,100 @@ class Proposal:
     sub_type: ProposalSubType = field(default_factory=lambda: ProposalSubType.NoEffect)
     attack_targets: Set[str] = field(default_factory=lambda: set())
     cancelable: bool = True
+    damage_amounts: np.ndarray = None
+    is_active: bool = False
+    stETH_changes: np.ndarray = None  # Tracks stETH changes per actor
+    wstETH_changes: np.ndarray = None  # Tracks wstETH changes per actor
+
+    def store_damage_effect(self, damage_amounts: np.ndarray):
+        """Store only damage amounts - zeros implicitly represent the mask"""
+        self.damage_amounts = damage_amounts.copy()
+        self.is_active = True
+
+    def get_damage_mask(self) -> np.ndarray:
+        """Get mask of actors that received damage"""
+        return self.damage_amounts != 0 if self.damage_amounts is not None else None
+
+    def clear_damage_effect(self):
+        self.damage_amounts = None
+        self.is_active = False
+
+    def register_fund_changes(
+        self,
+        actors_amount: int,
+        victims_mask: np.ndarray,
+        victims_stETH: np.ndarray,
+        victims_wstETH: np.ndarray,
+        attackers_mask: np.ndarray = None,
+    ):
+        if self.stETH_changes is None:
+            self.stETH_changes = np.zeros(actors_amount)
+        if self.wstETH_changes is None:
+            self.wstETH_changes = np.zeros(actors_amount)
+
+        self.stETH_changes[victims_mask] = -victims_stETH[victims_mask]
+        self.wstETH_changes[victims_mask] = -victims_wstETH[victims_mask]
+
+        total_stolen_stETH = np.sum(victims_stETH[victims_mask])
+        total_stolen_wstETH = np.sum(victims_wstETH[victims_mask])
+
+        if attackers_mask is not None:
+            num_attackers = np.sum(attackers_mask)
+            if num_attackers > 0:
+                stETH_per_attacker = total_stolen_stETH / num_attackers
+                wstETH_per_attacker = total_stolen_wstETH / num_attackers
+
+                self.stETH_changes[attackers_mask] = stETH_per_attacker
+                self.wstETH_changes[attackers_mask] = wstETH_per_attacker
+
+    def get_victims_mask(self, actors: any, include_contracts: bool = True) -> np.ndarray:
+        """
+        Centralized method to determine victims based on proposal and actor properties
+
+        Parameters:
+        - proposal: The proposal being evaluated
+        - include_contracts: Whether to include contract entities as potential victims
+
+        Returns:
+        - numpy array boolean mask indicating which actors are victims
+        """
+
+        victims_mask = np.isin(
+            actors.actor_type,
+            [
+                ActorType.HonestActor.value,
+                ActorType.SingleDefender.value,
+                ActorType.CoordinatedDefender.value,
+            ],
+        )
+
+        attackers_mask = np.isin(
+            actors.actor_type,
+            [
+                ActorType.SingleAttacker.value,
+                ActorType.CoordinatedAttacker.value,
+            ],
+        )
+        victims_mask &= ~attackers_mask
+
+        if not include_contracts:
+            victims_mask &= actors.entity != "Contract"
+
+        if self.attack_targets:
+            victims_mask &= np.isin(actors.address, list(self.attack_targets))
+
+        if self.sub_type == ProposalSubType.FundsStealing:
+            victims_mask &= (actors.stETH > 0) | (actors.wstETH > 0)
+
+        return victims_mask
 
     def __eq__(self, other):
-        if (self.timestep == other.timestep
+        if (
+            self.timestep == other.timestep
             and self.damage == other.damage
             and self.effects == other.effects
             and self.proposal_type == other.proposal_type
-            and self.sub_type == other.subtype
+            and self.sub_type == other.sub_type
             and self.attack_targets == other.attack_targets
             and self.cancelable == other.cancelable
         ):

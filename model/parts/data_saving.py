@@ -63,7 +63,12 @@ def extract_proposal_data(params, state):
 
     simulation_start_timestamp = time_manager.get_starting_timestamp_value()
     proposals_info = dual_governance.timelock.proposals.state.proposals
+
+    if not proposals_info:
+        return None
+
     proposal_dict = defaultdict(list)
+
     for proposal in proposals_info:
         proposal_dict["proposal_id"].append(proposal.id)
         proposal_dict["proposals_status_value"].append(proposal.status.value)
@@ -93,12 +98,24 @@ def _extract_actor_data_by_enum(actors: Actors, enum_type, attr_name_in_actor):
         mask = getattr(actors, attr_name_in_actor) == kind.value
 
         balance = np.sum(actors.stETH[mask] + actors.wstETH[mask])
+        hypothetical_balance = np.sum(actors.hypothetical_stETH[mask] + actors.hypothetical_wstETH[mask])
         locked = np.sum(actors.stETH_locked[mask] + actors.wstETH_locked[mask])
         health = np.sum(actors.health[mask])
+        cropped_health = np.sum(actors.cropped_health[mask])
+        hypothetical_health = np.sum(actors.hypothetical_health[mask])
+        damage = np.sum(actors.total_damage[mask])
+        healing = np.sum(actors.total_healing[mask])
+        recovery = np.sum(actors.total_recovery[mask])
 
         enum_actor_dict[f"balance_{kind.name}"] = balance / ether_base
+        enum_actor_dict[f"hypothetical_balance{kind.name}"] = hypothetical_balance / ether_base
         enum_actor_dict[f"locked_{kind.name}"] = locked / ether_base
         enum_actor_dict[f"health_{kind.name}"] = health
+        enum_actor_dict[f"hypothetical_health_{kind.name}"] = hypothetical_health
+        enum_actor_dict[f"cropped_health_{kind.name}"] = cropped_health
+        enum_actor_dict[f"damage_{kind.name}"] = damage
+        enum_actor_dict[f"healing_{kind.name}"] = healing
+        enum_actor_dict[f"recovery_{kind.name}"] = recovery
 
     return enum_actor_dict
 
@@ -119,6 +136,11 @@ def extract_actor_data(state):
         "actors_total_locked": total_locked,
         "actors_total_number": actors.amount,
         "actors_total_health": np.sum(actors.health),
+        "actors_total_hypothetical_health": np.sum(actors.hypothetical_health),
+        "actors_total_cropped_health": np.sum(actors.cropped_health),
+        "actors_total_damage": np.sum(actors.total_damage),
+        "actors_total_healing": np.sum(actors.total_healing),
+        "actors_total_recovery": np.sum(actors.total_recovery),
     }
     actors_dict.update(_extract_actor_data_by_enum(actors, ReactionTime, "reaction_time"))
     actors_dict.update(_extract_actor_data_by_enum(actors, ActorType, "actor_type"))
@@ -159,6 +181,7 @@ def save_data(params, substep, state_history, prev_state):
     else:
         return {"save_data": (None, timestep_data, None)}
 
+
 def write_data_fastparquet(params, substep, state_history, prev_state, policy_input):
     (common_data, new_timestep_data, proposal_data) = policy_input["save_data"]
     timestep = prev_state["timestep"]
@@ -180,11 +203,7 @@ def write_data_fastparquet(params, substep, state_history, prev_state, policy_in
             if timestep_data:
                 with lock:
                     write(
-                        str(parquet_path),
-                        combined_df,
-                        append=parquet_path.exists(),
-                        compression="SNAPPY",
-                        stats=False
+                        str(parquet_path), combined_df, append=parquet_path.exists(), compression="SNAPPY", stats=False
                     )
         except Exception as e:
             print(f"Error while saving timestep data: {e}")
@@ -202,10 +221,10 @@ def write_data_fastparquet(params, substep, state_history, prev_state, policy_in
                         common_data_df,
                         append=common_data_path.exists(),
                         compression="SNAPPY",
-                        stats=False
+                        stats=False,
                     )
 
-            if proposal_data:
+            if proposal_data is not None:
                 proposal_data_df = pd.DataFrame(proposal_data)
                 proposal_data_path = prev_state["outpath"].joinpath("proposals_data.parquet")
                 proposal_lock_path = prev_state["outpath"].joinpath("proposals_data.lock")
@@ -217,7 +236,7 @@ def write_data_fastparquet(params, substep, state_history, prev_state, policy_in
                         proposal_data_df,
                         append=proposal_data_path.exists(),
                         compression="SNAPPY",
-                        stats=False
+                        stats=False,
                     )
         except Exception as e:
             print(f"Error while saving data: {e}")

@@ -1,4 +1,3 @@
-import copy
 from datetime import timedelta
 from typing import List, Set
 
@@ -160,9 +159,9 @@ def get_proposals_to_cancel(params, substep, state_history, prev_state):
 
     return {"cancel_all_pending_proposals": canceled_proposals}
 
+
 def get_proposals_to_schedule_and_execute(params, substep, state_history, prev_state):
     dual_governance: DualGovernance = prev_state["dual_governance"]
-    proposals: List[Proposal] = prev_state["proposals"]
 
     proposals_to_schedule: List[Proposal] = []
     proposals_to_execute: List[Proposal] = []
@@ -171,10 +170,12 @@ def get_proposals_to_schedule_and_execute(params, substep, state_history, prev_s
             proposal.submittedAt
         ):
             proposals_to_schedule.append(proposal)
+
         elif dual_governance.can_execute(proposal.id):
             proposals_to_execute.append(proposal)
 
     return {"proposals_to_schedule": proposals_to_schedule, "proposals_to_execute": proposals_to_execute}
+
 
 # Mechanisms
 
@@ -190,15 +191,15 @@ def submit_proposals(params, substep, state_history, prev_state, policy_input):
         print(f"proposals created with monthly queue is {proposals}")
 
     for proposal in proposals:
-            print(
-                "submitting proposal with ID",
-                proposal.id,
-                "at ",
-                dual_governance.time_manager.get_current_time(),
-                prev_state["timestep"],
-            )
-            # print(proposal)
-            dual_governance.submit_proposal("", [ExecutorCall("", "", [])])
+        print(
+            "submitting proposal with ID",
+            proposal.id,
+            "at ",
+            dual_governance.time_manager.get_current_time(),
+            prev_state["timestep"],
+        )
+        # print(proposal)
+        dual_governance.submit_proposal("", [ExecutorCall("", "", [])])
 
     return ("dual_governance", dual_governance)
 
@@ -283,6 +284,7 @@ def initialize_proposals(params, substep, state_history, prev_state, policy_inpu
 
     return ("non_initialized_proposals", non_initialized_proposals_left)
 
+
 def cancel_proposals(params, substep, state_history, prev_state, policy_input):
     dual_governance: DualGovernance = prev_state["dual_governance"]
     proposals_to_cancel = policy_input["cancel_all_pending_proposals"]
@@ -292,6 +294,7 @@ def cancel_proposals(params, substep, state_history, prev_state, policy_input):
 
     return ("dual_governance", dual_governance)
 
+
 def schedule_and_execute_proposals(params, substep, state_history, prev_state, policy_input):
     dual_governance: DualGovernance = prev_state["dual_governance"]
     proposals_to_schedule: List[Proposal] = policy_input["proposals_to_schedule"]
@@ -299,6 +302,7 @@ def schedule_and_execute_proposals(params, substep, state_history, prev_state, p
 
     for proposal in proposals_to_schedule:
         dual_governance.schedule_proposal(proposal.id)
+
     for proposal in proposals_to_execute:
         dual_governance.execute_proposal(proposal.id)
 

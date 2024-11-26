@@ -128,11 +128,10 @@ class Proposals:
         proposal.status = ProposalStatus.Cancelled
 
     def cancel_all(self):
-        for proposal_id in range(self.state.last_canceled_proposal_id + 1):
-            if proposal_id == 0:
-                continue
+        last_proposal_id = len(self.state.proposals) + self.proposal_id_offset - 1
+        for proposal_id in range(self.state.last_canceled_proposal_id + 1, last_proposal_id + 1):
             self.cancel(proposal_id)
-        last_proposal_id = len(self.state.proposals)
+
         self.state.last_canceled_proposal_id = last_proposal_id
 
     ## ---

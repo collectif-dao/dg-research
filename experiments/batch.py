@@ -29,7 +29,7 @@ def setup_simulation_batch(
     proposals: list[Proposal] = [],
     attackers: set[str] = set(),
     defenders: set[str] = set(),
-    processes: int = -1,
+    processes: int = None,
     seed: int = 0,
     simulation_starting_time: datetime = datetime.min,
     out_dir: str = "",
@@ -145,7 +145,11 @@ def setup_simulation_batch(
 
     experiment = Experiment(simulations)
     experiment.engine = Engine(
-        backend=Backend.MULTIPROCESSING, raise_exceptions=False, drop_substeps=not time_profiling, deepcopy=False, processes=processes
+        backend=Backend.MULTIPROCESSING,
+        raise_exceptions=False,
+        drop_substeps=not time_profiling,
+        deepcopy=False,
+        processes=processes,
     )
 
     return experiment, simulation_hashes
@@ -170,7 +174,7 @@ def run_simulation_batches(
     labeled_addresses: dict[str, str] = dict(),
     time_profiling: bool = False,
     save_files: bool = True,
-    processes: int = -1,
+    processes: int = None,
     batch_size: int = 100,
     skip_existing_batches: bool = False,
     execute_simulations: bool = True,

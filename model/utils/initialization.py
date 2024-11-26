@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import Any, List, Set, Tuple
 
 import numpy as np
-import pandas as pd
 
 from model.actors.actors import Actors
 from model.parts.actors import actor_update_health
@@ -201,6 +200,8 @@ def generate_actors(
             attacker_type = ActorType.CoordinatedAttacker.value
         case Scenario.VetoSignallingLoop:
             attacker_type = ActorType.CoordinatedAttacker.value
+        case Scenario.ConstantVetoSignallingLoop:
+            attacker_type = ActorType.CoordinatedAttacker.value
 
     actor_types[random_attacker_mask] = attacker_type
     attacker_mask = np.isin(actor_addresses, list(attackers))
@@ -267,7 +268,13 @@ def generate_initial_proposals(
         return [], initial_proposals
 
     if (
-        scenario in [Scenario.SingleAttack, Scenario.CoordinatedAttack, Scenario.VetoSignallingLoop]
+        scenario
+        in [
+            Scenario.SingleAttack,
+            Scenario.CoordinatedAttack,
+            Scenario.VetoSignallingLoop,
+            Scenario.ConstantVetoSignallingLoop,
+        ]
         and total_attackers <= 0
     ):
         return [], initial_proposals

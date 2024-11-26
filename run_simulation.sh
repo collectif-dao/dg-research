@@ -2,7 +2,7 @@
 
 # Function to display usage
 usage() {
-  echo "Usage: $0 <simulation_name> [--post_processing] [--time_profiling]"
+  echo "Usage: $0 <simulation_name> [--post_processing] [--time_profiling] [--processes <num>]"
   exit 1
 }
 
@@ -11,11 +11,16 @@ usage() {
 
 # Parse optional arguments
 simulation_name=""
+processes=""
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     --post_processing) post_processing=true ;;
     --time_profiling) time_profiling=true ;;
+    --processes) 
+      shift
+      processes=$1 
+      ;;
     *) 
       [[ -z "$simulation_name" ]] && simulation_name=$1 || usage 
       ;;
@@ -29,4 +34,5 @@ done
 # Run the simulation with the provided name and flags
 python3 -m experiments.run --simulation_name "$simulation_name" \
   ${post_processing:+--post_processing} \
-  ${time_profiling:+--time_profiling}
+  ${time_profiling:+--time_profiling} \
+  ${processes:+--processes "$processes"}

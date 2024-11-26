@@ -494,7 +494,7 @@ def test_apply_proposal_damage(actor_data, proposal_type, sub_type):
     expected_health = actors.health.copy()
     damage_array = np.repeat(proposal.damage, len(addresses)).astype(np.int16)
 
-    actors.apply_proposal_damage(time_manager.get_current_timestamp(), proposal, True)
+    actors.apply_proposal_damage(proposal, True)
 
     for label, label_damage in proposal.effects.effects.items():
         if label_damage != 0:

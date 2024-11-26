@@ -6,6 +6,7 @@ import time
 from experiments.batch import run_simulation_batches
 from experiments.simulation_configuration import get_path
 from experiments.templates.actors_labelling import create_experiment as actors_labelling
+from experiments.templates.constant_veto_signalling_loop import create_experiment as constant_veto_signalling_loop
 from experiments.templates.model_validation import create_experiment as model_validation_experiment
 from experiments.templates.rage_quit_scenario import create_experiment as rage_quit_experiment
 from experiments.templates.signalling_thresholds_sweep_under_proposal_with_attack import (
@@ -40,7 +41,7 @@ def run(
     simulation_name: str = None,
     post_processing: bool = False,
     time_profiling: bool = False,
-    processes=-1,
+    processes: int = None,
     batch_size: int = 100,
     template_override=None,
     skip_existing_batches: bool = False,
@@ -62,6 +63,7 @@ def run(
             "single_attack_sweep_first_threshold": single_attack_sweep_first_threshold,
             "single_attack_sweep_second_threshold": single_attack_sweep_second_threshold,
             "veto_signalling_loop": veto_signalling_loop,
+            "constant_veto_signalling_loop": constant_veto_signalling_loop,
             "actors_labelling": actors_labelling,
         }
 
@@ -119,7 +121,8 @@ if __name__ == "__main__":
     parser.add_argument("--simulation_name", type=str, help="Name of the simulation to run", required=True)
     parser.add_argument("--post_processing", action="store_true", help="Enable post-processing result")
     parser.add_argument("--time_profiling", action="store_true", help="Profile time usage")
+    parser.add_argument("--processes", type=int, help="Number of processes to run", required=False, default=None)
 
     args = parser.parse_args()
 
-    run(args.simulation_name, args.post_processing, args.time_profiling)
+    run(args.simulation_name, args.post_processing, args.time_profiling, args.processes)
