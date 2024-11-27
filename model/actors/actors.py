@@ -81,9 +81,7 @@ class Actors:
         self.entity[empty_entity] = "Other"
 
         empty_address = self.address == ""
-        self.address[empty_address] = [generate_address() for _ in range(np.sum(empty_address))]
-
-        self.reaction_count: int = 0
+        self.address[empty_address] = [generate_address() for _ in range(np.sum(empty_address))]        
 
     ## ---
     ## Funds movement section
