@@ -3,7 +3,7 @@ from typing import List, Set
 import numpy as np
 
 from model.actors.actors import Actors
-from model.types.actors import ActorType
+from model.types.actors import ActorReaction, ActorType
 from model.types.proposal_type import ProposalSubType
 from model.types.proposals import Proposal, get_proposal_by_id
 from model.types.scenario import Scenario
@@ -22,28 +22,41 @@ def lock_or_unlock_stETH(params, substep, state_history, prev_state):
 
     return {"agent_delta_staked": [actors.address, stETH_amounts, wstETH_amounts]}
 
-
-# Mechanisms
-def actor_lock_or_unlock_in_escrow(params, substep, state_history, prev_state, policy_input):
-    delta_staked_by_agent: List[np.ndarray, np.ndarray, np.ndarray] = policy_input["agent_delta_staked"]
+def check_hp_and_calculate_reaction(params, substep, state_history, prev_state):
     actors: Actors = prev_state["actors"]
     dual_governance: DualGovernance = prev_state["dual_governance"]
+    proposals: List[Proposal] = prev_state["proposals"]
+    scenario: Scenario = prev_state["scenario"]
 
+    reactions, stETH_amounts, wstETH_amounts = actors.check_hp_and_calculate_reaction(
+        scenario, dual_governance, proposals
+    )
+
+    return {"agent_delta_staked": [actors.address, stETH_amounts, wstETH_amounts], "actor_reactions": reactions}
+
+
+# Mechanisms
+def react(params, substep, state_history, prev_state, policy_input):
+    actors: Actors = prev_state["actors"]
+    dual_governance: DualGovernance = prev_state["dual_governance"]
+    reactions: np.ndarray = policy_input["actor_reactions"]
+    delta_staked_by_agent: List[np.ndarray, np.ndarray, np.ndarray] = policy_input["agent_delta_staked"]
     _, stETH_amounts, wstETH_amounts = delta_staked_by_agent
 
     mask1 = (stETH_amounts > 0) + (wstETH_amounts > 0)
     actors.lock_to_escrow(stETH_amounts, wstETH_amounts, dual_governance.time_manager.get_current_timestamp(), mask1)
 
     mask2 = (stETH_amounts < 0) * (wstETH_amounts < 0)
-    actors.rebalance_to_stETH(
-        stETH_amounts, wstETH_amounts, dual_governance.time_manager.get_current_timestamp(), mask2
-    )
+    actors.rebalance_to_stETH(stETH_amounts, wstETH_amounts, dual_governance.time_manager.get_current_timestamp(), mask2)
 
     mask3 = np.logical_not(mask2) * ((stETH_amounts < 0) + (wstETH_amounts < 0))
-    actors.unlock_from_escrow(
-        stETH_amounts, wstETH_amounts, dual_governance.time_manager.get_current_timestamp(), mask3
-    )
+    actors.unlock_from_escrow(stETH_amounts, wstETH_amounts, dual_governance.time_manager.get_current_timestamp(), mask3)
 
+    mask_reacted = reactions != ActorReaction.NoReaction.value
+    actors.update_next_hp_check_timestamp(dual_governance.time_manager.get_current_timestamp(), mask_reacted)
+
+    mask_quitting = reactions == ActorReaction.Quit.value
+    actors.quit(mask_quitting)
     return ("actors", actors)
 
 
@@ -51,8 +64,7 @@ def actor_lock_or_unlock_in_escrow(params, substep, state_history, prev_state, p
 ## proposals creation effects
 ## ---
 
-
-def actor_react_on_proposals(params, substep, state_history, prev_state, policy_input):
+def actor_submit_proposals(params, substep, state_history, prev_state, policy_input):
     proposals: List[Proposal] = policy_input["proposal_create"]
     actors: Actors = prev_state["actors"]
     attackers: Set[str] = prev_state["attackers"]
@@ -82,7 +94,6 @@ def actor_update_health(
             mask2 = (scenario in [Scenario.VetoSignallingLoop, Scenario.ConstantVetoSignallingLoop]) * np.isin(
                 actors.address, list(attackers)
             )
-            actors.update_reaction_delay(mask2)
 
         elif scenario in (Scenario.SingleAttack, Scenario.CoordinatedAttack):
             victims_mask = proposal.get_victims_mask(actors, include_contracts=True)
@@ -120,7 +131,7 @@ def actor_update_health(
 ## ---
 
 
-def actor_reset_proposal_reaction(params, substep, state_history, prev_state, policy_input):
+def actor_cancel_proposals(params, substep, state_history, prev_state, policy_input):
     cancel_proposal_ids = policy_input["cancel_all_pending_proposals"]
     if not cancel_proposal_ids:
         return ("actors", prev_state["actors"])

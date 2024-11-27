@@ -2,6 +2,7 @@ from typing import List
 
 import numpy as np
 
+from model.parts.actors import ActorReaction
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.state import State
 from specs.time_manager import TimeManager
@@ -17,9 +18,10 @@ def add_deltatime_to_dg(params, substep, state_history, prev_state):
 # Mechanisms
 def update_escrow(params, substep, state_history, prev_state, policy_input):
     delta_staked_by_agent: List[np.ndarray, np.ndarray, np.ndarray] = policy_input["agent_delta_staked"]
+    reactions: np.ndarray = policy_input["actor_reactions"]
     dual_governance: DualGovernance = prev_state["dual_governance"]
 
-    for actor_address, stETH_amount, wstETH_amount in zip(*delta_staked_by_agent):
+    for actor_address, stETH_amount, wstETH_amount, reaction in zip(*delta_staked_by_agent, reactions):
         if stETH_amount == 0 and wstETH_amount == 0:
             continue
 
@@ -85,6 +87,10 @@ def update_escrow(params, substep, state_history, prev_state, policy_input):
                 continue
             else:
                 dual_governance.state.signalling_escrow.unlock_stETH(actor_address)
+        
+        if reaction == ActorReaction.Quit.value:
+            ## TODO: implement
+            pass
 
     return ("dual_governance", dual_governance)
 

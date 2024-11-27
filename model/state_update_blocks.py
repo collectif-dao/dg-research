@@ -1,40 +1,14 @@
-from model.parts.data_saving import (
-    save_data,
-    write_data_fastparquet,
-)
-from model.parts.dg import (
-    add_deltatime_to_dg,
-    update_dg_time_manager,
-    update_escrow,
-)
-from model.parts.proposals import (
-    activate_attack,
-    cancel_proposals,
-    deactivate_attack,
-    generate_proposal,
-    get_proposals_to_cancel,
-    get_proposals_to_schedule_and_execute,
-    initialize_proposals,
-    register_proposals,
-    schedule_and_execute_proposals,
-    submit_proposals,
-)
+import model.parts.actors as actors
+import model.parts.data_saving as data_saving
+import model.parts.dg as dg
+import model.parts.proposals as proposals
 from model.utils.seed import initialize_seed
-
-from .parts.actors import (
-    actor_execute_proposals,
-    actor_lock_or_unlock_in_escrow,
-    actor_react_on_proposals,
-    actor_reset_proposal_reaction,
-    lock_or_unlock_stETH,
-)
 
 
 def setup_seed(params, substep, state_history, prev_state):
     if prev_state["timestep"] == 0:
         initialize_seed(prev_state["seed"])
     return {}
-
 
 state_update_blocks = [
     {
@@ -47,50 +21,52 @@ state_update_blocks = [
     {
         # proposals.py
         "label": "Proposal Generation",
-        "policies": {"generate_proposal": generate_proposal},
+        "policies": {"generate_proposal": proposals.generate_proposal},
         "variables": {
-            "dual_governance": submit_proposals,
-            "proposals": register_proposals,
-            "actors": actor_react_on_proposals,
-            "is_active_attack": activate_attack,
-            "non_initialized_proposals": initialize_proposals,
+            "dual_governance": proposals.submit_proposals,
+            "proposals": proposals.register_proposals,
+            "is_active_attack": proposals.activate_attack,
+            "non_initialized_proposals": proposals.initialize_proposals,
+            "actors": actors.actor_submit_proposals,
         },
+    },
+    {
+        "label": "Proposal Cancellation",
+        "policies": {"cancel_all_pending_proposals": proposals.get_proposals_to_cancel},
+        "variables": {
+            "dual_governance": proposals.cancel_proposals,
+            "is_active_attack": proposals.deactivate_attack,
+            "actors": actors.actor_cancel_proposals
+        }
+    },
+    {
+        "label": "Proposal Scheduling and Execution",
+        "policies": {"get_proposals_to_schedule_and_execute": proposals.get_proposals_to_schedule_and_execute},
+        "variables": {
+            "dual_governance": proposals.schedule_and_execute_proposals,
+            "actors": actors.actor_execute_proposals
+        }
     },
     {
         # agents.py, dg.py
         "label": "Actors and Escrow",
-        "policies": {"lock_or_unlock_stETH": lock_or_unlock_stETH},
-        "variables": {"actors": actor_lock_or_unlock_in_escrow, "dual_governance": update_escrow},
+        "policies": {"check_hp_and_calculate_reaction": actors.check_hp_and_calculate_reaction},
+        "variables": {"actors": actors.react, "dual_governance": dg.update_escrow},
     },
     {
         # dg.py
         "label": "Spec Timestep",
-        "policies": {"add_deltatime_to_dg": add_deltatime_to_dg},
+        "policies": {"add_deltatime_to_dg": dg.add_deltatime_to_dg},
         "variables": {
-            "dual_governance": update_dg_time_manager,
+            "dual_governance": dg.update_dg_time_manager,
         },
-    },
-    {
-        # proposals.py
-        "label": "Proposal Cancellation",
-        "policies": {"cancel_all_pending_proposals": get_proposals_to_cancel},
-        "variables": {
-            "dual_governance": cancel_proposals,
-            "is_active_attack": deactivate_attack,
-            "actors": actor_reset_proposal_reaction,
-        },
-    },
-    {
-        "label": "Proposal Scheduling and Execution",
-        "policies": {"get_proposals_to_schedule_and_execute": get_proposals_to_schedule_and_execute},
-        "variables": {"dual_governance": schedule_and_execute_proposals, "actors": actor_execute_proposals},
     },
     {
         # data_saving.py
         "label": "Saving data",
-        "policies": {"save_data": save_data},
+        "policies": {"save_data": data_saving.save_data},
         "variables": {
-            "timestep_data": write_data_fastparquet,
+            "timestep_data": data_saving.write_data_fastparquet,
         },
     },
 ]

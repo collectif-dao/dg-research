@@ -9,3 +9,11 @@ class ActorType(Enum):
     Hacker = 5
     SingleDefender = 6
     CoordinatedDefender = 7
+
+
+class ActorReaction(Enum):
+    NoReaction = 0
+    NoAction = 1
+    Lock = 2
+    Unlock = 3
+    Quit = 4
