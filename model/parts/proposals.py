@@ -3,7 +3,8 @@ from typing import List, Set
 
 from model.sys_params import cancellation_delay_days
 from model.types.proposal_type import ProposalGeneration
-from model.types.proposals import Proposal, ProposalType, get_proposal_by_id, new_proposal
+from model.types.proposals import (Proposal, ProposalType, get_proposal_by_id,
+                                   new_proposal)
 from model.types.scenario import Scenario
 from model.utils.proposals import iterable_proposals
 from model.utils.proposals_queue import ProposalQueueManager
@@ -323,4 +324,6 @@ def _should_cancel_proposal(scenario: Scenario, proposal: Proposal) -> bool:
             ProposalType.NoImpact,
             ProposalType.Random,
         )
+    elif scenario == Scenario.HappyPath:
+        return True
     return False

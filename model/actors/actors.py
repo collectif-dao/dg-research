@@ -12,7 +12,8 @@ from model.types.proposal_type import ProposalSubType, ProposalType
 from model.types.proposals import Proposal
 from model.types.scenario import Scenario
 from model.utils.proposals import get_first_proposal_timestamp
-from model.utils.reactions import generate_reaction_delay_vector
+from model.utils.reactions import (generate_initial_reaction_time_vector,
+                                   generate_reaction_delay_vector)
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.proposals import ProposalStatus
 from specs.dual_governance.state import State
@@ -73,7 +74,7 @@ class Actors:
         self.reaction_time = reaction_time
         self.governance_participation = governance_participation
 
-        self.next_hp_check_timestamp = np.zeros(shape=self.amount, dtype=np.int64)
+        self.next_hp_check_timestamp = generate_initial_reaction_time_vector(self.reaction_time)
         self.recovery_time = np.zeros_like(self.next_hp_check_timestamp)
         self.last_locked_tx_timestamp = np.zeros_like(self.next_hp_check_timestamp)
 
@@ -81,7 +82,8 @@ class Actors:
         self.entity[empty_entity] = "Other"
 
         empty_address = self.address == ""
-        self.address[empty_address] = [generate_address() for _ in range(np.sum(empty_address))]        
+        self.address[empty_address] = [generate_address() for _ in range(np.sum(empty_address))]
+        self.did_quit = np.zeros(self.amount, dtype=np.bool_)
 
     ## ---
     ## Funds movement section
@@ -279,7 +281,7 @@ class Actors:
     def get_reactions_based_on_hp(self, mask: np.ndarray):
         reactions = np.zeros(self.amount, dtype=np.uint8)
         reactions[:] = ActorReaction.NoReaction.value
-        reactions[(self.health > 0) & (self.hypothetical_health > 0) & mask] = ActorReaction.NoAction.value
+        reactions[(self.health > 0) & (self.hypothetical_health > 0) & mask] = ActorReaction.Unlock.value
         reactions[(self.health > 0) & (self.hypothetical_health <= 0) & mask] = ActorReaction.Lock.value
         reactions[(self.health <= 0) & (self.hypothetical_health > 0) & mask] = ActorReaction.Unlock.value
         reactions[(self.health <= 0) & (self.hypothetical_health <= 0) & mask] = ActorReaction.Quit.value
@@ -305,6 +307,7 @@ class Actors:
     
     def quit(self, mask: np.ndarray):
         ## TODO: implement
+        self.did_quit[mask] = True
         pass
 
     ## ---

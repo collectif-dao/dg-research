@@ -17,23 +17,26 @@ from specs.utils import ether_base
 
 logging.getLogger("filelock").setLevel(logging.WARNING)
 
-fieldnames = [
-    "unique_run_key",
-    "timestep",
-    "dg_state_value",
-    "dg_state_name",
-    "dg_dynamic_timelock_seconds",
-    "total_balance",
-    "total_locked",
-    "total_health",
-    "total_actors",
-]
-fieldnames += [
-    f"{value_name}_{kind.name}"
-    for value_name in ("balance", "locked", "health")
-    for enum_type in (ReactionTime, ActorType)
-    for kind in enum_type
-]
+# fieldnames = [
+#     "unique_run_key",
+#     "timestep",
+#     "dg_state_value",
+#     "dg_state_name",
+#     "dg_dynamic_timelock_seconds",
+#     "total_balance",
+#     "total_locked",
+#     "total_health",
+#     "total_actors",
+#     "total_actors_locked",
+#     "total_actors_affected",
+#     "total_actors_quit",
+# ]
+# fieldnames += [
+#     f"{value_name}_{kind.name}"
+#     for value_name in ("balance", "locked", "health", "actors_locked", "actors_affected", "actors_quit")
+#     for enum_type in (ReactionTime, ActorType)
+#     for kind in enum_type
+# ]
 
 
 def extract_dg_state_data(state):
@@ -97,25 +100,34 @@ def _extract_actor_data_by_enum(actors: Actors, enum_type, attr_name_in_actor):
     for kind in enum_type:
         mask = getattr(actors, attr_name_in_actor) == kind.value
 
-        balance = np.sum(actors.stETH[mask] + actors.wstETH[mask])
-        hypothetical_balance = np.sum(actors.hypothetical_stETH[mask] + actors.hypothetical_wstETH[mask])
-        locked = np.sum(actors.stETH_locked[mask] + actors.wstETH_locked[mask])
+        balance = np.sum(actors.stETH[mask] + actors.wstETH[mask]) / ether_base
+        hypothetical_balance = np.sum(actors.hypothetical_stETH[mask] + actors.hypothetical_wstETH[mask]) / ether_base
+        locked = np.sum(actors.stETH_locked[mask] + actors.wstETH_locked[mask]) / ether_base
         health = np.sum(actors.health[mask])
         cropped_health = np.sum(actors.cropped_health[mask])
         hypothetical_health = np.sum(actors.hypothetical_health[mask])
         damage = np.sum(actors.total_damage[mask])
         healing = np.sum(actors.total_healing[mask])
         recovery = np.sum(actors.total_recovery[mask])
+        actors_locked = np.count_nonzero(actors.stETH_locked[mask] + actors.wstETH_locked[mask])
+        actors_affected = np.sum((actors.health[mask] <= 0) + (actors.hypothetical_health[mask] <= 0))
+        actors_quit = np.count_nonzero(actors.did_quit[mask])
+        quit = np.sum(actors.stETH[actors.did_quit & mask] + actors.wstETH[actors.did_quit & mask]) / ether_base
 
-        enum_actor_dict[f"balance_{kind.name}"] = balance / ether_base
-        enum_actor_dict[f"hypothetical_balance{kind.name}"] = hypothetical_balance / ether_base
-        enum_actor_dict[f"locked_{kind.name}"] = locked / ether_base
+
+        enum_actor_dict[f"balance_{kind.name}"] = balance
+        enum_actor_dict[f"hypothetical_balance{kind.name}"] = hypothetical_balance
+        enum_actor_dict[f"locked_{kind.name}"] = locked
         enum_actor_dict[f"health_{kind.name}"] = health
         enum_actor_dict[f"hypothetical_health_{kind.name}"] = hypothetical_health
         enum_actor_dict[f"cropped_health_{kind.name}"] = cropped_health
         enum_actor_dict[f"damage_{kind.name}"] = damage
         enum_actor_dict[f"healing_{kind.name}"] = healing
         enum_actor_dict[f"recovery_{kind.name}"] = recovery
+        enum_actor_dict[f"actors_locked_{kind.name}"] = actors_locked
+        enum_actor_dict[f"actors_affected_{kind.name}"] = actors_affected
+        enum_actor_dict[f"actors_quit_{kind.name}"] = actors_quit
+        enum_actor_dict[f"quit_{kind.name}"] = quit
 
     return enum_actor_dict
 
@@ -130,17 +142,26 @@ def extract_actor_data(state):
 
     total_balance = (total_stETH + total_wstETH) / ether_base
     total_locked = (total_stETH_locked + total_wstETH_locked) / ether_base
+    total_actors_locked = np.count_nonzero(actors.stETH_locked + actors.wstETH_locked)
+    total_actors_affected = np.sum((actors.health <= 0) + (actors.hypothetical_health <= 0))
+    total_actors_quit = np.count_nonzero(actors.did_quit)
+    total_quit = np.sum(actors.stETH[actors.did_quit] + actors.wstETH[actors.did_quit]) / ether_base
 
     actors_dict = {
         "actors_total_balance": total_balance,
         "actors_total_locked": total_locked,
         "actors_total_number": actors.amount,
+        "actors_total_number_locked": total_actors_locked,
         "actors_total_health": np.sum(actors.health),
         "actors_total_hypothetical_health": np.sum(actors.hypothetical_health),
         "actors_total_cropped_health": np.sum(actors.cropped_health),
         "actors_total_damage": np.sum(actors.total_damage),
         "actors_total_healing": np.sum(actors.total_healing),
         "actors_total_recovery": np.sum(actors.total_recovery),
+        "actors_total_actors_locked": total_actors_locked,
+        "actors_total_actors_affected": total_actors_affected,
+        "actors_total_actors_quit": total_actors_quit,
+        "actors_total_quit": total_quit,
     }
     actors_dict.update(_extract_actor_data_by_enum(actors, ReactionTime, "reaction_time"))
     actors_dict.update(_extract_actor_data_by_enum(actors, ActorType, "actor_type"))

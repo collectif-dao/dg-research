@@ -1,7 +1,8 @@
 import numpy as np
 import scipy.stats
 
-from model.sys_params import normal_actor_max_delay, quick_actor_max_delay, slow_actor_max_delay
+from model.sys_params import (normal_actor_max_delay, quick_actor_max_delay,
+                              slow_actor_max_delay)
 from model.types.governance_participation import GovernanceParticipation
 from model.types.reaction_time import ModeledReactions, ReactionTime
 from model.utils.seed import get_rng
@@ -209,3 +210,17 @@ reaction_delay_random_variables = {
     ReactionTime.Normal.value: get_reaction_delay_random_variable(quick_actor_max_delay, normal_actor_max_delay),  # 1
     ReactionTime.Quick.value: get_reaction_delay_random_variable(0, quick_actor_max_delay),  # 2
 }
+
+def generate_initial_reaction_time_vector(reaction_time: np.ndarray):
+    rng = get_rng()
+    reaction_time_vector = np.zeros(len(reaction_time), dtype=np.int64)
+    reaction_time_vector[reaction_time == ReactionTime.NoReaction.value] = 2**32 - 1
+    mask_slow = reaction_time == ReactionTime.Slow.value
+    reaction_time_vector[mask_slow] = scipy.stats.uniform.rvs(0, slow_actor_max_delay, size=sum(mask_slow), random_state=rng)
+    mask_normal = reaction_time == ReactionTime.Normal.value
+    reaction_time_vector[mask_normal] = scipy.stats.uniform.rvs(0, normal_actor_max_delay, size=sum(mask_normal), random_state=rng)
+    mask_quick = reaction_time == ReactionTime.Quick.value
+    reaction_time_vector[mask_quick] = scipy.stats.uniform.rvs(0, quick_actor_max_delay, size=sum(mask_quick), random_state=rng)
+
+
+    return reaction_time_vector
