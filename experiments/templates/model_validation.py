@@ -1,12 +1,17 @@
-from experiments.simulation_configuration import SIMULATION_TIME, calculate_timesteps, get_path
-from experiments.utils import setup_simulation
-from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
+from experiments.simulation_configuration import (SIMULATION_TIME,
+                                                  calculate_timesteps,
+                                                  get_path)
+from experiments.utils import DualGovernanceParameters, setup_simulation
+from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
+                                       ProposalType)
 from model.types.proposals import Proposal
 from model.types.scenario import Scenario
 
-MONTE_CARLO_RUNS = 500
-# MONTE_CARLO_RUNS = 100
-SEED = 6050
+# MONTE_CARLO_RUNS = 500
+MONTE_CARLO_RUNS = 250
+# MONTE_CARLO_RUNS = 1
+SEED = 0
+# SEED = 94
 # SEED = 10000
 TIMESTEPS = calculate_timesteps(3)
 # TIMESTEPS = 2
@@ -22,13 +27,13 @@ proposals = [
     ),
 ]
 
-# first_thresholds = [1, 1.25]
-# second_thresholds = [10]
-# dual_governance_params = [
-#     DualGovernanceParameters(first_rage_quit_support=thresh1, second_rage_quit_support=thresh2)
-#     for thresh1 in first_thresholds
-#     for thresh2 in second_thresholds
-# ]
+first_thresholds = [1]
+second_thresholds = [10]
+dual_governance_params = [
+    DualGovernanceParameters(first_rage_quit_support=thresh1, second_rage_quit_support=thresh2)
+    for thresh1 in first_thresholds
+    for thresh2 in second_thresholds
+]
 
 # attackers = {"0xc329400492c6ff2438472d4651ad17389fcb843a"}
 # defenders = {}
@@ -46,7 +51,8 @@ def create_experiment(simulation_name: str = "model_validation", return_template
         "proposals_generation": ProposalGeneration.Random,
         "seed": SEED,
         "simulation_starting_time": SIMULATION_TIME,
-        # "dual_governance_params": dual_governance_params,
+        "dual_governance_params": dual_governance_params,
+        "institutional_threshold": 3000,
     }
 
     if return_template:

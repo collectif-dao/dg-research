@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 from matplotlib import cm
 
+from experiments.analysis_utils.metrics import (
+    calculate_pre_first_veto_states, calculate_state_counts)
 from model.types.actors import get_attacker_types
 
 
@@ -171,3 +173,135 @@ def plot_token_distribution(
     ax.set_title(title)
     
     return ax
+
+def plot_pre_veto_locked_by_reaction_time_distributions(timestep_data_df: pd.DataFrame, start_data_df: pd.DataFrame, plot_token_distribution: bool = False) -> None:
+    """
+    Create boxplots showing the distribution of locked actors or tokens by type and first seal support
+    
+    Args:
+        timestep_data_df: DataFrame containing timestep data
+        start_data_df: DataFrame containing seal parameters
+        tokens: Boolean flag to determine whether to plot token distribution instead of actor distribution
+    """
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+
+    # Get pre-veto states and merge with seal parameters
+    pre_veto_states = calculate_pre_first_veto_states(timestep_data_df)
+    pre_veto_states = pre_veto_states.merge(
+        start_data_df[['run_id', 'first_seal_rage_quit_support', 'second_seal_rage_quit_support']], 
+        on='run_id', 
+        how='left'
+    )
+    
+    # Determine the value_vars based on the tokens flag
+    if plot_token_distribution:
+        value_vars = ['locked_Slow', 'locked_Normal', 'locked_Quick']
+        value_name = 'locked_tokens'
+        var_name = 'token_type'
+        ylabel = 'Number of Locked Tokens'
+        title = 'Distribution of Locked Tokens by Type and First Seal Support'
+    else:
+        value_vars = ['actors_locked_Slow', 'actors_locked_Normal', 'actors_locked_Quick']
+        value_name = 'locked_actors'
+        var_name = 'actor_type'
+        ylabel = 'Number of Locked Actors'
+        title = 'Distribution of Locked Actors by Type and First Seal Support'
+    
+    # Reshape data for plotting
+    plot_data = pd.melt(
+        pre_veto_states,
+        id_vars=['first_seal_rage_quit_support'],
+        value_vars=value_vars,
+        var_name=var_name,
+        value_name=value_name
+    )
+    
+    # Clean up labels by removing prefix
+    plot_data[var_name] = plot_data[var_name].str.replace('actors_locked_', '').str.replace('locked_', '')
+    
+    # Store original parameters
+    original_params = {
+        'font.size': plt.rcParams['font.size'],
+        'lines.linewidth': plt.rcParams['lines.linewidth']
+    }
+
+    # Set temporary parameters
+    plt.rcParams.update({'font.size': 14, 'lines.linewidth': 2})
+
+    try:
+        # Create the plot
+        plt.figure(figsize=(10, 6))
+        sns.boxplot(
+            data=plot_data,
+            x='first_seal_rage_quit_support',
+            y=value_name,
+            hue=var_name,
+            palette='Set2'
+        )
+        
+        # Convert x-axis labels to percentages
+        current_ticks = plt.gca().get_xticks()
+        current_labels = plt.gca().get_xticklabels()
+        plt.gca().set_xticklabels([f'{float(label.get_text())*100:.2f}%' for label in current_labels])
+        
+        plt.title(title)
+        plt.xlabel('First Seal Rage Quit Support (%)')
+        plt.ylabel(ylabel)
+        plt.legend(title=var_name.replace('_', ' ').title())
+        plt.xticks(rotation=0)
+        
+        plt.tight_layout()
+    finally:
+        # Restore original parameters
+        plt.rcParams.update(original_params)
+
+def plot_state_distribution(timestep_data_df: pd.DataFrame, in_timesteps: bool = True, collapse_non_normal: bool = False) -> None:
+    """
+    Plot the distribution of time spent in each state, converted to hours.
+
+    Args:
+        state_counts: DataFrame with counts of timesteps in each state per run.
+        timestep_to_hour: Conversion factor from timesteps to hours.
+        collapse_non_normal: Boolean flag to collapse all non-Normal states into one box.
+    """
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    state_counts = calculate_state_counts(timestep_data_df)
+
+    # Select columns based on suffix
+    cols = []
+    for col in state_counts.columns:
+        if in_timesteps and '_timesteps' in col:
+            cols.append(col)
+        elif not in_timesteps and '_hours' in col:
+            cols.append(col)
+    
+    plot_data = state_counts[cols]
+    plot_data.columns = [col.replace('_timesteps', '').replace('_hours', '') for col in cols]
+
+    if collapse_non_normal:
+        # Collapse all non-'Normal' states into one
+        plot_data['Other'] = plot_data.drop(columns=['Normal'], errors='ignore').sum(axis=1)
+        plot_data = plot_data[['Normal', 'Other']]
+
+    # Store original parameters
+    original_params = {
+        'font.size': plt.rcParams['font.size'],
+        'lines.linewidth': plt.rcParams['lines.linewidth']
+    }
+
+    # Set temporary parameters
+    plt.rcParams.update({'font.size': 14, 'lines.linewidth': 2})
+
+    try:
+        plt.figure(figsize=(10, 4))
+        sns.boxplot(data=plot_data)
+        plt.xticks(rotation=0)
+        plt.title(f'Distribution of Time Spent in Each State ({"Timesteps" if in_timesteps else "Hours"})')
+        plt.ylabel(f'Time Spent ({"Timesteps" if in_timesteps else "Hours"})')
+        plt.tight_layout()
+        plt.show()
+    finally:
+        # Restore original parameters
+        plt.rcParams.update(original_params)
