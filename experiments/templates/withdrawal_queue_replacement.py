@@ -4,7 +4,7 @@ from model.types.proposal_type import ProposalGeneration, ProposalSubType, Propo
 from model.types.proposals import Proposal
 from model.types.scenario import Scenario
 
-MONTE_CARLO_RUNS = 1
+MONTE_CARLO_RUNS = 50
 SEED = 141
 SCENARIO = Scenario.SingleAttack
 TIMESTEPS = calculate_timesteps(3)
