@@ -5,15 +5,12 @@ from typing import List, Tuple
 import numpy as np
 
 from model import sys_params
-from model.actors.errors import (NotEnoughActorStETHBalance,
-                                 NotEnoughActorWstETHBalance)
+from model.actors.errors import NotEnoughActorStETHBalance, NotEnoughActorWstETHBalance
 from model.types.actors import ActorReaction, ActorType
 from model.types.proposal_type import ProposalSubType, ProposalType
 from model.types.proposals import Proposal
 from model.types.scenario import Scenario
-from model.utils.proposals import get_first_proposal_timestamp
-from model.utils.reactions import (generate_initial_reaction_time_vector,
-                                   generate_reaction_delay_vector)
+from model.utils.reactions import generate_initial_reaction_time_vector, generate_reaction_delay_vector
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.proposals import ProposalStatus
 from specs.dual_governance.state import State
@@ -197,7 +194,7 @@ class Actors:
     ## Proposal damage section
     ## ---
 
-    def apply_proposal_damage(self, proposal: Proposal, mask: np.ndarray = None):
+    def apply_proposal_damage(self, current_timestamp: int, proposal: Proposal, mask: np.ndarray = None):
         if mask is None:
             mask = np.repeat(True, self.amount)
 
@@ -228,6 +225,8 @@ class Actors:
             self.total_damage[damage_mask & damage_is_positive] += np.abs(damage[damage_mask & damage_is_positive])
             self.total_healing[damage_mask & ~damage_is_positive] += np.abs(damage[damage_mask & ~damage_is_positive])
 
+        self.update_next_hp_check_timestamp(current_timestamp, damage_mask)
+
         return damage_mask
 
     def remove_proposal_damage(self, current_timestamp: int, proposal: Proposal):
@@ -249,6 +248,7 @@ class Actors:
                 self.total_recovery[recovery_mask] += np.abs(health_change[recovery_mask])
                 self.recovery_time[recovery_mask] = current_timestamp
 
+        self.update_next_hp_check_timestamp(current_timestamp, damage_mask & (health_change != 0))
         proposal.clear_damage_effect()
 
     def finalize_proposal_damage(self, proposal: Proposal):
@@ -265,7 +265,10 @@ class Actors:
     ## ---
     ## Actor's reaction section
     ## ---
-    def check_hp_and_calculate_reaction(self, scenario: Scenario, dual_governance: DualGovernance, proposals: List[Proposal]):
+
+    def check_hp_and_calculate_reaction(
+        self, scenario: Scenario, dual_governance: DualGovernance, proposals: List[Proposal]
+    ):
         mask = self.next_hp_check_timestamp <= dual_governance.time_manager.get_current_timestamp()
         # get reactions based on HP
         reactions = self.get_reactions_based_on_hp(mask)
@@ -274,10 +277,12 @@ class Actors:
         self.correct_reactions(scenario, dual_governance, proposals, reactions, mask)
 
         # calculate stETH and wstETH changes based on reactions
-        stETH_amounts, wstETH_amounts = self.calculate_lock_amount(scenario, dual_governance, proposals, reactions, mask)
+        stETH_amounts, wstETH_amounts = self.calculate_lock_amount(
+            scenario, dual_governance, proposals, reactions, mask
+        )
 
         return reactions, stETH_amounts, wstETH_amounts
-    
+
     def get_reactions_based_on_hp(self, mask: np.ndarray):
         reactions = np.zeros(self.amount, dtype=np.uint8)
         reactions[:] = ActorReaction.NoReaction.value
@@ -286,25 +291,45 @@ class Actors:
         reactions[(self.health <= 0) & (self.hypothetical_health > 0) & mask] = ActorReaction.Unlock.value
         reactions[(self.health <= 0) & (self.hypothetical_health <= 0) & mask] = ActorReaction.Quit.value
         return reactions
-    
-    def correct_reactions(self, scenario: Scenario, dual_governance: DualGovernance, proposals: List[Proposal], reactions: np.ndarray, mask: np.ndarray):
+
+    def correct_reactions(
+        self,
+        scenario: Scenario,
+        dual_governance: DualGovernance,
+        proposals: List[Proposal],
+        reactions: np.ndarray,
+        mask: np.ndarray,
+    ):
         self.correct_reactions_HonestActor(scenario, dual_governance, proposals, reactions, mask)
         self.correct_reactions_SingleDefender(scenario, dual_governance, proposals, reactions, mask)
         self.correct_reactions_CoordinatedAttacker(scenario, dual_governance, proposals, reactions, mask)
         self.remove_unnecessary_reactions(scenario, dual_governance, proposals, reactions, mask)
-        
-    def remove_unnecessary_reactions(self, scenario: Scenario, dual_governance: DualGovernance, proposals: List[Proposal], reactions: np.ndarray, mask: np.ndarray):
-        already_unlocked_mask = mask * (self.stETH_locked == 0) & (self.wstETH_locked == 0) * (reactions == ActorReaction.Unlock.value)
+
+    def remove_unnecessary_reactions(
+        self,
+        scenario: Scenario,
+        dual_governance: DualGovernance,
+        proposals: List[Proposal],
+        reactions: np.ndarray,
+        mask: np.ndarray,
+    ):
+        already_unlocked_mask = mask * (self.stETH_locked == 0) & (self.wstETH_locked == 0) * (
+            reactions == ActorReaction.Unlock.value
+        )
         reactions[already_unlocked_mask] = ActorReaction.NoAction.value
-        already_locked_mask = mask * ((self.stETH_locked > 0) | (self.wstETH_locked > 0)) * (reactions == ActorReaction.Lock.value)
+        already_locked_mask = (
+            mask * ((self.stETH_locked > 0) | (self.wstETH_locked > 0)) * (reactions == ActorReaction.Lock.value)
+        )
         reactions[already_locked_mask] = ActorReaction.NoAction.value
         if dual_governance.get_current_state() == State.RageQuit:
             mask1 = mask * ((reactions == ActorReaction.Unlock.value) + (reactions == ActorReaction.Quit.value))
             reactions[mask1] = ActorReaction.NoAction.value
 
     def update_next_hp_check_timestamp(self, current_timestamp: int, mask: np.ndarray = None):
-        self.next_hp_check_timestamp[mask] = current_timestamp + generate_reaction_delay_vector(self.reaction_time[mask])
-    
+        self.next_hp_check_timestamp[mask] = current_timestamp + generate_reaction_delay_vector(
+            self.reaction_time[mask]
+        )
+
     def quit(self, mask: np.ndarray):
         ## TODO: implement
         self.did_quit[mask] = True
@@ -315,7 +340,12 @@ class Actors:
     ## ---
 
     def calculate_lock_amount(
-        self, scenario: Scenario, dual_governance: DualGovernance, proposals: List[Proposal], reactions: np.ndarray, mask: np.ndarray
+        self,
+        scenario: Scenario,
+        dual_governance: DualGovernance,
+        proposals: List[Proposal],
+        reactions: np.ndarray,
+        mask: np.ndarray,
     ) -> Tuple[np.ndarray, np.ndarray]:
         stETH_amounts = np.zeros_like(self.stETH)
         wstETH_amounts = np.zeros_like(self.wstETH)
@@ -334,13 +364,27 @@ class Actors:
     ## Honest actors implementation
     ## ---
 
-    def correct_reactions_HonestActor(self, scenario: Scenario, dual_governance: DualGovernance, proposals: List[Proposal], reactions: np.ndarray, mask: np.ndarray):
+    def correct_reactions_HonestActor(
+        self,
+        scenario: Scenario,
+        dual_governance: DualGovernance,
+        proposals: List[Proposal],
+        reactions: np.ndarray,
+        mask: np.ndarray,
+    ):
         return
 
     ## ---
     ## Defenders actors implementation
     ## ---
-    def correct_reactions_SingleDefender(self, scenario: Scenario, dual_governance: DualGovernance, proposals: List[Proposal], reactions: np.ndarray, mask: np.ndarray):
+    def correct_reactions_SingleDefender(
+        self,
+        scenario: Scenario,
+        dual_governance: DualGovernance,
+        proposals: List[Proposal],
+        reactions: np.ndarray,
+        mask: np.ndarray,
+    ):
         mask1 = mask * (self.actor_type == ActorType.SingleDefender.value)
         if not np.any(mask1):
             return
@@ -359,7 +403,7 @@ class Actors:
         if all_negative_proposals_canceled:
             locked_mask = mask1 & ((self.stETH_locked > 0) | (self.wstETH_locked > 0))
             reactions[locked_mask] = ActorReaction.Unlock.value
-    
+
         else:
             unlocked_mask = mask1 & (self.stETH_locked == 0) & (self.wstETH_locked == 0)
             reactions[unlocked_mask] = ActorReaction.Lock.value
@@ -368,7 +412,14 @@ class Actors:
     ## Attackers actors implementation
     ## ---
 
-    def correct_reactions_CoordinatedAttacker(self, scenario: Scenario, dual_governance: DualGovernance, proposals: List[Proposal], reactions: np.ndarray, mask: np.ndarray):
+    def correct_reactions_CoordinatedAttacker(
+        self,
+        scenario: Scenario,
+        dual_governance: DualGovernance,
+        proposals: List[Proposal],
+        reactions: np.ndarray,
+        mask: np.ndarray,
+    ):
         mask1 = mask * (self.actor_type == ActorType.CoordinatedAttacker.value)
         if not np.any(mask1):
             return

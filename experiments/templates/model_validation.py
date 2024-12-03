@@ -7,12 +7,8 @@ from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
 from model.types.proposals import Proposal
 from model.types.scenario import Scenario
 
-# MONTE_CARLO_RUNS = 500
 MONTE_CARLO_RUNS = 250
-# MONTE_CARLO_RUNS = 1
 SEED = 0
-# SEED = 94
-# SEED = 10000
 TIMESTEPS = calculate_timesteps(3)
 # TIMESTEPS = 2
 

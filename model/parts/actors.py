@@ -22,6 +22,7 @@ def lock_or_unlock_stETH(params, substep, state_history, prev_state):
 
     return {"agent_delta_staked": [actors.address, stETH_amounts, wstETH_amounts]}
 
+
 def check_hp_and_calculate_reaction(params, substep, state_history, prev_state):
     actors: Actors = prev_state["actors"]
     dual_governance: DualGovernance = prev_state["dual_governance"]
@@ -47,16 +48,21 @@ def react(params, substep, state_history, prev_state, policy_input):
     actors.lock_to_escrow(stETH_amounts, wstETH_amounts, dual_governance.time_manager.get_current_timestamp(), mask1)
 
     mask2 = (stETH_amounts < 0) * (wstETH_amounts < 0)
-    actors.rebalance_to_stETH(stETH_amounts, wstETH_amounts, dual_governance.time_manager.get_current_timestamp(), mask2)
+    actors.rebalance_to_stETH(
+        stETH_amounts, wstETH_amounts, dual_governance.time_manager.get_current_timestamp(), mask2
+    )
 
     mask3 = np.logical_not(mask2) * ((stETH_amounts < 0) + (wstETH_amounts < 0))
-    actors.unlock_from_escrow(stETH_amounts, wstETH_amounts, dual_governance.time_manager.get_current_timestamp(), mask3)
+    actors.unlock_from_escrow(
+        stETH_amounts, wstETH_amounts, dual_governance.time_manager.get_current_timestamp(), mask3
+    )
 
-    mask_reacted = reactions != ActorReaction.NoReaction.value
-    actors.update_next_hp_check_timestamp(dual_governance.time_manager.get_current_timestamp(), mask_reacted)
+    # mask_reacted = reactions != ActorReaction.NoReaction.value
+    # actors.update_next_hp_check_timestamp(dual_governance.time_manager.get_current_timestamp(), mask_reacted)
 
     mask_quitting = reactions == ActorReaction.Quit.value
     actors.quit(mask_quitting)
+
     return ("actors", actors)
 
 
@@ -64,18 +70,21 @@ def react(params, substep, state_history, prev_state, policy_input):
 ## proposals creation effects
 ## ---
 
+
 def actor_submit_proposals(params, substep, state_history, prev_state, policy_input):
     proposals: List[Proposal] = policy_input["proposal_create"]
     actors: Actors = prev_state["actors"]
     attackers: Set[str] = prev_state["attackers"]
     scenario: Scenario = prev_state["scenario"]
+    dual_governance: DualGovernance = prev_state["dual_governance"]
 
-    actors = actor_update_health(scenario, proposals, actors, attackers)
+    actors = actor_update_health(dual_governance, scenario, proposals, actors, attackers)
 
     return "actors", actors
 
 
 def actor_update_health(
+    dual_governance: DualGovernance,
     scenario: Scenario,
     proposals: List[Proposal],
     actors: Actors,
@@ -88,12 +97,13 @@ def actor_update_health(
             )
 
             actors.simulate_proposal_effect(proposal, mask)
-            actors.apply_proposal_damage(proposal, mask)
+            actors.apply_proposal_damage(dual_governance.time_manager.get_current_timestamp(), proposal, mask)
 
             ## Update reaction delay for attackers in veto signalling loop attacks
             mask2 = (scenario in [Scenario.VetoSignallingLoop, Scenario.ConstantVetoSignallingLoop]) * np.isin(
                 actors.address, list(attackers)
             )
+            actors.update_next_hp_check_timestamp(dual_governance.time_manager.get_current_timestamp(), mask2)
 
         elif scenario in (Scenario.SingleAttack, Scenario.CoordinatedAttack):
             victims_mask = proposal.get_victims_mask(actors, include_contracts=True)
@@ -121,7 +131,7 @@ def actor_update_health(
                 actors.actor_type, [ActorType.SingleDefender.value, ActorType.CoordinatedDefender.value]
             )
 
-            actors.apply_proposal_damage(proposal, damage_mask)
+            actors.apply_proposal_damage(dual_governance.time_manager.get_current_timestamp(), proposal, damage_mask)
 
     return actors
 
