@@ -1,18 +1,21 @@
-from experiments.simulation_configuration import SIMULATION_TIME, calculate_timesteps, get_path
+from experiments.simulation_configuration import (SIMULATION_TIME,
+                                                  calculate_timesteps,
+                                                  get_path)
 from experiments.utils import DualGovernanceParameters, setup_simulation
-from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
+from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
+                                       ProposalType)
 from model.types.proposals import Proposal
 from model.types.scenario import Scenario
 
-MONTE_CARLO_RUNS = 50
+MONTE_CARLO_RUNS = 500
 SEED = 141
 SCENARIO = Scenario.SingleAttack
-TIMESTEPS = calculate_timesteps(3)
+TIMESTEPS = calculate_timesteps(1)
 
 proposals = [
     Proposal(
         timestep=2,
-        damage=50,
+        damage=100,
         proposal_type=ProposalType.Danger,
         sub_type=ProposalSubType.FundsStealing,
         proposer="0xc329400492c6ff2438472d4651ad17389fcb843a",
@@ -35,9 +38,9 @@ proposals = [
 attackers = {"0xc329400492c6ff2438472d4651ad17389fcb843a"}
 defenders = {}
 
+first_rage_quit_support_list = [1.75]
 dual_governance_params = [
-    DualGovernanceParameters(first_rage_quit_support=1, second_rage_quit_support=10),
-    DualGovernanceParameters(first_rage_quit_support=2, second_rage_quit_support=12),
+    DualGovernanceParameters(first_rage_quit_support=thresh, second_rage_quit_support=10) for thresh in first_rage_quit_support_list
 ]
 
 
@@ -57,6 +60,7 @@ def create_experiment(simulation_name: str = "withdrawal_queue_replacement", ret
         "seed": SEED,
         "simulation_starting_time": SIMULATION_TIME,
         "dual_governance_params": dual_governance_params,
+        "institutional_threshold": 3000,
     }
 
     if return_template:

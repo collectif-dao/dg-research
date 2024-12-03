@@ -13,7 +13,8 @@ from model.types.proposals import Proposal, ProposalSubType
 from model.types.reaction_time import ModeledReactions, ReactionTime
 from model.types.scenario import Scenario
 from model.utils.proposals_queue import ProposalQueueManager
-from model.utils.reactions import determine_governance_participation_vector, determine_reaction_time_vector
+from model.utils.reactions import (determine_governance_participation_vector,
+                                   determine_reaction_time_vector)
 from model.utils.seed import initialize_seed
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.proposals import ExecutorCall
@@ -213,6 +214,12 @@ def generate_actors(
     actor_reaction_time = determine_reaction_time_vector(len(actor_addresses), reactions)
     actor_participation = determine_governance_participation_vector(len(actor_addresses), reactions)
 
+    # Set rich actors to have slow reaction time
+    if institutional_threshold != 0:
+        institutional_mask = actor_stETH + actor_wstETH >= institutional_threshold * ether_base
+        actor_reaction_time[institutional_mask] = ReactionTime.Slow.value
+
+    # Set known corporative actors to have no reaction
     abstaining_mask = np.all(
         (
             np.isin(actor_typestr, ["Contract", "CEX", "Custody"]),
@@ -225,10 +232,7 @@ def generate_actors(
     actor_reaction_time[abstaining_mask] = ReactionTime.NoReaction.value
     actor_participation[abstaining_mask] = GovernanceParticipation.Abstaining.value
 
-    if institutional_threshold != 0:
-        institutional_mask = actor_stETH + actor_wstETH >= institutional_threshold * ether_base
-        actor_reaction_time[institutional_mask] = ReactionTime.Slow.value
-
+    # Set known attacker and defender actors to have quick reaction time
     override_mask = np.isin(
         actor_types,
         [

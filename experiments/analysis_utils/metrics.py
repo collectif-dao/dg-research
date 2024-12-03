@@ -237,3 +237,49 @@ def analyze_veto_timing_by_seals(timestep_data_df: pd.DataFrame, start_data_df: 
     stats.columns = [col.replace('run_id_', '') for col in stats.columns]
     
     return stats
+
+def calculate_pre_first_veto_states(timestep_data_df: pd.DataFrame) -> pd.DataFrame:
+    veto_times = calculate_time_to_first_veto(timestep_data_df)
+    pre_veto_states = timestep_data_df.merge(veto_times[['run_id', 'time_to_first_veto']], on='run_id', how='left')
+    pre_veto_states = pre_veto_states[pre_veto_states['timestep'] == pre_veto_states['time_to_first_veto'] - 1]
+    return pre_veto_states
+
+def calculate_pre_first_veto_stats(timestep_data_df: pd.DataFrame, start_data_df: pd.DataFrame) -> pd.DataFrame:
+    pre_veto_states = calculate_pre_first_veto_states(timestep_data_df)
+    
+    # Merge with both seal parameters
+    pre_veto_states = pre_veto_states.merge(
+        start_data_df[['run_id', 'first_seal_rage_quit_support', 'second_seal_rage_quit_support']], 
+        on='run_id', 
+        how='left'
+    )
+    
+    # Calculate statistics for each actor type grouped by seal parameters
+    stats = (pre_veto_states
+             .groupby(['first_seal_rage_quit_support', 'second_seal_rage_quit_support'])
+             .agg({
+                 'actors_locked_Slow': ['mean', 'median', 'std'],
+                 'actors_locked_Normal': ['mean', 'median', 'std'],
+                 'actors_locked_Quick': ['mean', 'median', 'std']
+             }))
+    
+    # Flatten column names
+    stats.columns = ['_'.join(col).strip() for col in stats.columns.values]
+    
+    return stats
+
+def calculate_state_counts(timestep_data_df: pd.DataFrame) -> pd.DataFrame:
+    # Get counts per state
+    state_counts = timestep_data_df.groupby(['run_id', 'dg_state_name']).size().unstack(fill_value=0)
+    
+    # Convert timesteps to hours using existing function
+    state_counts_hours = state_counts.apply(timesteps_to_hours)
+    
+    # Combine both counts into single dataframe
+    state_counts_df = pd.concat([
+        state_counts.add_suffix('_timesteps'),
+        state_counts_hours.add_suffix('_hours')
+    ], axis=1)
+    
+    return state_counts_df
+    
