@@ -87,6 +87,7 @@ def setup_simulation_batch(
                 second_rage_quit_support=second_rage_quit_support,
                 institutional_threshold=institutional_threshold,
                 labeled_addresses=labeled_addresses,
+                attacker_funds=params.attacker_funds,
             )
 
             state_data = construct_state_data(

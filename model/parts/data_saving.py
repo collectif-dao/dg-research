@@ -1,6 +1,7 @@
 import logging
 from collections import defaultdict
 from datetime import timedelta
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -9,6 +10,7 @@ from filelock import FileLock
 
 from model.actors.actors import Actors
 from model.types.actors import ActorType
+from model.types.proposals import Proposal, get_proposal_by_id
 from model.types.reaction_time import ReactionTime
 from specs.dual_governance import DualGovernance
 from specs.time_manager import TimeManager
@@ -63,6 +65,7 @@ def extract_proposal_data(params, state):
     dual_governance: DualGovernance = state["dual_governance"]
     time_manager: TimeManager = state["time_manager"]
     timedelta_tick: timedelta = params["timedelta_tick"]
+    proposals: List[Proposal] = state["proposals"]
 
     simulation_start_timestamp = time_manager.get_starting_timestamp_value()
     proposals_info = dual_governance.timelock.proposals.state.proposals
@@ -73,9 +76,16 @@ def extract_proposal_data(params, state):
     proposal_dict = defaultdict(list)
 
     for proposal in proposals_info:
+        model_proposal = get_proposal_by_id(proposals, proposal.id)
+        if model_proposal is None:
+            continue
+
         proposal_dict["proposal_id"].append(proposal.id)
         proposal_dict["proposals_status_value"].append(proposal.status.value)
         proposal_dict["proposals_status_name"].append(proposal.status.name)
+        proposal_dict["proposal_damage"].append(model_proposal.damage)
+        proposal_dict["proposal_type_value"].append(model_proposal.proposal_type.value)
+        proposal_dict["proposal_type_name"].append(model_proposal.proposal_type.name)
         proposal_dict["submittedAt"].append(
             timestamps_to_timesteps(proposal.submittedAt, simulation_start_timestamp, timedelta_tick)
         )
@@ -88,6 +98,16 @@ def extract_proposal_data(params, state):
         proposal_dict["cancelledAt"].append(
             timestamps_to_timesteps(proposal.cancelledAt, simulation_start_timestamp, timedelta_tick)
         )
+
+        effects_labels = []
+        effects_damages = []
+
+        for label, value in model_proposal.effects.effects.items():
+            effects_labels.append(label)
+            effects_damages.append(value)
+
+        proposal_dict["proposal_effects_labels"].append(effects_labels)
+        proposal_dict["proposal_effects_damages"].append(effects_damages)
 
     proposal_dict["simulation_hash"] = state["simulation_hash"]
 
@@ -113,7 +133,6 @@ def _extract_actor_data_by_enum(actors: Actors, enum_type, attr_name_in_actor):
         actors_affected = np.sum((actors.health[mask] <= 0) + (actors.hypothetical_health[mask] <= 0))
         actors_quit = np.count_nonzero(actors.did_quit[mask])
         quit = np.sum(actors.stETH[actors.did_quit & mask] + actors.wstETH[actors.did_quit & mask]) / ether_base
-
 
         enum_actor_dict[f"balance_{kind.name}"] = balance
         enum_actor_dict[f"hypothetical_balance{kind.name}"] = hypothetical_balance

@@ -4,8 +4,8 @@ from model.types.proposal_type import ProposalGeneration, ProposalSubType, Propo
 from model.types.proposals import Proposal
 from model.types.scenario import Scenario
 
-MONTE_CARLO_RUNS = 1
-SEED = 188
+MONTE_CARLO_RUNS = 100
+SEED = 1888
 SCENARIO = Scenario.VetoSignallingLoop
 TIMESTEPS = calculate_timesteps(3)
 
@@ -26,8 +26,10 @@ attackers = {
 }
 defenders = {}
 
+attacker_funds_list = [25000]
 dual_governance_params = [
-    DualGovernanceParameters(first_rage_quit_support=1, second_rage_quit_support=10),
+    DualGovernanceParameters(first_rage_quit_support=1, second_rage_quit_support=10, attacker_funds=funds)
+    for funds in attacker_funds_list
 ]
 
 

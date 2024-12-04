@@ -12,17 +12,6 @@ from specs.time_manager import TimeManager
 
 
 # Behaviors
-def lock_or_unlock_stETH(params, substep, state_history, prev_state):
-    dual_governance: DualGovernance = prev_state["dual_governance"]
-    actors: Actors = prev_state["actors"]
-    proposals: List[Proposal] = prev_state["proposals"]
-    scenario: Scenario = prev_state["scenario"]
-
-    stETH_amounts, wstETH_amounts = actors.calculate_lock_amount(scenario, dual_governance, proposals)
-
-    return {"agent_delta_staked": [actors.address, stETH_amounts, wstETH_amounts]}
-
-
 def check_hp_and_calculate_reaction(params, substep, state_history, prev_state):
     actors: Actors = prev_state["actors"]
     dual_governance: DualGovernance = prev_state["dual_governance"]
@@ -44,15 +33,17 @@ def react(params, substep, state_history, prev_state, policy_input):
     delta_staked_by_agent: List[np.ndarray, np.ndarray, np.ndarray] = policy_input["agent_delta_staked"]
     _, stETH_amounts, wstETH_amounts = delta_staked_by_agent
 
-    mask1 = (stETH_amounts > 0) + (wstETH_amounts > 0)
+    mask1 = ((stETH_amounts > 0) | (wstETH_amounts > 0)) & (reactions == ActorReaction.Lock.value)
     actors.lock_to_escrow(stETH_amounts, wstETH_amounts, dual_governance.time_manager.get_current_timestamp(), mask1)
 
-    mask2 = (stETH_amounts < 0) * (wstETH_amounts < 0)
+    mask2 = (stETH_amounts < 0) & (wstETH_amounts < 0) & (reactions == ActorReaction.Unlock.value)
     actors.rebalance_to_stETH(
         stETH_amounts, wstETH_amounts, dual_governance.time_manager.get_current_timestamp(), mask2
     )
 
-    mask3 = np.logical_not(mask2) * ((stETH_amounts < 0) + (wstETH_amounts < 0))
+    mask3 = (
+        np.logical_not(mask2) & ((stETH_amounts < 0) | (wstETH_amounts < 0)) & (reactions == ActorReaction.Unlock.value)
+    )
     actors.unlock_from_escrow(
         stETH_amounts, wstETH_amounts, dual_governance.time_manager.get_current_timestamp(), mask3
     )

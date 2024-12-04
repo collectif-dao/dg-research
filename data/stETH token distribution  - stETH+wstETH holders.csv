@@ -7,17 +7,17 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x248ccbf4864221fc0e840f29bb042ad5bfc89b5c,0,248010.8051,248010.8051,🤖 MakerDAO: MCD JOIN WSTETH B [0x248ccb],Contract,Maker
 0x9ffdf407cde9a93c47611799da23924af3ef764f,217641.5675,0,217641.5675,Ether.fi: Liquidfier,Contract,Restaking
 0xfe08d40eee53d64936d3128838867c867602665c,131014.9498,0,131014.9498,AO protocol,Contract,Others 
-0xc035a7cf15375ce2706766804551791ad035e0c2,0,124673.912,124673.912,AAVE: Aave Ethereum Lido wstETH (aEthLidowstETH),Contract ,AAVE
+0xc035a7cf15375ce2706766804551791ad035e0c2,0,124673.912,124673.912,AAVE: Aave Ethereum Lido wstETH (aEthLidowstETH),Contract,AAVE
 0x1982b2f5814301d4e9a8b0201555376e62f82428,115021.8616,0,115021.8616,🤖 Aave: aSTETH Token [0x1982b2],Contract,AAVE
 0x176f3dab24a159341c0509bb36b833e7fdd0a132,106241.1558,0,106241.1558,Justin Sun [0x176f3d],Private,
 0x3c22ec75ea5d745c78fc84762f7f1e6d82a2c5bf,18741.10062,84416.85318,103157.9538,@0x3c37_1d1e,Private,
 0x0f25c1dc2a9922304f2eac71dca9b07e310e8e5a,0,99464.40021,99464.40021,🤖 Lido Finance: L1 ERC20 Token Gateway (Proxy) [0x0f25c1],Contract,Bridge
 0x10cd5fbe1b404b7e19ef964b63939907bdaf42e2,0,71517.78146,71517.78146,🤖 MakerDAO: MCD JOIN WSTETH A [0x10cd5f],Contract,Maker
 0x52aa899454998be5b000ad077a46bbe360f4e497,0,66309.74297,66309.74297,Fluid (Instadapp): FluidLiquidityProxy,Contract,Leverage/Lending
-0x47176b2af9885dc6c4575d4efd63895f7aaa4790,64418.34594,0,64418.34594,MorpheusAI: L2TokenReceiver,Contract ,Bridge
+0x47176b2af9885dc6c4575d4efd63895f7aaa4790,64418.34594,0,64418.34594,MorpheusAI: L2TokenReceiver,Contract,Bridge
 0x18709e89bd403f470088abdacebe86cc60dda12e,60343.36144,0,60343.36144,🏦 Huobi: Hot Wallet [0x18709e],CEX,
 0xee5b5b923ffce93a870b3104b7ca09c3db80047a,53077.80444,0,53077.80444,Bybit: Hot Wallet,CEX,
-0xa91661efee567b353d55948c0f051c1a16e503a5,46954.26646,0,46954.26646,Wintermute?,Contract ,DEX
+0xa91661efee567b353d55948c0f051c1a16e503a5,46954.26646,0,46954.26646,Wintermute?,Contract,DEX
 0x5313b39bf226ced2332c81eb97bb28c6fd50d1a3,0,46087.64268,46087.64268,Token Millionaire [0x5313b3],Private,
 0xbbbbbbbbbb9cc5e90e3b3af64bdaf62c37eeffcb,0,45567.72687,45567.72687,Morpho: Morpho Blue,Contract,Leverage/Lending
 0xe53fff67f9f384d20ebea36f43b93dc49ed22753,45352.14276,0,45352.14276,Token Millionaire [0xe53fff],Private,
@@ -40,7 +40,7 @@ address,stETH,wstETH,total,label,type,protocol_type
 0x5eea56d346aa5bc5aea1786169e1f4b8699e882d,26606.42354,0,26606.42354,Token Millionaire [0x5eea56],Private,
 0x0e774bbed46b477538f5b34c8618858d3d86e530,0,24270.84785,24270.84785,Token Millionaire [0x0e774b],Private,
 0x9d94ef33e7f8087117f85b3ff7b1d8f27e4053d5,13598.03058,10632.6,24230.63058,🤖 Token Millionaire [0x9d94ef],Contract,Other
-0x704377f719651c3ee6902ff3c9d5522e5054d429,23773.35036,0,23773.35036,Elixir: Gnosis Safe Proxy,Contract ,Vault
+0x704377f719651c3ee6902ff3c9d5522e5054d429,23773.35036,0,23773.35036,Elixir: Gnosis Safe Proxy,Contract,Vault
 0x3afdc9bca9213a35503b077a6072f3d0d5ab0840,0,22258.0687,22258.0687,Compound: CometFactory,Contract,Leverage/Lending
 0xba12222222228d8ba445958a75a0704d566bf2c8,0,21149.58441,21149.58441,🏦 🤖 Balancer: V2 Vault [0xba1222],Contract,DEX
 0xc13abcdeed78efcade757371beabbbdfebe0b932,20299.01405,0,20299.01405,Token Millionaire,Private,
@@ -65,8 +65,8 @@ address,stETH,wstETH,total,label,type,protocol_type
 0xf4477e81f2de150d48c4941c93e54d36ab82ad3f,13634.08886,0,13634.08886,ETH Millionaire [0xf4477e],Private,
 0x629e7da20197a5429d30da36e77d06cdf796b71a,0,12918.35526,12918.35526,Wormhole Network Exploiter: Wallet [0x629e7d],Private,
 0xac665a44d46194eb9826d6f93fb5cc93bc2654b4,12562.69418,0,12562.69418,🤖 Private Transactions Miner [0xac665a],Contract,Other
-0x1ce8aafb51e79f6bdc0ef2ebd6fd34b00620f6db,12400.03462,0,12400.03462,ENZF Vault Proxy,Custody ,
-0x4b4eec1ddc9420a5cc35a25f5899dc5993f9e586,12129.79731,0,12129.79731,Elixir: Gnosis Safe Proxy,Contract ,Vault
+0x1ce8aafb51e79f6bdc0ef2ebd6fd34b00620f6db,12400.03462,0,12400.03462,ENZF Vault Proxy,Custody,
+0x4b4eec1ddc9420a5cc35a25f5899dc5993f9e586,12129.79731,0,12129.79731,Elixir: Gnosis Safe Proxy,Contract,Vault
 0x995a09ed0b24ee13fbfcfbe60cad2fb6281b479f,12047.00936,0,12047.00936,StakeDAO: WANT Wallet [0x995a09],Private,
 0x2d018f3602c1185766bc725e3390caab6f44ae5b,11992.48798,0,11992.48798,Token Millionaire [0x2d018f],Private,
 0x21e27a5e5513d6e65c4f830167390997aa84843a,11949.59647,0,11949.59647,🏦 🤖 Curve.fi: stETH-ng Liquidity Pool [0x21e27a],Contract,DEX
@@ -110,7 +110,7 @@ address,stETH,wstETH,total,label,type,protocol_type
 0xb3668730e4a8abe282a6d471c75baf75557ffff3,0,8134.521603,8134.521603,Token Millionaire [0xb36687],Private,
 0xed803540037b0ae069c93420f89cd653b6e3df1f,0,8078.206579,8078.206579,f(x) Protocol: Treasury,Contract,DAO
 0xc5d01939af7ce9ffc505f0bb36efedde7920f2dc,0,8033.059103,8033.059103,Vault,Private,
-0x4d9629e80118082b939e3d59e69c82a2ec08b4d5,7857.110899,0,7857.110899,🤖 Fei Protocol: TRIBE Redeem Contract [0x4d9629],Contract,Vault
+0x4d9629e80118082b939e3d59e69c82a2ec08b4d5,7857.110899,0,7857.110899,🤖 Fei Protocol: TRIBE Redeem Contract[0x4d9629],Contract,Vault
 0x46cd2870894a9a7d5eedbb40997d994fa8a058df,7739.876487,0,7739.876487,Token Millionaire [0x46cd28],Private,
 0x605ecf96cf0a8bd71e05cc5518cba349b54b8da8,7707.319177,0,7707.319177,Token Millionaire [0x605ecf],Private,
 0x3f3a4f13a0c1390d018e75032f9e12dbe2b27412,7530.173496,0,7530.173496,🤖 Argent: User Wallet [0x3f3a4f],Contract,Other
@@ -922,7 +922,7 @@ address,stETH,wstETH,total,label,type,protocol_type
 0xfbfd90dadd02cba7d54cf40631cf626e807aa3c1,733.140765,0,733.140765,Token Millionaire [0xfbfd90],Private,
 0x290d54b9406074da982ef7359ebb6cda0c751c99,732.0901929,0,732.0901929,Token Millionaire [0x290d54],Private,
 0x863c9aade08c7e024a4c7a2884c6024711ccb11a,731.0416256,0,731.0416256,"""DoubleRecursionVault"" on OpenSea [0x863c9a]",Private,
-0x674bdf20a0f284d710bc40872100128e2d66bd3f,0,730.2608649,730.2608649,🤖 Loopring: Default Deposit Contract [0x674bdf],Contract,Bridge
+0x674bdf20a0f284d710bc40872100128e2d66bd3f,0,730.2608649,730.2608649,🤖 Loopring: Default Deposit Contract[0x674bdf],Contract,Bridge
 0x83b9e8a7fd1373022172ba571cd4e1f6463998c9,729.8965823,0,729.8965823,Token Millionaire [0x83b9e8],Private,
 0x8edc525f60ceec5ad17367107fdb443b4c16d87f,729.0583836,0,729.0583836,Token Millionaire [0x8edc52],Private,
 0xa7f489edd17975c8125493d2ded43eb553f0d830,724.4926049,0,724.4926049,Token Millionaire [0xa7f489],Private,

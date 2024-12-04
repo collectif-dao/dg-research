@@ -1,46 +1,64 @@
-from experiments.simulation_configuration import (SIMULATION_TIME,
-                                                  calculate_timesteps,
-                                                  get_path)
+from experiments.simulation_configuration import SIMULATION_TIME, calculate_timesteps, get_path
 from experiments.utils import DualGovernanceParameters, setup_simulation
-from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
-                                       ProposalType)
-from model.types.proposals import Proposal
+from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
+from model.types.proposals import Proposal, ProposalsEffect
 from model.types.scenario import Scenario
+from model.utils.address_labeling import assign_labels_by_funds_threshold
 
-MONTE_CARLO_RUNS = 500
+MONTE_CARLO_RUNS = 50
 SEED = 141
 SCENARIO = Scenario.SingleAttack
-TIMESTEPS = calculate_timesteps(1)
+TIMESTEPS = calculate_timesteps(3)
+
+proposal_effect: ProposalsEffect = ProposalsEffect()
+proposal_effect.add_effect("Decentralized", 0)
+proposal_effect.add_effect("Institutional", 35)
+labeled_addresses = assign_labels_by_funds_threshold(3000, "Institutional", "Decentralized")
 
 proposals = [
     Proposal(
         timestep=2,
-        damage=100,
+        damage=0,
         proposal_type=ProposalType.Danger,
         sub_type=ProposalSubType.FundsStealing,
         proposer="0xc329400492c6ff2438472d4651ad17389fcb843a",
         attack_targets={
-            "0xb671e841a8e6db528358ed385983892552ef422f",
-            "0x4b4eec1ddc9420a5cc35a25f5899dc5993f9e586",
-            "0x47176b2af9885dc6c4575d4efd63895f7aaa4790",
+            "0x176f3dab24a159341c0509bb36b833e7fdd0a132",
+            "0x3c22ec75ea5d745c78fc84762f7f1e6d82a2c5bf",
         },
+        # effects=proposal_effect,
     ),
     # Proposal(
-    #     timestep=2,
-    #     damage=25,
+    #     timestep=252,
+    #     damage=-25,
     #     proposal_type=ProposalType.Negative,
     #     sub_type=ProposalSubType.NoEffect,
     #     proposer="0xc329400492c6ff2438472d4651ad17389fcb843a",
+    #     attack_targets={
+    #         "0x176f3dab24a159341c0509bb36b833e7fdd0a132",
+    #         "0x3c22ec75ea5d745c78fc84762f7f1e6d82a2c5bf",
+    #     },
     #     # cancelable=False,
     # ),
 ]
 
-attackers = {"0xc329400492c6ff2438472d4651ad17389fcb843a"}
+attackers = {"0x6ac1108461189f1569e1d4dedc9940a0395d3423"}
 defenders = {}
 
-first_rage_quit_support_list = [1.75]
+# first_rage_quit_support_list = [1.75]
+# dual_governance_params = [
+#     DualGovernanceParameters(first_rage_quit_support=thresh, second_rage_quit_support=10)
+#     for thresh in first_rage_quit_support_list
+# ]
+
+first_thresholds = [1, 1.25]
+second_thresholds = [10]
+attacker_funds_list = [5000, 15000]
 dual_governance_params = [
-    DualGovernanceParameters(first_rage_quit_support=thresh, second_rage_quit_support=10) for thresh in first_rage_quit_support_list
+    DualGovernanceParameters(first_rage_quit_support=thresh1, second_rage_quit_support=thresh2, attacker_funds=funds)
+    for thresh1 in first_thresholds
+    for thresh2 in second_thresholds
+    for funds in attacker_funds_list
 ]
 
 

@@ -29,6 +29,7 @@ collections.Hashable = collections.abc.Hashable
 class DualGovernanceParameters:
     first_rage_quit_support: int = None
     second_rage_quit_support: int = None
+    attacker_funds: int = 0
 
 
 def get_simulation_hash(initial_state=None, state_update_blocks=None, params=None, timesteps=None):
@@ -107,6 +108,7 @@ def setup_simulation(
                 second_rage_quit_support=second_rage_quit_support,
                 institutional_threshold=institutional_threshold,
                 labeled_addresses=labeled_addresses,
+                attacker_funds=params.attacker_funds,
             )
 
             state_data = construct_state_data(

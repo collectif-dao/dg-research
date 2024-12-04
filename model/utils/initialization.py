@@ -13,8 +13,7 @@ from model.types.proposals import Proposal, ProposalSubType
 from model.types.reaction_time import ModeledReactions, ReactionTime
 from model.types.scenario import Scenario
 from model.utils.proposals_queue import ProposalQueueManager
-from model.utils.reactions import (determine_governance_participation_vector,
-                                   determine_reaction_time_vector)
+from model.utils.reactions import determine_governance_participation_vector, determine_reaction_time_vector
 from model.utils.seed import initialize_seed
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.proposals import ExecutorCall
@@ -41,13 +40,21 @@ def generate_initial_state(
     second_rage_quit_support: int = None,
     institutional_threshold: int = 0,
     labeled_addresses: dict[str, str] = dict(),
+    attacker_funds: int = 0,
 ) -> Any:
     initialize_seed(seed)
 
     proposals: List[Proposal] = []
     non_initialized_proposals: List[Proposal] = []
     actors = generate_actors(
-        scenario, reactions, max_actors, attackers, defenders, labeled_addresses, institutional_threshold
+        scenario,
+        reactions,
+        max_actors,
+        attackers,
+        defenders,
+        labeled_addresses,
+        institutional_threshold,
+        attacker_funds,
     )
 
     time_manager = TimeManager(current_time=simulation_starting_time, simulation_start_time=simulation_starting_time)
@@ -97,9 +104,7 @@ def generate_initial_state(
 
     if len(proposals) > 0:
         ## TODO: add proposal_effects here
-        actors = actor_update_health(
-            scenario, proposals, dual_governance, lido, actors, attackers, dual_governance.time_manager
-        )
+        actors = actor_update_health(dual_governance, scenario, proposals, actors, attackers)
 
         for proposal in proposals:
             if proposal.proposal_type in (ProposalType.Danger, ProposalType.Hack, ProposalType.Negative):
@@ -153,6 +158,7 @@ def generate_actors(
     defenders: Set[str],
     labeled_addresses: dict[str, str],
     institutional_threshold: int = 0,
+    attacker_funds: int = 0,
 ) -> Actors:
     from model.utils.seed import get_rng
 
@@ -189,50 +195,50 @@ def generate_actors(
     actor_health = np.array(rng.normal(loc=50, scale=20, size=len(actor_label)), dtype="int32")
     actor_health = np.maximum(np.minimum(actor_health, 100), 1)
 
-    actors_distribution = rng.normal(loc=0, scale=1, size=len(actor_addresses))
-    random_attacker_mask = actors_distribution >= 3
+    attacker_type = {
+        Scenario.SingleAttack: ActorType.SingleAttacker.value,
+        Scenario.CoordinatedAttack: ActorType.CoordinatedAttacker.value,
+        Scenario.VetoSignallingLoop: ActorType.CoordinatedAttacker.value,
+        Scenario.ConstantVetoSignallingLoop: ActorType.CoordinatedAttacker.value,
+    }.get(scenario, ActorType.HonestActor.value)
 
-    attacker_type = ActorType.HonestActor.value
+    if attacker_funds > 0:
+        if attackers:
+            attacker_indices = np.where(np.isin(actor_addresses, list(attackers)))[0]
+            actor_types[attacker_indices] = attacker_type
 
-    match scenario:
-        case Scenario.SingleAttack:
-            attacker_type = ActorType.SingleAttacker.value
-        case Scenario.CoordinatedAttack:
-            attacker_type = ActorType.CoordinatedAttacker.value
-        case Scenario.VetoSignallingLoop:
-            attacker_type = ActorType.CoordinatedAttacker.value
-        case Scenario.ConstantVetoSignallingLoop:
-            attacker_type = ActorType.CoordinatedAttacker.value
-
-    actor_types[random_attacker_mask] = attacker_type
-    attacker_mask = np.isin(actor_addresses, list(attackers))
-    actor_types[attacker_mask] = attacker_type
+            total_funds = actor_stETH[attacker_indices] + actor_wstETH[attacker_indices]
+            funds_needed = attacker_funds * ether_base - total_funds
+            actor_stETH[attacker_indices] += np.maximum(funds_needed, 0)
+        else:
+            actor_addresses = np.append(actor_addresses, "0xAttacker")
+            actor_stETH = np.append(actor_stETH, attacker_funds * ether_base)
+            actor_wstETH = np.append(actor_wstETH, 0)
+            actor_typestr = np.append(actor_typestr, "Attacker")
+            actor_label = np.append(actor_label, "Attacker")
+            actor_types = np.append(actor_types, attacker_type)
+            actor_health = np.append(actor_health, 100)
+            actor_ldo = np.append(actor_ldo, 0)
+    else:
+        random_attackers = rng.normal(loc=0, scale=1, size=len(actor_addresses)) >= 3
+        actor_types[random_attackers] = attacker_type
 
     defender_mask = np.isin(actor_addresses, list(defenders))
     actor_types[defender_mask] = ActorType.SingleDefender.value
 
     actor_reaction_time = determine_reaction_time_vector(len(actor_addresses), reactions)
     actor_participation = determine_governance_participation_vector(len(actor_addresses), reactions)
-
-    # Set rich actors to have slow reaction time
     if institutional_threshold != 0:
         institutional_mask = actor_stETH + actor_wstETH >= institutional_threshold * ether_base
         actor_reaction_time[institutional_mask] = ReactionTime.Slow.value
 
-    # Set known corporative actors to have no reaction
+    attacker_mask = np.isin(actor_addresses, list(attackers))
     abstaining_mask = np.all(
-        (
-            np.isin(actor_typestr, ["Contract", "CEX", "Custody"]),
-            np.logical_not(attacker_mask),
-            np.logical_not(defender_mask),
-        ),
-        axis=0,
+        (np.isin(actor_typestr, ["Contract", "CEX", "Custody"]), ~attacker_mask, ~defender_mask), axis=0
     )
-
     actor_reaction_time[abstaining_mask] = ReactionTime.NoReaction.value
     actor_participation[abstaining_mask] = GovernanceParticipation.Abstaining.value
 
-    # Set known attacker and defender actors to have quick reaction time
     override_mask = np.isin(
         actor_types,
         [

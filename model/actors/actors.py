@@ -82,6 +82,9 @@ class Actors:
         self.address[empty_address] = [generate_address() for _ in range(np.sum(empty_address))]
         self.did_quit = np.zeros(self.amount, dtype=np.bool_)
 
+    def exclude_quit_actors(self, mask: np.ndarray) -> np.ndarray:
+        return mask & ~self.did_quit
+
     ## ---
     ## Funds movement section
     ## ---
@@ -155,6 +158,11 @@ class Actors:
         if victims_mask is None:
             victims_mask = proposal.get_victims_mask(self, include_contracts=True)
 
+        victims_mask = self.exclude_quit_actors(victims_mask)
+
+        if attackers_mask is not None:
+            attackers_mask = self.exclude_quit_actors(attackers_mask)
+
         match proposal.sub_type:
             case ProposalSubType.FundsStealing:
                 current_stETH = np.copy(self.hypothetical_stETH)
@@ -197,6 +205,8 @@ class Actors:
     def apply_proposal_damage(self, current_timestamp: int, proposal: Proposal, mask: np.ndarray = None):
         if mask is None:
             mask = np.repeat(True, self.amount)
+
+        mask = self.exclude_quit_actors(mask)
 
         initial_health = self.hypothetical_health.copy()
         damage = np.repeat(proposal.damage, self.amount)
@@ -270,7 +280,7 @@ class Actors:
         self, scenario: Scenario, dual_governance: DualGovernance, proposals: List[Proposal]
     ):
         mask = self.next_hp_check_timestamp <= dual_governance.time_manager.get_current_timestamp()
-        # get reactions based on HP
+        mask = self.exclude_quit_actors(mask)
         reactions = self.get_reactions_based_on_hp(mask)
 
         # correct reactions for specific situations and actortypes
@@ -331,9 +341,7 @@ class Actors:
         )
 
     def quit(self, mask: np.ndarray):
-        ## TODO: implement
         self.did_quit[mask] = True
-        pass
 
     ## ---
     ## Lock/unlock actor's logic
@@ -420,8 +428,13 @@ class Actors:
         reactions: np.ndarray,
         mask: np.ndarray,
     ):
-        mask1 = mask * (self.actor_type == ActorType.CoordinatedAttacker.value)
-        if not np.any(mask1):
+        coordinated_attacker_mask = mask & (self.actor_type == ActorType.CoordinatedAttacker.value)
+        if not np.any(coordinated_attacker_mask):
+            return
+
+        reactions[coordinated_attacker_mask] = ActorReaction.NoAction.value
+
+        if scenario not in [Scenario.VetoSignallingLoop, Scenario.ConstantVetoSignallingLoop]:
             return
 
         if not proposals:
@@ -439,8 +452,11 @@ class Actors:
         )
 
         if positive_proposals_pending:
-            unlocked_mask = mask1 & (self.stETH_locked == 0) & (self.wstETH_locked == 0)
+            unlocked_mask = coordinated_attacker_mask & (self.stETH_locked == 0) & (self.wstETH_locked == 0)
             reactions[unlocked_mask] = ActorReaction.Lock.value
+            return
+
         elif scenario == Scenario.VetoSignallingLoop:
-            locked_mask = mask1 & ((self.stETH_locked > 0) | (self.wstETH_locked > 0))
+            locked_mask = coordinated_attacker_mask & ((self.stETH_locked > 0) | (self.wstETH_locked > 0))
             reactions[locked_mask] = ActorReaction.Unlock.value
+            return

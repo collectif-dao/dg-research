@@ -26,24 +26,16 @@ def update_escrow(params, substep, state_history, prev_state, policy_input):
             continue
 
         if stETH_amount > 0:
-            # print(f"stETH_amount > 0 and actor is {actor_address} with stETH_amount {stETH_amount}")
             dual_governance.state.signalling_escrow.lido.approve(
                 actor_address, dual_governance.state.signalling_escrow.address, stETH_amount
             )
             dual_governance.state.signalling_escrow.lock_stETH(actor_address, stETH_amount)
-            # print(
-            #     f"rage quit support after lock is {dual_governance.state.signalling_escrow.get_rage_quit_support() / ether_base}"
-            # )
 
         if wstETH_amount > 0:
-            # print(f"wstETH_amount > 0 and actor is {actor_address} with wstETH_amount {wstETH_amount}")
             dual_governance.state.signalling_escrow.lido.wstETH.approve(
                 actor_address, dual_governance.state.signalling_escrow.address, wstETH_amount
             )
             dual_governance.state.signalling_escrow.lock_wstETH(actor_address, wstETH_amount)
-            # print(
-            #     f"rage quit support after lock is {dual_governance.state.signalling_escrow.get_rage_quit_support()  / ether_base}"
-            # )
 
         if stETH_amount < 0 and wstETH_amount == 0:
             lock_time = int(dual_governance.state.signalling_escrow.signaling_escrow_min_lock_time.total_seconds())
@@ -87,7 +79,7 @@ def update_escrow(params, substep, state_history, prev_state, policy_input):
                 continue
             else:
                 dual_governance.state.signalling_escrow.unlock_stETH(actor_address)
-        
+
         if reaction == ActorReaction.Quit.value:
             ## TODO: implement
             pass
@@ -100,6 +92,7 @@ def update_dg_time_manager(params, substep, state_history, prev_state, policy_in
     time_manager: TimeManager = prev_state["time_manager"]
     dual_governance: DualGovernance = prev_state["dual_governance"]
     time_manager.shift_current_time(delta)
+    timestep = prev_state["timestep"]
 
     rage_quit_support = dual_governance.state.signalling_escrow.get_rage_quit_support()
     state = dual_governance.get_current_state()
