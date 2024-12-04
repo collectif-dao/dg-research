@@ -1,10 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from matplotlib import cm
 
 from experiments.analysis_utils.metrics import (
-    calculate_pre_first_veto_states, calculate_state_counts)
+    calculate_pre_first_veto_states, calculate_state_counts,
+    calculate_time_to_first_veto)
 from model.types.actors import get_attacker_types
 
 
@@ -305,3 +307,43 @@ def plot_state_distribution(timestep_data_df: pd.DataFrame, in_timesteps: bool =
     finally:
         # Restore original parameters
         plt.rcParams.update(original_params)
+
+def plot_attack_success_rate(timestep_data_df_full, start_data_df_full):
+    """
+    Plot attack success rate vs attacker share with confidence intervals
+    using individual run data.
+    """
+    from experiments.analysis_utils.metrics import calculate_time_to_first_veto
+
+    # Calculate veto times for each run
+    veto_times = calculate_time_to_first_veto(timestep_data_df_full)
+    
+    # Merge with start data to get attacker share
+    analysis_df = veto_times.merge(
+        start_data_df_full[['run_id', 'attacker_share']], 
+        on='run_id'
+    )
+    
+    # Mark runs as successful (no veto) or failed (veto occurred)
+    analysis_df['attack_succeeded'] = analysis_df['time_to_first_veto'].isna()
+    analysis_df['attack_success_binary'] = analysis_df['attack_succeeded'].astype(int) * 100
+    
+    # Create the plot
+    plt.figure(figsize=(10, 6))
+    sns.lineplot(
+        data=analysis_df,
+        x='attacker_share',
+        y='attack_success_binary',
+        errorbar=('ci', 95)  # 95% confidence interval
+    )
+    
+    plt.title('Attack Success Rate vs Attacker Share')
+    plt.xlabel('Attacker Share')
+    plt.ylabel('Attack Success Rate (%)')
+    
+    # Format x-axis as percentage
+    current_values = plt.gca().get_xticks()
+    plt.gca().set_xticklabels([f'{x:.0%}' for x in current_values])
+    
+    plt.grid(True)
+    plt.show()
