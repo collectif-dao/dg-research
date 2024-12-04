@@ -23,7 +23,7 @@ def read_directory(path: Path) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame
         timestep_data_df = pd.read_parquet(timestep_data_p)
         timestep_data_df_list.append(timestep_data_df)
     
-    proposal_df_full = pd.concat(proposal_df_list).drop_duplicates()
+    proposal_df_full = pd.concat(proposal_df_list)#.drop_duplicates()
     start_data_df_full = pd.concat(start_data_df_list).drop_duplicates()
     timestep_data_df_full = pd.concat(timestep_data_df_list).drop_duplicates()
 
@@ -32,6 +32,7 @@ def read_directory(path: Path) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame
     postprocess_proposal_data(proposal_df_full)
 
     set_run_id(proposal_df_full, start_data_df_full, timestep_data_df_full)
+    start_data_df_full = add_attacker_share(timestep_data_df_full, start_data_df_full)
 
     return proposal_df_full, start_data_df_full, timestep_data_df_full
 
@@ -59,3 +60,24 @@ def postprocess_timestep_data(timestep_data_df: pd.DataFrame) -> None:
 
 def postprocess_proposal_data(proposal_df: pd.DataFrame) -> None:
     pass
+
+def add_attacker_share(timestep_data_df: pd.DataFrame, start_data_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Calculate and add attacker_share column to start_data_df based on initial balances and attacker funds.
+    
+    Args:
+        timestep_data_df: DataFrame containing timestep data with actors_total_balance
+        start_data_df: DataFrame containing start data with attacker_funds
+    
+    Returns:
+        Modified start_data_df with new attacker_share column
+    """
+    # Get initial balances (timestep=1) for each run
+    initial_balances = timestep_data_df[timestep_data_df['timestep'] == 1][['run_id', 'actors_total_balance']]
+    initial_balances = initial_balances.rename(columns={'actors_total_balance': 'initial_total_balance'})
+    
+    # Merge and calculate attacker share
+    start_data_df = start_data_df.merge(initial_balances, on='run_id')
+    start_data_df['attacker_share'] = start_data_df['attacker_funds'] / start_data_df['initial_total_balance']
+    
+    return start_data_df

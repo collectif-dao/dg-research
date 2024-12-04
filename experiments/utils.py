@@ -14,7 +14,8 @@ from radcad import Backend, Engine, Experiment, Model, Simulation
 
 from model.state_update_blocks import state_update_blocks
 from model.sys_params import sys_params
-from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
+from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
+                                       ProposalType)
 from model.types.proposals import Proposal
 from model.types.reaction_time import ModeledReactions
 from model.types.scenario import Scenario
@@ -125,6 +126,7 @@ def setup_simulation(
                 simulation_starting_time=state["simulation_starting_time"],
                 first_seal_rage_quit_support=state["first_seal_rage_quit_support"],
                 second_seal_rage_quit_support=state["second_seal_rage_quit_support"],
+                attacker_funds=state["attacker_funds"],
             )
 
             simulation_hash = get_simulation_hash(

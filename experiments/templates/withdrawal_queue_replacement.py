@@ -1,31 +1,41 @@
-from experiments.simulation_configuration import SIMULATION_TIME, calculate_timesteps, get_path
+import numpy as np
+
+from experiments.simulation_configuration import (SIMULATION_TIME,
+                                                  calculate_timesteps,
+                                                  get_path)
 from experiments.utils import DualGovernanceParameters, setup_simulation
-from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
+from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
+                                       ProposalType)
 from model.types.proposals import Proposal, ProposalsEffect
 from model.types.scenario import Scenario
-from model.utils.address_labeling import assign_labels_by_funds_threshold
 
-MONTE_CARLO_RUNS = 50
+# from model.utils.address_labeling import assign_labels_by_funds_threshold
+
+
+def get_attacker_funds_from_share(total_balance, share):
+    return total_balance * share / (1 - share)
+
+MONTE_CARLO_RUNS = 1000
 SEED = 141
 SCENARIO = Scenario.SingleAttack
-TIMESTEPS = calculate_timesteps(3)
+# TIMESTEPS = calculate_timesteps(1)
+TIMESTEPS = 75
 
 proposal_effect: ProposalsEffect = ProposalsEffect()
 proposal_effect.add_effect("Decentralized", 0)
 proposal_effect.add_effect("Institutional", 35)
-labeled_addresses = assign_labels_by_funds_threshold(3000, "Institutional", "Decentralized")
+# labeled_addresses = assign_labels_by_funds_threshold(3000, "Institutional", "Decentralized")
+
+attackers = {"0x91bef2fd282aaa7612c593c4d83c0efaf6200954"}
+defenders = {}
 
 proposals = [
     Proposal(
         timestep=2,
-        damage=0,
+        damage=100,
         proposal_type=ProposalType.Danger,
         sub_type=ProposalSubType.FundsStealing,
-        proposer="0xc329400492c6ff2438472d4651ad17389fcb843a",
-        attack_targets={
-            "0x176f3dab24a159341c0509bb36b833e7fdd0a132",
-            "0x3c22ec75ea5d745c78fc84762f7f1e6d82a2c5bf",
-        },
+        proposer=list(attackers)[0],
         # effects=proposal_effect,
     ),
     # Proposal(
@@ -42,18 +52,19 @@ proposals = [
     # ),
 ]
 
-attackers = {"0x6ac1108461189f1569e1d4dedc9940a0395d3423"}
-defenders = {}
-
 # first_rage_quit_support_list = [1.75]
 # dual_governance_params = [
 #     DualGovernanceParameters(first_rage_quit_support=thresh, second_rage_quit_support=10)
 #     for thresh in first_rage_quit_support_list
 # ]
-
-first_thresholds = [1, 1.25]
+total_balance = 8996374.56750506 # Calculated for attacker 0x91bef2fd282aaa7612c593c4d83c0efaf6200954
+min_share = 0.25
+max_share = 0.55
+step = 0.05
+shares = np.arange(min_share, max_share, step)
+attacker_funds_list = [get_attacker_funds_from_share(total_balance, share) for share in shares]
+first_thresholds = [1]
 second_thresholds = [10]
-attacker_funds_list = [5000, 15000]
 dual_governance_params = [
     DualGovernanceParameters(first_rage_quit_support=thresh1, second_rage_quit_support=thresh2, attacker_funds=funds)
     for thresh1 in first_thresholds

@@ -13,7 +13,8 @@ from model.types.proposals import Proposal, ProposalSubType
 from model.types.reaction_time import ModeledReactions, ReactionTime
 from model.types.scenario import Scenario
 from model.utils.proposals_queue import ProposalQueueManager
-from model.utils.reactions import determine_governance_participation_vector, determine_reaction_time_vector
+from model.utils.reactions import (determine_governance_participation_vector,
+                                   determine_reaction_time_vector)
 from model.utils.seed import initialize_seed
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.proposals import ExecutorCall
@@ -137,6 +138,7 @@ def generate_initial_state(
         "simulation_starting_time": time_manager.get_current_timestamp(),
         "first_seal_rage_quit_support": dual_governance.state.config.first_seal_rage_quit_support,
         "second_seal_rage_quit_support": dual_governance.state.config.second_seal_rage_quit_support,
+        "attacker_funds": attacker_funds,
         "proposals_queue": proposals_queue,
         "timestep_data": {},
     }

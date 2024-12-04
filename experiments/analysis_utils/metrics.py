@@ -129,14 +129,14 @@ def calculate_proposal_stats_by_seals(proposal_df: pd.DataFrame, start_data_df: 
         - status percentages for each status
     """
     # Get seal parameters for each run
-    seal_params = start_data_df[['run_id', 'first_seal_rage_quit_support', 'second_seal_rage_quit_support']].copy()
+    seal_params = start_data_df[['run_id', 'first_seal_rage_quit_support', 'second_seal_rage_quit_support', 'attacker_share']].copy()
     
     # Merge proposal data with seal parameters
     merged_df = proposal_df.merge(seal_params, on='run_id')
     
     # Group by seal parameters and calculate statistics
     stats = (merged_df
-             .groupby(['first_seal_rage_quit_support', 'second_seal_rage_quit_support'])
+             .groupby(['first_seal_rage_quit_support', 'second_seal_rage_quit_support', 'attacker_share'])
              .agg({
                  'proposal_id': 'count',
                  'proposals_status_name': lambda x: x.value_counts(normalize=True).to_dict()
@@ -211,13 +211,13 @@ def analyze_veto_timing_by_seals(timestep_data_df: pd.DataFrame, start_data_df: 
     
     # Merge with seal parameters
     veto_times_with_params = veto_times.merge(
-        start_data_df[['run_id', 'first_seal_rage_quit_support', 'second_seal_rage_quit_support']], 
+        start_data_df[['run_id', 'first_seal_rage_quit_support', 'second_seal_rage_quit_support', 'attacker_share']], 
         on='run_id'
     )
     
     # Group by seal parameters and calculate statistics
     stats = (veto_times_with_params
-             .groupby(['first_seal_rage_quit_support', 'second_seal_rage_quit_support'])
+             .groupby(['first_seal_rage_quit_support', 'second_seal_rage_quit_support', 'attacker_share'])
              .agg({
                  'time_to_first_veto': [
                      ('veto_rate', lambda x: x.notna().mean() * 100),
@@ -249,14 +249,14 @@ def calculate_pre_first_veto_stats(timestep_data_df: pd.DataFrame, start_data_df
     
     # Merge with both seal parameters
     pre_veto_states = pre_veto_states.merge(
-        start_data_df[['run_id', 'first_seal_rage_quit_support', 'second_seal_rage_quit_support']], 
+        start_data_df[['run_id', 'first_seal_rage_quit_support', 'second_seal_rage_quit_support', 'attacker_share']], 
         on='run_id', 
         how='left'
     )
     
     # Calculate statistics for each actor type grouped by seal parameters
     stats = (pre_veto_states
-             .groupby(['first_seal_rage_quit_support', 'second_seal_rage_quit_support'])
+             .groupby(['first_seal_rage_quit_support', 'second_seal_rage_quit_support', 'attacker_share'])
              .agg({
                  'actors_locked_Slow': ['mean', 'median', 'std'],
                  'actors_locked_Normal': ['mean', 'median', 'std'],
