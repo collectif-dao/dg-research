@@ -4,7 +4,7 @@ import csv
 def assign_labels_by_funds_threshold(funds_threshold: int, main_label: str, counter_label: str):
     labeled_addresses: dict[str, str] = dict()
 
-    with open("data/stETH_token_distribution.csv", mode="r") as csv_file:
+    with open("data/stETH token distribution  - stETH+wstETH holders.csv", mode="r") as csv_file:
         csv_reader = csv.DictReader(csv_file, delimiter=",")
         line_count = 0
 
