@@ -7,7 +7,7 @@ from specs.utils import ether_base
 path_to_simulations = Path("experiments/results/simulations/")
 
 
-def read_directory(path: Path) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def read_directory(path: Path, drop_duplicates: bool = False) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     proposal_df_list, start_data_df_list, timestep_data_df_list = [], [], []
     for i, p_to_tables in enumerate(path.iterdir()):
         proposals_p = p_to_tables.joinpath("proposals_data.parquet")
@@ -23,9 +23,14 @@ def read_directory(path: Path) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame
         timestep_data_df = pd.read_parquet(timestep_data_p)
         timestep_data_df_list.append(timestep_data_df)
     
-    proposal_df_full = pd.concat(proposal_df_list)#.drop_duplicates()
-    start_data_df_full = pd.concat(start_data_df_list).drop_duplicates()
-    timestep_data_df_full = pd.concat(timestep_data_df_list).drop_duplicates()
+    proposal_df_full = pd.concat(proposal_df_list)
+    start_data_df_full = pd.concat(start_data_df_list)
+    timestep_data_df_full = pd.concat(timestep_data_df_list)
+
+    if drop_duplicates:
+        proposal_df_full = proposal_df_full.drop_duplicates()
+        start_data_df_full = start_data_df_full.drop_duplicates()
+        timestep_data_df_full = timestep_data_df_full.drop_duplicates()
 
     postprocess_start_data(start_data_df_full)
     postprocess_timestep_data(timestep_data_df_full)
