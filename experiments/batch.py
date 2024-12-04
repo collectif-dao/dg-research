@@ -178,7 +178,7 @@ def run_simulation_batches(
     processes: int = None,
     batch_size: int = 100,
     skip_existing_batches: bool = False,
-    execute_simulations: bool = True,
+    execute_simulations: bool = False,
 ):
     """Run simulations in batches"""
     dual_governance_params = dual_governance_params or [DualGovernanceParameters()]

@@ -45,6 +45,7 @@ def run(
     batch_size: int = 100,
     template_override=None,
     skip_existing_batches: bool = False,
+    execute_simulations: bool = False,
 ):
     out_path = get_path()
 
@@ -90,6 +91,7 @@ def run(
             time_profiling=time_profiling,
             out_dir=out_path.joinpath(simulation_name),
             skip_existing_batches=skip_existing_batches,
+            execute_simulations=execute_simulations,
         )
 
         experiment_duration = time.time() - start_time
@@ -121,8 +123,15 @@ if __name__ == "__main__":
     parser.add_argument("--simulation_name", type=str, help="Name of the simulation to run", required=True)
     parser.add_argument("--post_processing", action="store_true", help="Enable post-processing result")
     parser.add_argument("--time_profiling", action="store_true", help="Profile time usage")
+    parser.add_argument("--execute", action="store_true", help="Execute simulations", required=False, default=False)
     parser.add_argument("--processes", type=int, help="Number of processes to run", required=False, default=None)
 
     args = parser.parse_args()
 
-    run(args.simulation_name, args.post_processing, args.time_profiling, args.processes)
+    run(
+        simulation_name=args.simulation_name,
+        post_processing=args.post_processing,
+        time_profiling=args.time_profiling,
+        processes=args.processes,
+        execute_simulations=args.execute,
+    )
