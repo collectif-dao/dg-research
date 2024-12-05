@@ -193,7 +193,14 @@ def extract_common_data(params, state):
 
     common_data = {
         key: state[key]
-        for key in ["seed", "first_seal_rage_quit_support", "second_seal_rage_quit_support", "attacker_funds", "simulation_hash"]
+        for key in [
+            "seed",
+            "first_seal_rage_quit_support",
+            "second_seal_rage_quit_support",
+            "attacker_funds",
+            "simulation_hash",
+            "determining_factor",
+        ]
     }
     common_data["n_actors"] = actors.amount
 

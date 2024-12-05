@@ -26,7 +26,6 @@ def assign_labels_by_funds_threshold(funds_threshold: int, main_label: str, coun
 
 
 def assign_labels_by_percentage(
-    counter_label_percentage: int,
     main_label: str = "Decentralized",
     counter_label: str = "Centralized",
 ) -> callable:
@@ -47,6 +46,7 @@ def assign_labels_by_percentage(
         reaction_mask: np.ndarray,
         stETH_amounts: np.ndarray,
         wstETH_amounts: np.ndarray,
+        determining_factor: int = 0,
     ) -> np.ndarray:
         from model.utils.seed import get_rng
 
@@ -57,7 +57,7 @@ def assign_labels_by_percentage(
 
         eligible_indices = np.where(reaction_mask)[0]
 
-        num_anti = int(len(eligible_indices) * (counter_label_percentage / 100))
+        num_anti = int(len(eligible_indices) * (determining_factor / 100))
         anti_indices = rng.choice(eligible_indices, size=num_anti, replace=False)
 
         labels[anti_indices] = counter_label
@@ -68,7 +68,6 @@ def assign_labels_by_percentage(
 
 
 def assign_labels_by_funds_threshold_active_actors(
-    funds_threshold: int,
     main_label: str = "Retail",
     counter_label: str = "Institutional",
 ) -> callable:
@@ -86,18 +85,18 @@ def assign_labels_by_funds_threshold_active_actors(
 
     from specs.utils import ether_base
 
-    threshold_in_wei = funds_threshold * ether_base
-
     def labeling_function(
         existing_labels: np.ndarray,
         reaction_mask: np.ndarray,
         stETH_amounts: np.ndarray,
         wstETH_amounts: np.ndarray,
+        determining_factor: int = 0,
     ) -> np.ndarray:
         labels = existing_labels.copy()
         labels[reaction_mask] = main_label
 
         total_funds = stETH_amounts + wstETH_amounts
+        threshold_in_wei = determining_factor * ether_base
         institutional_mask = (total_funds >= threshold_in_wei) & reaction_mask
 
         labels[institutional_mask] = counter_label

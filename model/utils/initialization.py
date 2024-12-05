@@ -41,6 +41,7 @@ def generate_initial_state(
     institutional_threshold: int = 0,
     labeled_addresses: Union[dict[str, str], Callable] = dict(),
     attacker_funds: int = 0,
+    determining_factor: int = 0,
 ) -> Any:
     initialize_seed(seed)
 
@@ -55,6 +56,7 @@ def generate_initial_state(
         labeled_addresses,
         institutional_threshold,
         attacker_funds,
+        determining_factor,
     )
 
     time_manager = TimeManager(current_time=simulation_starting_time, simulation_start_time=simulation_starting_time)
@@ -140,6 +142,7 @@ def generate_initial_state(
         "attacker_funds": attacker_funds,
         "proposals_queue": proposals_queue,
         "timestep_data": {},
+        "determining_factor": determining_factor,
     }
 
 
@@ -160,6 +163,7 @@ def generate_actors(
     labeled_addresses: Union[dict[str, str], Callable] = dict(),
     institutional_threshold: int = 0,
     attacker_funds: int = 0,
+    determining_factor: int = 0,
 ) -> Actors:
     from model.utils.seed import get_rng
 
@@ -251,13 +255,13 @@ def generate_actors(
 
     if callable(labeled_addresses):
         quick_normal_mask = np.isin(actor_reaction_time, [ReactionTime.Normal.value, ReactionTime.Quick.value])
-        print(f"quick and normal actors count is {np.sum(quick_normal_mask)}")
 
         actor_label = labeled_addresses(
             existing_labels=actor_label,
             reaction_mask=quick_normal_mask,
             stETH_amounts=actor_stETH,
             wstETH_amounts=actor_wstETH,
+            determining_factor=determining_factor,
         )
     else:
         actor_label = np.array(
