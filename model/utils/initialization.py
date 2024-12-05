@@ -1,6 +1,6 @@
 import csv
 from datetime import datetime
-from typing import Any, List, Set, Tuple
+from typing import Any, Callable, List, Set, Tuple, Union
 
 import numpy as np
 
@@ -13,8 +13,7 @@ from model.types.proposals import Proposal, ProposalSubType
 from model.types.reaction_time import ModeledReactions, ReactionTime
 from model.types.scenario import Scenario
 from model.utils.proposals_queue import ProposalQueueManager
-from model.utils.reactions import (determine_governance_participation_vector,
-                                   determine_reaction_time_vector)
+from model.utils.reactions import determine_governance_participation_vector, determine_reaction_time_vector
 from model.utils.seed import initialize_seed
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.proposals import ExecutorCall
@@ -40,7 +39,7 @@ def generate_initial_state(
     first_rage_quit_support: int = None,
     second_rage_quit_support: int = None,
     institutional_threshold: int = 0,
-    labeled_addresses: dict[str, str] = dict(),
+    labeled_addresses: Union[dict[str, str], Callable] = dict(),
     attacker_funds: int = 0,
 ) -> Any:
     initialize_seed(seed)
@@ -158,7 +157,7 @@ def generate_actors(
     max_actors: int,
     attackers: Set[str],
     defenders: Set[str],
-    labeled_addresses: dict[str, str],
+    labeled_addresses: Union[dict[str, str], Callable] = dict(),
     institutional_threshold: int = 0,
     attacker_funds: int = 0,
 ) -> Actors:
@@ -182,10 +181,7 @@ def generate_actors(
             actor_stETH.append(parse_token_amount(row["stETH"]))
             actor_wstETH.append(parse_token_amount(row["wstETH"]))
             actor_typestr.append(row["type"])
-            if row["address"] in labeled_addresses:
-                actor_label.append(labeled_addresses[row["address"]])
-            else:
-                actor_label.append(row["label"])
+            actor_label.append(row["label"])
 
     actor_addresses = np.array(actor_addresses)
     actor_ldo = np.array(actor_ldo)
@@ -252,6 +248,21 @@ def generate_actors(
     )
     actor_reaction_time[override_mask] = ReactionTime.Quick.value
     actor_participation[override_mask] = GovernanceParticipation.Full.value
+
+    if callable(labeled_addresses):
+        quick_normal_mask = np.isin(actor_reaction_time, [ReactionTime.Normal.value, ReactionTime.Quick.value])
+        print(f"quick and normal actors count is {np.sum(quick_normal_mask)}")
+
+        actor_label = labeled_addresses(
+            existing_labels=actor_label,
+            reaction_mask=quick_normal_mask,
+            stETH_amounts=actor_stETH,
+            wstETH_amounts=actor_wstETH,
+        )
+    else:
+        actor_label = np.array(
+            [labeled_addresses.get(addr, label) for addr, label in zip(actor_addresses, actor_label)]
+        )
 
     actors = Actors(
         address=actor_addresses,

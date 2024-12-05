@@ -272,6 +272,8 @@ class Actors:
         self.health[damage_mask] -= proposal.damage_amounts[damage_mask]
         self.cropped_health = np.clip(self.health, 0, 100)
 
+        ### TODO: add update next hp check timestamp here
+
     ## ---
     ## Actor's reaction section
     ## ---

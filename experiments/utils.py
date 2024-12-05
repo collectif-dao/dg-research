@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
+from typing import Callable, Union
 
 import numpy as np
 import pandas as pd
@@ -14,8 +15,7 @@ from radcad import Backend, Engine, Experiment, Model, Simulation
 
 from model.state_update_blocks import state_update_blocks
 from model.sys_params import sys_params
-from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
-                                       ProposalType)
+from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
 from model.types.proposals import Proposal
 from model.types.reaction_time import ModeledReactions
 from model.types.scenario import Scenario
@@ -69,7 +69,7 @@ def setup_simulation(
     dual_governance_params: list[DualGovernanceParameters] = None,
     max_actors: int = 0,
     institutional_threshold: int = 0,
-    labeled_addresses: dict[str, str] = dict(),
+    labeled_addresses: Union[dict[str, str], Callable] = dict(),
     time_profiling: bool = False,
     save_files: bool = True,
     batch_size: int = 100,
