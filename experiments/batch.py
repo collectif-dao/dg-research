@@ -89,6 +89,7 @@ def setup_simulation_batch(
                 institutional_threshold=institutional_threshold,
                 labeled_addresses=labeled_addresses,
                 attacker_funds=params.attacker_funds,
+                determining_factor=params.determining_factor,
             )
 
             state_data = construct_state_data(
