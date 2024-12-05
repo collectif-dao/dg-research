@@ -1,6 +1,7 @@
 import collections.abc
 from datetime import datetime
 from pathlib import Path
+from typing import Callable, Union
 
 from radcad import Backend, Engine, Experiment, Model, Simulation
 
@@ -36,7 +37,7 @@ def setup_simulation_batch(
     dual_governance_params: list[DualGovernanceParameters] = None,
     max_actors: int = 0,
     institutional_threshold: int = 0,
-    labeled_addresses: dict[str, str] = dict(),
+    labeled_addresses: Union[dict[str, str], Callable] = dict(),
     time_profiling: bool = False,
     save_files: bool = True,
     skip_existing_batches: bool = False,
@@ -172,13 +173,13 @@ def run_simulation_batches(
     dual_governance_params: list[DualGovernanceParameters] = None,
     max_actors: int = 0,
     institutional_threshold: int = 0,
-    labeled_addresses: dict[str, str] = dict(),
+    labeled_addresses: Union[dict[str, str], Callable] = dict(),
     time_profiling: bool = False,
     save_files: bool = True,
     processes: int = None,
     batch_size: int = 100,
     skip_existing_batches: bool = False,
-    execute_simulations: bool = True,
+    execute_simulations: bool = False,
 ):
     """Run simulations in batches"""
     dual_governance_params = dual_governance_params or [DualGovernanceParameters()]

@@ -1,11 +1,8 @@
 import numpy as np
 
-from experiments.simulation_configuration import (SIMULATION_TIME,
-                                                  calculate_timesteps,
-                                                  get_path)
+from experiments.simulation_configuration import SIMULATION_TIME, get_path
 from experiments.utils import DualGovernanceParameters, setup_simulation
-from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
-                                       ProposalType)
+from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
 from model.types.proposals import Proposal, ProposalsEffect
 from model.types.scenario import Scenario
 
@@ -14,6 +11,7 @@ from model.types.scenario import Scenario
 
 def get_attacker_funds_from_share(total_balance, share):
     return total_balance * share / (1 - share)
+
 
 MONTE_CARLO_RUNS = 1000
 SEED = 141
@@ -57,11 +55,12 @@ proposals = [
 #     DualGovernanceParameters(first_rage_quit_support=thresh, second_rage_quit_support=10)
 #     for thresh in first_rage_quit_support_list
 # ]
-total_balance = 8996374.56750506 # Calculated for attacker 0x91bef2fd282aaa7612c593c4d83c0efaf6200954
+total_balance = 8996374.56750506  # Calculated for attacker 0x91bef2fd282aaa7612c593c4d83c0efaf6200954
 min_share = 0.25
 max_share = 0.55
 step = 0.05
 shares = np.arange(min_share, max_share, step)
+
 attacker_funds_list = [get_attacker_funds_from_share(total_balance, share) for share in shares]
 first_thresholds = [1]
 second_thresholds = [10]

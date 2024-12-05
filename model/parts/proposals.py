@@ -3,8 +3,7 @@ from typing import List, Set
 
 from model.sys_params import cancellation_delay_days
 from model.types.proposal_type import ProposalGeneration
-from model.types.proposals import (Proposal, ProposalType, get_proposal_by_id,
-                                   new_proposal)
+from model.types.proposals import Proposal, ProposalType, get_proposal_by_id, new_proposal
 from model.types.scenario import Scenario
 from model.utils.proposals import iterable_proposals
 from model.utils.proposals_queue import ProposalQueueManager
@@ -155,7 +154,7 @@ def get_proposals_to_cancel(params, substep, state_history, prev_state):
                 return {"cancel_all_pending_proposals": []}
 
             if timelock_proposal.id > last_canceled:
-                print(f"Canceling proposal {timelock_proposal.id}, total info is {model_proposal}")
+                # print(f"Canceling proposal {timelock_proposal.id}, total info is {model_proposal}")
                 canceled_proposals.append(timelock_proposal.id)
 
     return {"cancel_all_pending_proposals": canceled_proposals}
@@ -185,20 +184,20 @@ def submit_proposals(params, substep, state_history, prev_state, policy_input):
     dual_governance: DualGovernance = prev_state["dual_governance"]
     proposals: List[Proposal] = policy_input["proposal_create"]
     # queue: ProposalQueueManager = prev_state["proposals_queue"]
-    timestep: int = prev_state["timestep"]
+    # timestep: int = prev_state["timestep"]
 
-    if proposals:
-        print(f"current timestep is {timestep}")
-        print(f"proposals created with monthly queue is {proposals}")
+    # if proposals:
+    # print(f"current timestep is {timestep}")
+    # print(f"proposals created with monthly queue is {proposals}")
 
     for proposal in proposals:
-        print(
-            "submitting proposal with ID",
-            proposal.id,
-            "at ",
-            dual_governance.time_manager.get_current_time(),
-            prev_state["timestep"],
-        )
+        # print(
+        #     "submitting proposal with ID",
+        #     proposal.id,
+        #     "at ",
+        #     dual_governance.time_manager.get_current_time(),
+        #     prev_state["timestep"],
+        # )
         # print(proposal)
         dual_governance.submit_proposal("", [ExecutorCall("", "", [])])
 

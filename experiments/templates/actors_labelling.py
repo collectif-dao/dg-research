@@ -1,20 +1,23 @@
-from experiments.simulation_configuration import SIMULATION_TIME, calculate_timesteps, get_path
+from experiments.simulation_configuration import SIMULATION_TIME, get_path
 from experiments.utils import DualGovernanceParameters, setup_simulation
 from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
 from model.types.proposals import Proposal, ProposalsEffect
 from model.types.scenario import Scenario
-from model.utils.address_labeling import assign_labels_by_funds_threshold
+from model.utils.address_labeling import assign_labels_by_percentage
 
-MONTE_CARLO_RUNS = 100
-SEED = 188
+MONTE_CARLO_RUNS = 1000
+SEED = 1
 SCENARIO = Scenario.HappyPath
-TIMESTEPS = calculate_timesteps(1)
+TIMESTEPS = 75
 
 proposal_effect: ProposalsEffect = ProposalsEffect()
 proposal_effect.add_effect("Decentralized", 0)
-proposal_effect.add_effect("Institutional", 35)
-labeled_addresses = assign_labels_by_funds_threshold(3000, "Institutional", "Decentralized")
-
+proposal_effect.add_effect("Centralized", 100)
+labeled_addresses = assign_labels_by_percentage(
+    counter_label_percentage=50,
+    main_label="Decentralized",
+    counter_label="Centralized",
+)
 proposals = [
     Proposal(
         timestep=2,
@@ -52,6 +55,7 @@ def create_experiment(simulation_name: str = "actors_labelling", return_template
         "simulation_starting_time": SIMULATION_TIME,
         "dual_governance_params": dual_governance_params,
         "labeled_addresses": labeled_addresses,
+        "institutional_threshold": 3000,
     }
 
     if return_template:

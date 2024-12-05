@@ -2,7 +2,7 @@
 
 # Function to display usage
 usage() {
-  echo "Usage: $0 <simulation_name> [--post_processing] [--time_profiling] [--processes <num>]"
+  echo "Usage: $0 <simulation_name> [--post_processing] [--time_profiling] [--execute] [--processes <num>]"
   exit 1
 }
 
@@ -17,6 +17,7 @@ while [[ "$#" -gt 0 ]]; do
   case $1 in
     --post_processing) post_processing=true ;;
     --time_profiling) time_profiling=true ;;
+    --execute) execute=true ;;
     --processes) 
       shift
       processes=$1 
@@ -35,4 +36,5 @@ done
 python3 -m experiments.run --simulation_name "$simulation_name" \
   ${post_processing:+--post_processing} \
   ${time_profiling:+--time_profiling} \
+  ${execute:+--execute} \
   ${processes:+--processes "$processes"}

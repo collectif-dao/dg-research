@@ -6,49 +6,49 @@ run_simulations: install model_validation withdrawal_queue_replacement rage_quit
 .PHONY: model_validation
 model_validation:
 	@echo "Running model_validation simulation"
-	@./run_simulation.sh model_validation
+	@./run_simulation.sh model_validation --execute
 
 .PHONY: withdrawal_queue_replacement
 withdrawal_queue_replacement:
 	@echo "Running withdrawal_queue_replacement simulation"
-	@./run_simulation.sh withdrawal_queue_replacement
+	@./run_simulation.sh withdrawal_queue_replacement --execute
 
 .PHONY: rage_quit
 rage_quit:
 	@echo "Running rage_quit simulation"
-	@./run_simulation.sh rage_quit
+	@./run_simulation.sh rage_quit --execute
 
 .PHONY: withdrawal_queue_replacement_institutional
 withdrawal_queue_replacement_institutional:
 	@echo "Running withdrawal_queue_replacement_institutional simulation"
-	@./run_simulation.sh withdrawal_queue_replacement_institutional
+	@./run_simulation.sh withdrawal_queue_replacement_institutional --execute
 
 .PHONY: signalling_thresholds_sweep_under_proposal_with_attack
 signalling_thresholds_sweep_under_proposal_with_attack:
 	@echo "Running signalling_thresholds_sweep_under_proposal_with_attack simulation"
-	@./run_simulation.sh signalling_thresholds_sweep_under_proposal_with_attack
+	@./run_simulation.sh signalling_thresholds_sweep_under_proposal_with_attack --execute
 
 .PHONY: veto_signalling_loop
 veto_signalling_loop:
 	@echo "Running veto_signalling_loop simulation"
-	@./run_simulation.sh veto_signalling_loop
+	@./run_simulation.sh veto_signalling_loop --execute
 
 .PHONY: constant_veto_signalling_loop
 constant_veto_signalling_loop:
 	@echo "Running constant_veto_signalling_loop simulation"
-	@./run_simulation.sh constant_veto_signalling_loop
+	@./run_simulation.sh constant_veto_signalling_loop --execute
 
 .PHONY: thresholds_sweep
 thresholds_sweep:
 	@echo "Running single_attack_sweep_second_threshold"
-	@./run_simulation.sh single_attack_sweep_second_threshold
+	@./run_simulation.sh single_attack_sweep_second_threshold --execute
 	@echo "Running single_attack_sweep_first_threshold"
-	@./run_simulation.sh single_attack_sweep_first_threshold
+	@./run_simulation.sh single_attack_sweep_first_threshold --execute
 
 .PHONY: actors_labelling
 actors_labelling:
 	@echo "Running actors_labelling simulation"
-	@./run_simulation.sh actors_labelling
+	@./run_simulation.sh actors_labelling --execute
 
 # Install dependencies from requirements.txt if not already installed
 .PHONY: install
