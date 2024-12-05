@@ -189,7 +189,7 @@ def calculate_time_to_first_veto(timestep_data_df: pd.DataFrame) -> pd.DataFrame
     
     return result
 
-def analyze_veto_timing_by_seals(timestep_data_df: pd.DataFrame, start_data_df: pd.DataFrame) -> pd.DataFrame:
+def analyze_veto_timing_by_seals(timestep_data_df: pd.DataFrame, start_data_df: pd.DataFrame, additional_columns: tuple[str] = ('attacker_share')) -> pd.DataFrame:
     """
     Analyze how seal parameters affect time to first veto
     
@@ -211,13 +211,13 @@ def analyze_veto_timing_by_seals(timestep_data_df: pd.DataFrame, start_data_df: 
     
     # Merge with seal parameters
     veto_times_with_params = veto_times.merge(
-        start_data_df[['run_id', 'first_seal_rage_quit_support', 'second_seal_rage_quit_support', 'attacker_share']], 
+        start_data_df[['run_id', 'first_seal_rage_quit_support', 'second_seal_rage_quit_support', *additional_columns]], 
         on='run_id'
     )
     
     # Group by seal parameters and calculate statistics
     stats = (veto_times_with_params
-             .groupby(['first_seal_rage_quit_support', 'second_seal_rage_quit_support', 'attacker_share'])
+             .groupby(['first_seal_rage_quit_support', 'second_seal_rage_quit_support', *additional_columns])
              .agg({
                  'time_to_first_veto': [
                      ('veto_rate', lambda x: x.notna().mean() * 100),
