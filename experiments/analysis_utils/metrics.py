@@ -172,7 +172,7 @@ def calculate_time_to_first_veto(timestep_data_df: pd.DataFrame) -> pd.DataFrame
         Values will be NaN for runs with no veto signalling.
     """
     # Find first occurrence of VetoSignalling state (value = 2) for each run
-    veto_starts = (timestep_data_df[timestep_data_df['dg_state_value'] == 2]
+    veto_starts = (timestep_data_df[timestep_data_df['dg_state_name'] == 'VetoSignalling']
                   .groupby('run_id')
                   .agg({'timestep': 'min'})
                   .rename(columns={'timestep': 'time_to_first_veto'}))
@@ -282,4 +282,83 @@ def calculate_state_counts(timestep_data_df: pd.DataFrame) -> pd.DataFrame:
     ], axis=1)
     
     return state_counts_df
+    
+def calculate_time_to_first_ragequit(timestep_data_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Calculate the time to first ragequit for each run using state transitions
+    
+    Args:
+        timestep_data_df: DataFrame containing timestep data
+        
+    Returns:
+        DataFrame with run_id and times to first ragequit in both timesteps and hours.
+        Values will be NaN for runs with no ragequits.
+    """
+    # Find first occurrence of RageQuit state for each run
+    ragequit_starts = (timestep_data_df[timestep_data_df['dg_state_name'] == 'RageQuit']
+                      .groupby('run_id')
+                      .agg({'timestep': 'min'})
+                      .rename(columns={'timestep': 'time_to_first_ragequit'}))
+    
+    # Add runs that had no ragequits (with NaN time_to_first_ragequit)
+    all_runs = pd.DataFrame(index=timestep_data_df['run_id'].unique())
+    result = all_runs.join(ragequit_starts)
+    result = result.reset_index().rename(columns={'index': 'run_id'})
+    
+    # Add column with time in hours
+    result['time_to_first_ragequit_hours'] = result['time_to_first_ragequit'].apply(
+        lambda x: timesteps_to_hours(x) if pd.notna(x) else np.nan
+    )
+    
+    return result
+
+def analyze_ragequit_timing_by_seals(timestep_data_df: pd.DataFrame, start_data_df: pd.DataFrame, additional_columns: tuple[str] = ('attacker_share',)) -> pd.DataFrame:
+    """
+    Analyze how seal parameters affect time to first ragequit
+    
+    Args:
+        timestep_data_df: DataFrame containing timestep data
+        start_data_df: DataFrame containing seal parameters
+        additional_columns: Additional columns to group by (default: attacker_share)
+        
+    Returns:
+        DataFrame with statistics grouped by seal parameters:
+        - ragequit_rate: Percentage of runs with ragequits
+        - mean_time_to_ragequit: Average time to first ragequit in timesteps
+        - median_time_to_ragequit: Median time to first ragequit in timesteps
+        - mean_time_to_ragequit_hours: Average time to first ragequit in hours
+        - median_time_to_ragequit_hours: Median time to first ragequit in hours
+        - total_runs: Number of runs with this seal combination
+    """
+    # Get ragequit timing data
+    ragequit_times = calculate_time_to_first_ragequit(timestep_data_df)
+    
+    # Merge with seal parameters
+    ragequit_times_with_params = ragequit_times.merge(
+        start_data_df[['run_id', 'first_seal_rage_quit_support', 'second_seal_rage_quit_support', *additional_columns]], 
+        on='run_id'
+    )
+    
+    # Group by seal parameters and calculate statistics
+    stats = (ragequit_times_with_params
+             .groupby(['first_seal_rage_quit_support', 'second_seal_rage_quit_support', *additional_columns])
+             .agg({
+                 'time_to_first_ragequit': [
+                     ('ragequit_rate', lambda x: x.notna().mean() * 100),
+                     ('mean_time_to_ragequit', 'mean'),
+                     ('median_time_to_ragequit', 'median')
+                 ],
+                 'time_to_first_ragequit_hours': [
+                     ('mean_time_to_ragequit_hours', 'mean'),
+                     ('median_time_to_ragequit_hours', 'median')
+                 ],
+                 'run_id': [('total_runs', 'count')]
+             }))
+    
+    # Flatten column names
+    stats.columns = ['_'.join(col).strip() for col in stats.columns.values]
+    stats.columns = [col.replace('time_to_first_ragequit_', '') for col in stats.columns]
+    stats.columns = [col.replace('run_id_', '') for col in stats.columns]
+    
+    return stats
     

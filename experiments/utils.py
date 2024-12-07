@@ -15,7 +15,8 @@ from radcad import Backend, Engine, Experiment, Model, Simulation
 
 from model.state_update_blocks import state_update_blocks
 from model.sys_params import sys_params
-from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
+from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
+                                       ProposalType)
 from model.types.proposals import Proposal
 from model.types.reaction_time import ModeledReactions
 from model.types.scenario import Scenario
@@ -74,6 +75,7 @@ def setup_simulation(
     time_profiling: bool = False,
     save_files: bool = True,
     batch_size: int = 100,
+    modeled_reactions: ModeledReactions = ModeledReactions.Normal,
 ):
     simulations: list[Simulation] = []
     simulation_hashes: list[str] = []
@@ -96,7 +98,7 @@ def setup_simulation(
 
             state = generate_initial_state(
                 scenario,
-                ModeledReactions.Normal,
+                modeled_reactions,
                 proposal_types,
                 proposal_subtypes,
                 proposals_generation,

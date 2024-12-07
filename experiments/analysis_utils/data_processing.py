@@ -28,8 +28,9 @@ def read_directory(path: Path, drop_duplicates: bool = False) -> tuple[pd.DataFr
     timestep_data_df_full = pd.concat(timestep_data_df_list)
 
     if drop_duplicates:
-        proposal_df_full = proposal_df_full.drop_duplicates()
         start_data_df_full = start_data_df_full.drop_duplicates()
+        proposal_df_full = proposal_df_full.drop_duplicates(
+            subset=proposal_df_full.drop(columns=["proposal_effects_labels", "proposal_effects_damages"]).columns.tolist())
         timestep_data_df_full = timestep_data_df_full.drop_duplicates()
 
     postprocess_start_data(start_data_df_full)
