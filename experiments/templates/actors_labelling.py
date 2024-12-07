@@ -1,11 +1,12 @@
 from experiments.simulation_configuration import SIMULATION_TIME, get_path
 from experiments.utils import DualGovernanceParameters, setup_simulation
-from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
+from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
+                                       ProposalType)
 from model.types.proposals import Proposal, ProposalsEffect
 from model.types.scenario import Scenario
 from model.utils.address_labeling import assign_labels_by_percentage
 
-MONTE_CARLO_RUNS = 1
+MONTE_CARLO_RUNS = 1000
 SEED = 1
 SCENARIO = Scenario.HappyPath
 TIMESTEPS = 75
@@ -19,7 +20,7 @@ labeled_addresses = assign_labels_by_percentage(
     counter_label="Centralized",
 )
 
-labeled_percentages = [10, 25, 40, 55, 70, 85, 90]
+labeled_percentages = [43]
 
 proposals = [
     Proposal(
