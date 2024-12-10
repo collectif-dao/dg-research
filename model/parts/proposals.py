@@ -71,6 +71,7 @@ def generate_proposal(params, substep, state_history, prev_state):
                         Scenario.SmartContractHack,
                         Scenario.VetoSignallingLoop,
                         Scenario.ConstantVetoSignallingLoop,
+                        Scenario.RageQuitLoop,
                     ]:
                         if len(prev_state["attackers"]) == 0:
                             proposer = ""
@@ -217,6 +218,7 @@ def activate_attack(params, substep, state_history, prev_state, policy_input):
         Scenario.SingleAttack: (ProposalType.Danger, ProposalType.Hack, ProposalType.Negative),
         Scenario.VetoSignallingLoop: (ProposalType.Positive, ProposalType.NoImpact, ProposalType.Random),
         Scenario.ConstantVetoSignallingLoop: (ProposalType.Positive, ProposalType.NoImpact, ProposalType.Random),
+        Scenario.RageQuitLoop: (ProposalType.Positive, ProposalType.NoImpact, ProposalType.Random),
     }.get(scenario)
 
     if not dangerous_types:
@@ -317,7 +319,7 @@ def _should_cancel_proposal(scenario: Scenario, proposal: Proposal) -> bool:
             ProposalType.Hack,
             ProposalType.Negative,
         )
-    elif scenario in [Scenario.VetoSignallingLoop, Scenario.ConstantVetoSignallingLoop]:
+    elif scenario in [Scenario.VetoSignallingLoop, Scenario.ConstantVetoSignallingLoop, Scenario.RageQuitLoop]:
         return proposal.proposal_type in (
             ProposalType.Positive,
             ProposalType.NoImpact,

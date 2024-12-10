@@ -5,12 +5,10 @@ from typing import Callable, Union
 
 from radcad import Backend, Engine, Experiment, Model, Simulation
 
-from experiments.utils import (DualGovernanceParameters, construct_state_data,
-                               get_batch_hash, get_simulation_hash)
+from experiments.utils import DualGovernanceParameters, construct_state_data, get_batch_hash, get_simulation_hash
 from model.state_update_blocks import state_update_blocks
 from model.sys_params import sys_params
-from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
-                                       ProposalType)
+from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
 from model.types.proposals import Proposal
 from model.types.reaction_time import ModeledReactions
 from model.types.scenario import Scenario
@@ -93,6 +91,7 @@ def setup_simulation_batch(
                 labeled_addresses=labeled_addresses,
                 attacker_funds=params.attacker_funds,
                 determining_factor=params.determining_factor,
+                save_data_enabled=save_files,
             )
 
             state_data = construct_state_data(

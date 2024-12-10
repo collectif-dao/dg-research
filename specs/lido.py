@@ -44,7 +44,7 @@ class Lido(stETH_Token):
         return eth_amount * int(self.get_total_shares() / self.get_total_pooled_ether())
 
     def get_pooled_eth_by_shares(self, shares_amount: int) -> int:
-        return shares_amount * int(self.get_total_pooled_ether() / self.get_total_shares())
+        return shares_amount * self.get_total_pooled_ether() // self.get_total_shares()
 
     def get_total_supply(self) -> int:
         return self.get_total_pooled_ether()

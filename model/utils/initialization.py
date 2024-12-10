@@ -42,6 +42,7 @@ def generate_initial_state(
     labeled_addresses: Union[dict[str, str], Callable] = dict(),
     attacker_funds: int = 0,
     determining_factor: int = 0,
+    save_data_enabled: bool = True,
 ) -> Any:
     initialize_seed(seed)
 
@@ -143,6 +144,7 @@ def generate_initial_state(
         "proposals_queue": proposals_queue,
         "timestep_data": {},
         "determining_factor": determining_factor,
+        "save_data_enabled": save_data_enabled,
     }
 
 
@@ -202,6 +204,7 @@ def generate_actors(
         Scenario.CoordinatedAttack: ActorType.CoordinatedAttacker.value,
         Scenario.VetoSignallingLoop: ActorType.CoordinatedAttacker.value,
         Scenario.ConstantVetoSignallingLoop: ActorType.CoordinatedAttacker.value,
+        Scenario.RageQuitLoop: ActorType.CoordinatedAttacker.value,
     }.get(scenario, ActorType.HonestActor.value)
 
     if attacker_funds > 0:
@@ -301,6 +304,7 @@ def generate_initial_proposals(
             Scenario.CoordinatedAttack,
             Scenario.VetoSignallingLoop,
             Scenario.ConstantVetoSignallingLoop,
+            Scenario.RageQuitLoop,
         ]
         and total_attackers <= 0
     ):

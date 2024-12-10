@@ -214,6 +214,9 @@ def extract_common_data(params, state):
 
 
 def save_data(params, substep, state_history, prev_state):
+    if not prev_state.get("save_data_enabled", True):
+        return {"save_data": (None, None, None)}
+
     timestep = prev_state["timestep"]
 
     timestep_data = {"timestep": timestep, "simulation_hash": prev_state["simulation_hash"]}
@@ -230,6 +233,9 @@ def save_data(params, substep, state_history, prev_state):
 
 
 def write_data_fastparquet(params, substep, state_history, prev_state, policy_input):
+    if not prev_state.get("save_data_enabled", True):
+        return ("timestep_data", prev_state["timestep_data"])
+
     (common_data, new_timestep_data, proposal_data) = policy_input["save_data"]
     timestep = prev_state["timestep"]
 

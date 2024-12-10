@@ -42,6 +42,10 @@ def determine_proposal_type(scenario: Scenario) -> ProposalType:
             if distribution >= 2 or distribution <= -2:
                 return ProposalType.Random
 
+        case Scenario.RageQuitLoop:
+            if distribution >= 2 or distribution <= -2:
+                return ProposalType.Random
+
             else:
                 return ProposalType.Positive
 
@@ -70,6 +74,9 @@ def determine_proposal_subtype(scenario: Scenario) -> ProposalSubType:
             return ProposalType.NoImpact
 
         case Scenario.ConstantVetoSignallingLoop:
+            return ProposalType.NoImpact
+
+        case Scenario.RageQuitLoop:
             return ProposalType.NoImpact
 
 

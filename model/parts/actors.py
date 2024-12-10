@@ -82,7 +82,12 @@ def actor_update_health(
     attackers: Set[str],
 ):
     for proposal in proposals:
-        if scenario in [Scenario.HappyPath, Scenario.VetoSignallingLoop, Scenario.ConstantVetoSignallingLoop]:
+        if scenario in [
+            Scenario.HappyPath,
+            Scenario.VetoSignallingLoop,
+            Scenario.ConstantVetoSignallingLoop,
+            Scenario.RageQuitLoop,
+        ]:
             mask = (actors.actor_type == ActorType.HonestActor.value) * (actors.entity != "Contract") + np.isin(
                 actors.actor_type, [ActorType.SingleDefender.value, ActorType.CoordinatedDefender.value]
             )
@@ -91,9 +96,9 @@ def actor_update_health(
             actors.apply_proposal_damage(dual_governance.time_manager.get_current_timestamp(), proposal, mask)
 
             ## Update reaction delay for attackers in veto signalling loop attacks
-            mask2 = (scenario in [Scenario.VetoSignallingLoop, Scenario.ConstantVetoSignallingLoop]) * np.isin(
-                actors.address, list(attackers)
-            )
+            mask2 = (
+                scenario in [Scenario.VetoSignallingLoop, Scenario.ConstantVetoSignallingLoop, Scenario.RageQuitLoop]
+            ) * np.isin(actors.address, list(attackers))
             actors.update_next_hp_check_timestamp(dual_governance.time_manager.get_current_timestamp(), mask2)
 
         elif scenario in (Scenario.SingleAttack, Scenario.CoordinatedAttack):

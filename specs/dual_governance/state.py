@@ -206,10 +206,10 @@ class DualGovernanceState:
             self.rage_quit_round += 1
 
     def _is_first_seal_rage_quit_support_crossed(self, rage_quit_support):
-        return rage_quit_support > self.config.first_seal_rage_quit_support
+        return rage_quit_support >= self.config.first_seal_rage_quit_support
 
     def _is_second_seal_rage_quit_support_crossed(self, rage_quit_support):
-        return rage_quit_support > self.config.second_seal_rage_quit_support
+        return rage_quit_support >= self.config.second_seal_rage_quit_support
 
     def _is_dynamic_timelock_max_duration_passed(self):
         return (

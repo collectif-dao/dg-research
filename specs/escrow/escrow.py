@@ -341,7 +341,7 @@ class Escrow:
         return (
             (self.state == EscrowState.RageQuitEscrow)
             and self.batches_queue.is_closed()
-            and (self.rage_quit_timelock_started_at == Timestamps.ZERO)
+            and (self.rage_quit_timelock_started_at != Timestamps.ZERO)
             and (
                 self.time_manager.get_current_timestamp_value()
                 > (self.rage_quit_extension_delay + self.rage_quit_timelock_started_at)

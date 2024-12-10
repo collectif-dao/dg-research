@@ -330,7 +330,10 @@ class Actors:
         )
         reactions[already_unlocked_mask] = ActorReaction.NoAction.value
         already_locked_mask = (
-            mask * ((self.stETH_locked > 0) | (self.wstETH_locked > 0)) * (reactions == ActorReaction.Lock.value)
+            mask
+            * ((self.stETH_locked > 0) | (self.wstETH_locked > 0))
+            * (reactions == ActorReaction.Lock.value)
+            * ~((scenario == Scenario.RageQuitLoop) & (self.actor_type == ActorType.CoordinatedAttacker.value))
         )
         reactions[already_locked_mask] = ActorReaction.NoAction.value
         if dual_governance.get_current_state() == State.RageQuit:
@@ -360,13 +363,65 @@ class Actors:
         stETH_amounts = np.zeros_like(self.stETH)
         wstETH_amounts = np.zeros_like(self.wstETH)
 
-        mask1 = mask * (reactions == ActorReaction.Lock.value)
-        stETH_amounts[mask1] = self.stETH[mask1]
-        wstETH_amounts[mask1] = self.wstETH[mask1]
+        normal_lock_mask = (
+            mask & (reactions == ActorReaction.Lock.value) & (self.actor_type != ActorType.CoordinatedAttacker.value)
+        )
+        stETH_amounts[normal_lock_mask] = self.stETH[normal_lock_mask]
+        wstETH_amounts[normal_lock_mask] = self.wstETH[normal_lock_mask]
 
-        mask2 = mask * ((reactions == ActorReaction.Unlock.value) + (reactions == ActorReaction.Quit.value))
-        stETH_amounts[mask2] = -self.stETH_locked[mask2]
-        wstETH_amounts[mask2] = -self.wstETH_locked[mask2]
+        if scenario == Scenario.RageQuitLoop:
+            coordinated_attacker_mask = (
+                mask
+                & (reactions == ActorReaction.Lock.value)
+                & (self.actor_type == ActorType.CoordinatedAttacker.value)
+            )
+            if np.any(coordinated_attacker_mask) and dual_governance.state.state != State.RageQuit:
+                current_support = dual_governance.state.signalling_escrow.get_rage_quit_support()
+                second_seal_threshold = dual_governance.state.config.second_seal_rage_quit_support
+                needed_support = second_seal_threshold - current_support
+                total_supply = dual_governance.state.signalling_escrow.lido.get_total_supply()
+
+                needed_funds = (needed_support * total_supply) // 10**18
+
+                actor_indices = np.where(coordinated_attacker_mask)[0]
+
+                remaining_needed = needed_funds
+
+                if remaining_needed > 0:
+                    for actor_idx in actor_indices:
+                        available_stETH = self.stETH[actor_idx]
+
+                        if available_stETH > 0:
+                            stETH_to_lock = min(available_stETH, remaining_needed)
+                            stETH_amounts[actor_idx] = stETH_to_lock
+                            remaining_needed -= stETH_to_lock
+
+                            if remaining_needed <= 0:
+                                break
+
+                            if remaining_needed > 0:
+                                available_wstETH = self.wstETH[actor_idx]
+
+                                if available_wstETH > 0:
+                                    wstETH_to_lock = min(available_wstETH, remaining_needed)
+                                    wstETH_amounts[actor_idx] = wstETH_to_lock
+                                    remaining_needed -= wstETH_to_lock
+
+                                    if remaining_needed <= 0:
+                                        break
+
+        else:
+            coordinated_lock_mask = (
+                mask
+                & (reactions == ActorReaction.Lock.value)
+                & (self.actor_type == ActorType.CoordinatedAttacker.value)
+            )
+            stETH_amounts[coordinated_lock_mask] = self.stETH[coordinated_lock_mask]
+            wstETH_amounts[coordinated_lock_mask] = self.wstETH[coordinated_lock_mask]
+
+        unlock_mask = mask & ((reactions == ActorReaction.Unlock.value) + (reactions == ActorReaction.Quit.value))
+        stETH_amounts[unlock_mask] = -self.stETH_locked[unlock_mask]
+        wstETH_amounts[unlock_mask] = -self.wstETH_locked[unlock_mask]
 
         return stETH_amounts, wstETH_amounts
 
@@ -436,9 +491,17 @@ class Actors:
 
         reactions[coordinated_attacker_mask] = ActorReaction.NoAction.value
 
-        if scenario not in [Scenario.VetoSignallingLoop, Scenario.ConstantVetoSignallingLoop]:
+        if scenario in [Scenario.VetoSignallingLoop, Scenario.ConstantVetoSignallingLoop]:
+            self._handle_veto_signalling_loop(dual_governance, proposals, reactions, coordinated_attacker_mask)
             return
 
+        if scenario == Scenario.RageQuitLoop:
+            self._handle_rage_quit_loop(dual_governance, proposals, reactions, coordinated_attacker_mask)
+            return
+
+    def _handle_veto_signalling_loop(
+        self, dual_governance: DualGovernance, proposals: List[Proposal], reactions: np.ndarray, mask: np.ndarray
+    ):
         if not proposals:
             return
 
@@ -454,11 +517,37 @@ class Actors:
         )
 
         if positive_proposals_pending:
-            unlocked_mask = coordinated_attacker_mask & (self.stETH_locked == 0) & (self.wstETH_locked == 0)
+            unlocked_mask = mask & (self.stETH_locked == 0) & (self.wstETH_locked == 0)
             reactions[unlocked_mask] = ActorReaction.Lock.value
+        else:
+            locked_mask = mask & ((self.stETH_locked > 0) | (self.wstETH_locked > 0))
+            reactions[locked_mask] = ActorReaction.Unlock.value
+
+    def _handle_rage_quit_loop(
+        self, dual_governance: DualGovernance, proposals: List[Proposal], reactions: np.ndarray, mask: np.ndarray
+    ):
+        if not proposals:
             return
 
-        elif scenario == Scenario.VetoSignallingLoop:
-            locked_mask = coordinated_attacker_mask & ((self.stETH_locked > 0) | (self.wstETH_locked > 0))
-            reactions[locked_mask] = ActorReaction.Unlock.value
+        current_state = dual_governance.get_current_state()
+        if current_state == State.RageQuit:
             return
+
+        if current_state == State.VetoSignalling:
+            current_support = dual_governance.state.signalling_escrow.get_rage_quit_support()
+            if dual_governance.state._is_second_seal_rage_quit_support_crossed(current_support):
+                return
+
+        attacker_stETH = np.sum(self.stETH[mask])
+        attacker_wstETH = np.sum(self.wstETH[mask])
+        attacker_funds = attacker_stETH + attacker_wstETH
+
+        attacker_funds = np.sum(self.stETH[mask] + self.wstETH[mask])
+        current_support = dual_governance.state.signalling_escrow.get_rage_quit_support()
+        second_seal_threshold = dual_governance.state.config.second_seal_rage_quit_support
+        needed_support = second_seal_threshold - current_support
+        total_supply = dual_governance.state.signalling_escrow.lido.get_total_supply()
+
+        needed_funds = (needed_support * total_supply) // 10**18
+        if attacker_funds >= needed_funds:
+            reactions[mask] = ActorReaction.Lock.value

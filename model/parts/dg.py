@@ -5,6 +5,7 @@ import numpy as np
 from model.parts.actors import ActorReaction
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.state import State
+from specs.lido import Lido
 from specs.time_manager import TimeManager
 from specs.types.timestamp import Timestamp
 
@@ -92,7 +93,6 @@ def update_dg_time_manager(params, substep, state_history, prev_state, policy_in
     time_manager: TimeManager = prev_state["time_manager"]
     dual_governance: DualGovernance = prev_state["dual_governance"]
     time_manager.shift_current_time(delta)
-    timestep = prev_state["timestep"]
 
     rage_quit_support = dual_governance.state.signalling_escrow.get_rage_quit_support()
     state = dual_governance.get_current_state()
@@ -115,5 +115,54 @@ def update_dg_time_manager(params, substep, state_history, prev_state, policy_in
 
     if state == State.VetoCooldown and dual_governance.state._is_veto_cooldown_duration_passed():
         dual_governance.activate_next_state()  ## should transition to Normal or VetoSignalling state
+
+    if state == State.RageQuit:
+        if dual_governance.state.rage_quit_escrow is not None:
+            is_rage_quit_finalized = dual_governance.state.rage_quit_escrow.is_rage_quit_finalized()
+
+            if is_rage_quit_finalized:
+                dual_governance.activate_next_state()
+                print("✓ Rage quit finalized, stopping")
+
+            escrow = dual_governance.state.rage_quit_escrow
+            lido: Lido = prev_state["lido"]
+
+            if lido.balance_of(escrow.address) > 0:
+                requested_amounts = escrow.batches_queue.calc_request_amounts(
+                    escrow.min_withdrawal_request_amount,
+                    escrow.max_withdrawal_request_amount,
+                    lido.balance_of(escrow.address),
+                )
+
+                if len(requested_amounts) > escrow.max_withdrawal_batch_size:
+                    escrow.request_next_withdrawals_batch(escrow.max_withdrawal_batch_size)
+                elif len(requested_amounts) > 0:
+                    escrow.request_next_withdrawals_batch(len(requested_amounts))
+
+                unstETH_ids = escrow.withdrawal_queue.get_withdrawal_requests(escrow.address)
+
+                last_finalized_request = escrow.withdrawal_queue.queue[
+                    escrow.withdrawal_queue.last_finalized_request_id
+                ]
+                request_to_finalize = escrow.withdrawal_queue.queue[unstETH_ids[-1]]
+
+                steth_to_finalize = request_to_finalize.cumulative_stETH - last_finalized_request.cumulative_stETH
+
+                escrow.withdrawal_queue.finalize(unstETH_ids[-1], steth_to_finalize, 1 * 10**27)
+                escrow.claim_next_withdrawals_batch(len(unstETH_ids))
+
+                buffered_ether = lido.get_buffered_ether()
+                new_buffered_ether = buffered_ether - steth_to_finalize
+
+                lido.set_buffered_ether(new_buffered_ether)
+                lido._burn_shares(escrow.withdrawal_queue.address, steth_to_finalize)
+
+                if (
+                    len(requested_amounts) > 0
+                    and len(requested_amounts) < escrow.max_withdrawal_batch_size
+                    and escrow.batches_queue.is_all_unstETH_claimed()
+                ):
+                    escrow.batches_queue.close()
+                    escrow.start_rage_quit_extension_delay()
 
     return ("dual_governance", dual_governance)

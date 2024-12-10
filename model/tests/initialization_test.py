@@ -58,6 +58,7 @@ def test_generate_initial_state(
         simulation_starting_time=simulation_starting_time,
         first_rage_quit_support=first_rage_quit_threshold,
         second_rage_quit_support=second_rage_quit_threshold,
+        save_data_enabled=False,
     )
 
     assert isinstance(result, dict)

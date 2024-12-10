@@ -8,6 +8,7 @@ from experiments.simulation_configuration import get_path
 from experiments.templates.actors_labelling import create_experiment as actors_labelling
 from experiments.templates.constant_veto_signalling_loop import create_experiment as constant_veto_signalling_loop
 from experiments.templates.model_validation import create_experiment as model_validation_experiment
+from experiments.templates.rage_quit_loop import create_experiment as rage_quit_loop
 from experiments.templates.rage_quit_scenario import create_experiment as rage_quit_experiment
 from experiments.templates.signalling_thresholds_sweep_under_proposal_with_attack import (
     create_experiment as signalling_thresholds_sweep_under_proposal_with_attack,
@@ -46,6 +47,7 @@ def run(
     template_override=None,
     skip_existing_batches: bool = False,
     execute_simulations: bool = False,
+    save_files: bool = False,
 ):
     out_path = get_path()
 
@@ -66,6 +68,7 @@ def run(
             "veto_signalling_loop": veto_signalling_loop,
             "constant_veto_signalling_loop": constant_veto_signalling_loop,
             "actors_labelling": actors_labelling,
+            "rage_quit_loop": rage_quit_loop,
         }
 
         if simulation_name not in simulations:
@@ -92,6 +95,7 @@ def run(
             out_dir=out_path.joinpath(simulation_name),
             skip_existing_batches=skip_existing_batches,
             execute_simulations=execute_simulations,
+            save_files=save_files,
         )
 
         experiment_duration = time.time() - start_time
@@ -125,6 +129,7 @@ if __name__ == "__main__":
     parser.add_argument("--time_profiling", action="store_true", help="Profile time usage")
     parser.add_argument("--execute", action="store_true", help="Execute simulations", required=False, default=False)
     parser.add_argument("--processes", type=int, help="Number of processes to run", required=False, default=None)
+    parser.add_argument("--save_files", action="store_true", help="Save files", required=False, default=False)
 
     args = parser.parse_args()
 
@@ -134,4 +139,5 @@ if __name__ == "__main__":
         time_profiling=args.time_profiling,
         processes=args.processes,
         execute_simulations=args.execute,
+        save_files=args.save_files,
     )

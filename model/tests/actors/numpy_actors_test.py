@@ -1,5 +1,3 @@
-import sys
-
 import numpy as np
 import pytest
 from hypothesis import given
@@ -18,7 +16,6 @@ from specs.tests.accounting_test import base_int_strategy, ethereum_address_stra
 from specs.time_manager import TimeManager
 from specs.utils import ether_base
 
-sys.modules["model.actors.utils"].IS_NUMBA = True
 MAX_HEALTH = 100
 MIN_HEALTH = 1
 

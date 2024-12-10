@@ -8,3 +8,4 @@ class Scenario(Enum):
     SmartContractHack = 4
     VetoSignallingLoop = 5
     ConstantVetoSignallingLoop = 6
+    RageQuitLoop = 7
