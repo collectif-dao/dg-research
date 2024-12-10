@@ -123,9 +123,10 @@ def actor_update_health(
                 attackers_mask=attackers_mask,
             )
 
-            damage_mask = (actors.actor_type == ActorType.HonestActor.value) * (actors.entity != "Contract") + np.isin(
-                actors.actor_type, [ActorType.SingleDefender.value, ActorType.CoordinatedDefender.value]
-            )
+            damage_mask = (
+                (actors.actor_type == ActorType.HonestActor.value) * (actors.entity != "Contract")
+                + np.isin(actors.actor_type, [ActorType.SingleDefender.value, ActorType.CoordinatedDefender.value])
+            ) & ~attackers_mask
 
             actors.apply_proposal_damage(dual_governance.time_manager.get_current_timestamp(), proposal, damage_mask)
 

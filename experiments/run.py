@@ -6,6 +6,9 @@ import time
 from experiments.batch import run_simulation_batches
 from experiments.simulation_configuration import get_path
 from experiments.templates.actors_labelling import create_experiment as actors_labelling
+from experiments.templates.bribed_withdrawal_queue_replacement import (
+    create_experiment as bribed_withdrawal_queue_replacement,
+)
 from experiments.templates.constant_veto_signalling_loop import create_experiment as constant_veto_signalling_loop
 from experiments.templates.model_validation import create_experiment as model_validation_experiment
 from experiments.templates.rage_quit_loop import create_experiment as rage_quit_loop
@@ -69,6 +72,7 @@ def run(
             "constant_veto_signalling_loop": constant_veto_signalling_loop,
             "actors_labelling": actors_labelling,
             "rage_quit_loop": rage_quit_loop,
+            "bribed_withdrawal_queue_replacement": bribed_withdrawal_queue_replacement,
         }
 
         if simulation_name not in simulations:

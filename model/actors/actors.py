@@ -169,11 +169,31 @@ class Actors:
                 current_wstETH = np.copy(self.hypothetical_wstETH)
 
                 proposal.register_fund_changes(
-                    actors_amount=self.amount,
+                    actors_amount=self.stETH,
                     victims_mask=victims_mask,
                     victims_stETH=current_stETH,
                     victims_wstETH=current_wstETH,
                     attackers_mask=attackers_mask,
+                )
+
+                self.hypothetical_stETH += proposal.stETH_changes
+                self.hypothetical_wstETH += proposal.wstETH_changes
+
+            case ProposalSubType.Bribing:
+                current_stETH = np.copy(self.hypothetical_stETH)
+                current_wstETH = np.copy(self.hypothetical_wstETH)
+
+                bribed_mask = np.isin(self.address, list(proposal.attack_targets))
+
+                victims_mask = victims_mask & ~bribed_mask
+
+                proposal.register_bribe_changes(
+                    actors_amount=self.stETH,
+                    bribed_mask=bribed_mask,
+                    victims_mask=victims_mask,
+                    attackers_mask=attackers_mask,
+                    current_stETH=current_stETH,
+                    current_wstETH=current_wstETH,
                 )
 
                 self.hypothetical_stETH += proposal.stETH_changes
@@ -213,15 +233,22 @@ class Actors:
 
         if proposal.sub_type == ProposalSubType.FundsStealing:
             if proposal.attack_targets:
-                target_mask = np.isin(self.address, list(proposal.attack_targets))
+                target_mask = np.isin(self.address, list(proposal.attack_targets)) & mask
                 damage[target_mask] = sys_params.sys_params["max_damage"]
             else:
-                target_mask = self.entity != "Contract"
+                target_mask = (self.entity != "Contract") & mask
                 damage[target_mask] = sys_params.sys_params["max_damage"]
+
+        elif proposal.sub_type == ProposalSubType.Bribing:
+            bribed_mask = np.isin(self.address, list(proposal.attack_targets)) & mask
+            damage[bribed_mask] = -1
+
+            target_mask = (self.entity != "Contract") & mask
+            damage[~bribed_mask & target_mask] = sys_params.sys_params["max_damage"]
 
         for label, label_damage in proposal.effects.effects.items():
             if label_damage != 0:
-                damage[self.label == label] = label_damage
+                damage[(self.label == label) & mask] = label_damage
 
         damage[np.logical_not(mask)] = 0
 

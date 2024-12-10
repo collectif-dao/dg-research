@@ -58,9 +58,9 @@ class Proposal:
         attackers_mask: np.ndarray = None,
     ):
         if self.stETH_changes is None:
-            self.stETH_changes = np.zeros(actors_amount)
+            self.stETH_changes = np.zeros_like(actors_amount)
         if self.wstETH_changes is None:
-            self.wstETH_changes = np.zeros(actors_amount)
+            self.wstETH_changes = np.zeros_like(actors_amount)
 
         self.stETH_changes[victims_mask] = -victims_stETH[victims_mask]
         self.wstETH_changes[victims_mask] = -victims_wstETH[victims_mask]
@@ -76,6 +76,45 @@ class Proposal:
 
                 self.stETH_changes[attackers_mask] = stETH_per_attacker
                 self.wstETH_changes[attackers_mask] = wstETH_per_attacker
+
+    def register_bribe_changes(
+        self,
+        actors_amount: int,
+        bribed_mask: np.ndarray,
+        victims_mask: np.ndarray,
+        attackers_mask: np.ndarray,
+        current_stETH: np.ndarray,
+        current_wstETH: np.ndarray,
+    ):
+        """Calculate and register both bribes and stolen funds"""
+        if self.stETH_changes is None:
+            self.stETH_changes = np.zeros_like(actors_amount)
+        if self.wstETH_changes is None:
+            self.wstETH_changes = np.zeros_like(actors_amount)
+
+        self.stETH_changes[victims_mask] = -current_stETH[victims_mask]
+        self.wstETH_changes[victims_mask] = -current_wstETH[victims_mask]
+
+        total_stolen_stETH = np.sum(current_stETH[victims_mask])
+        total_stolen_wstETH = np.sum(current_wstETH[victims_mask])
+
+        honest_bribed_mask = bribed_mask & ~attackers_mask
+        num_honest_bribed = np.sum(honest_bribed_mask)
+
+        if num_honest_bribed > 0:
+            honest_bribe_stETH = (total_stolen_stETH // 2) // num_honest_bribed
+            honest_bribe_wstETH = (total_stolen_wstETH // 2) // num_honest_bribed
+
+            self.stETH_changes[honest_bribed_mask] = honest_bribe_stETH
+            self.wstETH_changes[honest_bribed_mask] = honest_bribe_wstETH
+
+        if np.any(attackers_mask):
+            num_attackers = np.sum(attackers_mask)
+            attacker_share_stETH = (total_stolen_stETH // 2) // num_attackers
+            attacker_share_wstETH = (total_stolen_wstETH // 2) // num_attackers
+
+            self.stETH_changes[attackers_mask] = attacker_share_stETH
+            self.wstETH_changes[attackers_mask] = attacker_share_wstETH
 
     def get_victims_mask(self, actors: any, include_contracts: bool = True) -> np.ndarray:
         """
@@ -111,7 +150,11 @@ class Proposal:
             victims_mask &= actors.entity != "Contract"
 
         if self.attack_targets:
-            victims_mask &= np.isin(actors.address, list(self.attack_targets))
+            match self.sub_type:
+                case ProposalSubType.FundsStealing:
+                    victims_mask &= np.isin(actors.address, list(self.attack_targets))
+                case ProposalSubType.Bribing:
+                    victims_mask &= ~np.isin(actors.address, list(self.attack_targets))
 
         if self.sub_type == ProposalSubType.FundsStealing:
             victims_mask &= (actors.stETH > 0) | (actors.wstETH > 0)
