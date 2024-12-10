@@ -15,8 +15,7 @@ from radcad import Backend, Engine, Experiment, Model, Simulation
 
 from model.state_update_blocks import state_update_blocks
 from model.sys_params import sys_params
-from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
-                                       ProposalType)
+from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
 from model.types.proposals import Proposal
 from model.types.reaction_time import ModeledReactions
 from model.types.scenario import Scenario
@@ -31,6 +30,7 @@ collections.Hashable = collections.abc.Hashable
 class DualGovernanceParameters:
     first_rage_quit_support: int = None
     second_rage_quit_support: int = None
+    after_schedule_delay: int = 0
     attacker_funds: int = 0
     determining_factor: int = 0
 

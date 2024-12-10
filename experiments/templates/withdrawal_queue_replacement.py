@@ -64,11 +64,18 @@ shares = np.arange(min_share, max_share, step)
 attacker_funds_list = [get_attacker_funds_from_share(total_balance, share) for share in shares]
 first_thresholds = [1]
 second_thresholds = [10]
+after_schedule_delay_list = [0, 10]
 dual_governance_params = [
-    DualGovernanceParameters(first_rage_quit_support=thresh1, second_rage_quit_support=thresh2, attacker_funds=funds)
+    DualGovernanceParameters(
+        first_rage_quit_support=thresh1,
+        second_rage_quit_support=thresh2,
+        attacker_funds=funds,
+        after_schedule_delay=delay,
+    )
     for thresh1 in first_thresholds
     for thresh2 in second_thresholds
     for funds in attacker_funds_list
+    for delay in after_schedule_delay_list
 ]
 
 

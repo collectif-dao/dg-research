@@ -38,6 +38,7 @@ def generate_initial_state(
     simulation_starting_time: datetime = datetime.min,
     first_rage_quit_support: int = None,
     second_rage_quit_support: int = None,
+    after_schedule_delay: int = 0,
     institutional_threshold: int = 0,
     labeled_addresses: Union[dict[str, str], Callable] = dict(),
     attacker_funds: int = 0,
@@ -76,7 +77,15 @@ def generate_initial_state(
 
     dual_governance = DualGovernance()
     dual_governance.initialize(
-        Address.test_escrow_address, time_manager, lido, "", "", Timestamp(0), Timestamp(0), **filtered_params
+        escrow_address=Address.test_escrow_address,
+        time_manager=time_manager,
+        lido=lido,
+        activation_committee="",
+        execution_committee="",
+        protection_duration=Timestamp(0),
+        emergency_mode_duration=Timestamp(0),
+        after_schedule_delay=after_schedule_delay,
+        **filtered_params,
     )
 
     for i in range(actors.amount):

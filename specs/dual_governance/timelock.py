@@ -18,10 +18,12 @@ class EmergencyProtectedTimelock:
     after_submit_delay: int = default(int(timedelta(days=3).total_seconds()))
     after_schedule_delay: int = default(int(timedelta(days=2).total_seconds()))
 
-    def initialize(self, time_manager: TimeManager):
+    def initialize(self, time_manager: TimeManager, after_schedule_delay: int = 0):
         self.time_manager = time_manager
         self.proposals = Proposals()
         self.proposals.initialize(time_manager)
+        if after_schedule_delay > 0:
+            self.after_schedule_delay = int(timedelta(days=after_schedule_delay).total_seconds())
 
     ## ---
     ## proposals operations

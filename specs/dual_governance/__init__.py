@@ -30,11 +30,12 @@ class DualGovernance:
         execution_committee: str = "",
         protection_duration: Timestamp = Timestamp(0),
         emergency_mode_duration: Timestamp = Timestamp(0),
+        after_schedule_delay: int = 0,
         **config_overrides,
     ):
         self.time_manager = time_manager
         timelock = EmergencyProtectedTimelock()
-        timelock.initialize(time_manager)
+        timelock.initialize(time_manager, after_schedule_delay)
         timelock.set_emergency_protection(
             activation_committee,
             execution_committee,

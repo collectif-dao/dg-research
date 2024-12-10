@@ -91,6 +91,7 @@ def setup_simulation_batch(
                 labeled_addresses=labeled_addresses,
                 attacker_funds=params.attacker_funds,
                 determining_factor=params.determining_factor,
+                after_schedule_delay=params.after_schedule_delay,
                 save_data_enabled=save_files,
             )
 
