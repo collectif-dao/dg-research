@@ -30,6 +30,7 @@ class Proposal:
     proposal_type: ProposalType = field(default_factory=lambda: ProposalType.NoImpact)
     sub_type: ProposalSubType = field(default_factory=lambda: ProposalSubType.NoEffect)
     attack_targets: Set[str] = field(default_factory=lambda: set())
+    attack_targets_determination: bool = False
     cancelable: bool = True
     damage_amounts: np.ndarray = None
     is_active: bool = False

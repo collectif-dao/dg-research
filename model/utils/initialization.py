@@ -105,11 +105,7 @@ def generate_initial_state(
 
     if len(initial_proposals) > 0:
         proposals, non_initialized_proposals = generate_initial_proposals(
-            initial_proposals,
-            dual_governance,
-            scenario,
-            proposals_queue,
-            len(attackers),
+            initial_proposals, dual_governance, scenario, proposals_queue, actors, len(attackers), determining_factor
         )
 
     is_active_attack = False
@@ -301,7 +297,9 @@ def generate_initial_proposals(
     dual_governance: DualGovernance,
     scenario: Scenario,
     proposals_queue: ProposalQueueManager,
+    actors: Actors,
     total_attackers: int = 0,
+    determining_factor: int = 0,
 ) -> Tuple[List[Proposal], List[Proposal]]:
     if not dual_governance.state.is_proposals_creation_allowed():
         return [], initial_proposals
@@ -329,6 +327,19 @@ def generate_initial_proposals(
 
         proposal.id = new_proposal_id
 
+        if (
+            proposal.attack_targets_determination
+            and proposal.sub_type == ProposalSubType.Bribing
+            and determining_factor > 0
+        ):
+            quick_normal_mask = np.isin(actors.reaction_time, [ReactionTime.Normal.value, ReactionTime.Quick.value])
+            bribing_actors = get_attack_targets_by_percentage(
+                actor_addresses=actors.address,
+                reaction_mask=quick_normal_mask,
+                determining_factor=determining_factor,
+            )
+            proposal.attack_targets = bribing_actors
+
         if proposal.timestep == 0:
             dual_governance.submit_proposal("", [ExecutorCall("", "", [])])
             proposals_queue.last_registration_timestep = 0
@@ -337,3 +348,22 @@ def generate_initial_proposals(
             non_initialized_proposals.append(proposal)
 
     return proposals, non_initialized_proposals
+
+
+def get_attack_targets_by_percentage(
+    actor_addresses: np.ndarray,
+    reaction_mask: np.ndarray,
+    determining_factor: int = 0,
+) -> set[str]:
+    from model.utils.seed import get_rng
+
+    rng = get_rng()
+
+    eligible_indices = np.where(reaction_mask)[0]
+
+    num_targets = int(len(eligible_indices) * (determining_factor / 100))
+
+    target_indices = rng.choice(eligible_indices, size=num_targets, replace=False)
+    target_addresses = set(actor_addresses[target_indices])
+
+    return target_addresses

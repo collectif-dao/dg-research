@@ -4,24 +4,24 @@ from model.types.proposal_type import ProposalGeneration, ProposalSubType, Propo
 from model.types.proposals import Proposal
 from model.types.scenario import Scenario
 
-# from model.utils.address_labeling import assign_labels_by_funds_threshold
-
-
-def get_attacker_funds_from_share(total_balance, share):
-    return total_balance * share / (1 - share)
-
-
 MONTE_CARLO_RUNS = 100
 SEED = 4121
 SCENARIO = Scenario.CoordinatedAttack
-TIMESTEPS = calculate_timesteps(3)
+TIMESTEPS = calculate_timesteps(1)
 
 attackers = {"0x91bef2fd282aaa7612c593c4d83c0efaf6200954"}
 
 attacker_funds_list = [1000]
+determining_factors = [10, 20, 30, 40, 50]
 dual_governance_params = [
-    DualGovernanceParameters(first_rage_quit_support=1, second_rage_quit_support=10, attacker_funds=funds)
+    DualGovernanceParameters(
+        first_rage_quit_support=1,
+        second_rage_quit_support=10,
+        attacker_funds=funds,
+        determining_factor=determining_factor,
+    )
     for funds in attacker_funds_list
+    for determining_factor in determining_factors
 ]
 
 proposals = [
@@ -31,12 +31,13 @@ proposals = [
         proposal_type=ProposalType.Danger,
         sub_type=ProposalSubType.Bribing,
         proposer=list(attackers)[0],
-        attack_targets={
-            "0x5eea56d346aa5bc5aea1786169e1f4b8699e882d",
-            "0x11dd5d87e5bce946b3bad36685901095e063f48e",
-            "0x5313b39bf226ced2332c81eb97bb28c6fd50d1a3",
-            "0x02ed4a07431bcc26c5519ebf8473ee221f26da8b",
-        },
+        attack_targets_determination=True,
+        # attack_targets={
+        #     "0x5eea56d346aa5bc5aea1786169e1f4b8699e882d",
+        #     "0x11dd5d87e5bce946b3bad36685901095e063f48e",
+        #     "0x5313b39bf226ced2332c81eb97bb28c6fd50d1a3",
+        #     "0x02ed4a07431bcc26c5519ebf8473ee221f26da8b",
+        # },
     ),
 ]
 
