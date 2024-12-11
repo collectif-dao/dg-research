@@ -10,6 +10,7 @@ from filelock import FileLock
 
 from model.actors.actors import Actors
 from model.types.actors import ActorType
+from model.types.proposal_type import ProposalSubType
 from model.types.proposals import Proposal, get_proposal_by_id
 from model.types.reaction_time import ReactionTime
 from specs.dual_governance import DualGovernance
@@ -98,6 +99,14 @@ def extract_proposal_data(params, state):
         proposal_dict["cancelledAt"].append(
             timestamps_to_timesteps(proposal.cancelledAt, simulation_start_timestamp, timedelta_tick)
         )
+
+        if model_proposal.attack_targets != set() and model_proposal.sub_type in [
+            ProposalSubType.FundsStealing,
+            ProposalSubType.Bribing,
+        ]:
+            proposal_dict["attack_targets"].append(list(model_proposal.attack_targets))
+        else:
+            proposal_dict["attack_targets"].append([])
 
         effects_labels = []
         effects_damages = []
