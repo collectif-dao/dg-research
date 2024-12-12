@@ -213,6 +213,17 @@ def extract_common_data(params, state):
     }
     common_data["n_actors"] = actors.amount
 
+    quick_normal_mask_without_attackers = np.isin(
+        actors.reaction_time, [ReactionTime.Normal.value, ReactionTime.Quick.value]
+    ) & ~np.isin(actors.actor_type, [ActorType.SingleAttacker.value, ActorType.CoordinatedAttacker.value])
+
+    common_data["quick_and_normal_honest_actors_stETH_funds"] = (
+        np.sum(actors.stETH[quick_normal_mask_without_attackers]) / ether_base
+    )
+    common_data["quick_and_normal_honest_actors_wstETH_funds"] = (
+        np.sum(actors.wstETH[quick_normal_mask_without_attackers]) / ether_base
+    )
+
     for reaction_time in ReactionTime:
         common_data[reaction_time.name] = np.count_nonzero(actors.reaction_time == reaction_time.value)
 

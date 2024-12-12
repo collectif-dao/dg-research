@@ -133,6 +133,9 @@ if __name__ == "__main__":
     parser.add_argument("--time_profiling", action="store_true", help="Profile time usage")
     parser.add_argument("--execute", action="store_true", help="Execute simulations", required=False, default=False)
     parser.add_argument("--processes", type=int, help="Number of processes to run", required=False, default=None)
+    parser.add_argument(
+        "--batch_size", type=int, help="Number of simulations inside of a batch", required=False, default=None
+    )
     parser.add_argument("--save_files", action="store_true", help="Save files", required=False, default=False)
 
     args = parser.parse_args()
@@ -144,4 +147,5 @@ if __name__ == "__main__":
         processes=args.processes,
         execute_simulations=args.execute,
         save_files=args.save_files,
+        batch_size=args.batch_size,
     )

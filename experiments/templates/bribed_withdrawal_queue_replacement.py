@@ -1,13 +1,13 @@
-from experiments.simulation_configuration import SIMULATION_TIME, calculate_timesteps, get_path
+from experiments.simulation_configuration import SIMULATION_TIME, get_path
 from experiments.utils import DualGovernanceParameters, setup_simulation
 from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
 from model.types.proposals import Proposal
 from model.types.scenario import Scenario
 
-MONTE_CARLO_RUNS = 100
+MONTE_CARLO_RUNS = 1000
 SEED = 4121
 SCENARIO = Scenario.CoordinatedAttack
-TIMESTEPS = calculate_timesteps(1)
+TIMESTEPS = 2
 
 attackers = {"0x91bef2fd282aaa7612c593c4d83c0efaf6200954"}
 
