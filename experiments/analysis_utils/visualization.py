@@ -12,7 +12,8 @@ from model.types.actors import get_attacker_types
 
 def add_proposal_data_to_timeplot(ax: plt.Axes,
                                   proposal_df: pd.DataFrame,
-                                  lines: tuple[int, int, int, int, int] = (1, 1, 1, 1, 1)
+                                  lines: tuple[int, int, int, int, int] = (1, 1, 1, 1, 1),
+                                  proposal_legend=True
                                   ) -> None:
     line_types = [
         ((0, (1, 20)), "submission"),
@@ -67,9 +68,9 @@ def add_proposal_data_to_timeplot(ax: plt.Axes,
                 )
                 used_line_types.append(4)
         ax.set_ylim(ylim)
-
-    for i, color in enumerate(colors):
-        ax.plot([], [], c=color, label=f"Proposal {proposal_df.proposal_id.iloc[i]}")
+    if proposal_legend:
+        for i, color in enumerate(colors):
+            ax.plot([], [], c=color, label=f"Proposal {proposal_df.proposal_id.iloc[i]}")
     for i in used_line_types:
         linestyle, label = line_types[i]
         ax.plot([], [], linestyle=linestyle, c="gray", label=label)
@@ -338,7 +339,8 @@ def plot_attack_success_rate(timestep_data_df_full, start_data_df_full):
         data=analysis_df,
         x='attacker_share',
         y='attack_success_binary',
-        errorbar=('ci', 95)  # 95% confidence interval
+        errorbar=('ci', 95),  # 95% confidence interval
+        marker='o'
     )
     
     plt.title('Attack Success Rate vs Attacker Share')
@@ -438,7 +440,8 @@ def plot_expected_attacker_gains(timestep_data_df_full, start_data_df_full):
         data=analysis_df,
         x='attacker_share',
         y='relative_gains',
-        errorbar=('ci', 95)  # 95% confidence interval
+        errorbar=('ci', 95),  # 95% confidence interval
+        marker='o'
     )
     
     plt.title('Expected Relative Gains vs Attacker Share')

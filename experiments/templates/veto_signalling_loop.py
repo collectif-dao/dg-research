@@ -1,13 +1,22 @@
-from experiments.simulation_configuration import SIMULATION_TIME, calculate_timesteps, get_path
+import numpy as np
+
+from experiments.simulation_configuration import (SIMULATION_TIME,
+                                                  calculate_timesteps,
+                                                  get_path)
 from experiments.utils import DualGovernanceParameters, setup_simulation
-from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
+from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
+                                       ProposalType)
 from model.types.proposals import Proposal
 from model.types.scenario import Scenario
 
-MONTE_CARLO_RUNS = 100
+
+def get_attacker_funds_from_share(total_balance, share):
+    return total_balance * share / (1 - share)
+
+MONTE_CARLO_RUNS = 1
 SEED = 1888
 SCENARIO = Scenario.VetoSignallingLoop
-TIMESTEPS = calculate_timesteps(3)
+TIMESTEPS = calculate_timesteps(6)
 
 proposals = [
     Proposal(
@@ -16,17 +25,21 @@ proposals = [
         proposal_type=ProposalType.Positive,
         sub_type=ProposalSubType.NoEffect,
         proposer="0x6625c6332c9f91f2d27c304e729b86db87a3f504",
+        cancelable=False
     ),
 ]
 
 attackers = {
-    "0x5eea56d346aa5bc5aea1786169e1f4b8699e882d",
-    "0x6625c6332c9f91f2d27c304e729b86db87a3f504",
-    "0x5313b39bf226ced2332c81eb97bb28c6fd50d1a3",
+    # "0x5eea56d346aa5bc5aea1786169e1f4b8699e882d",
+    # "0x6625c6332c9f91f2d27c304e729b86db87a3f504",
+    # "0x5313b39bf226ced2332c81eb97bb28c6fd50d1a3",
+    "0x91bef2fd282aaa7612c593c4d83c0efaf6200954"
 }
 defenders = {}
 
-attacker_funds_list = [25000]
+total_balance = 8996374.56750506
+# attacker_funds_list = [25000]
+attacker_funds_list = [get_attacker_funds_from_share(total_balance, share) for share in np.arange(0.01, 0.1, 0.01)]
 dual_governance_params = [
     DualGovernanceParameters(first_rage_quit_support=1, second_rage_quit_support=10, attacker_funds=funds)
     for funds in attacker_funds_list
