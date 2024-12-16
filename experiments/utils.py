@@ -14,7 +14,7 @@ from json_tricks import dumps
 from radcad import Backend, Engine, Experiment, Model, Simulation
 
 from model.state_update_blocks import state_update_blocks
-from model.sys_params import sys_params
+from model.sys_params import CustomDelays, sys_params
 from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
 from model.types.proposals import Proposal
 from model.types.reaction_time import ModeledReactions
@@ -33,6 +33,7 @@ class DualGovernanceParameters:
     after_schedule_delay: int = 0
     attacker_funds: int = 0
     determining_factor: int = 0
+    custom_delays: CustomDelays = None
 
 
 def get_simulation_hash(initial_state=None, state_update_blocks=None, params=None, timesteps=None):
@@ -114,6 +115,7 @@ def setup_simulation(
                 labeled_addresses=labeled_addresses,
                 attacker_funds=params.attacker_funds,
                 determining_factor=params.determining_factor,
+                custom_delays=params.custom_delays,
             )
 
             state_data = construct_state_data(

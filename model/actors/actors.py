@@ -32,6 +32,7 @@ class Actors:
         actor_type: np.ndarray,
         reaction_time: np.ndarray,
         governance_participation: np.ndarray,
+        custom_delays: sys_params.CustomDelays = None,
     ):
         n = len(address)
         if (
@@ -71,7 +72,7 @@ class Actors:
         self.reaction_time = reaction_time
         self.governance_participation = governance_participation
 
-        self.next_hp_check_timestamp = generate_initial_reaction_time_vector(self.reaction_time)
+        self.next_hp_check_timestamp = generate_initial_reaction_time_vector(self.reaction_time, custom_delays)
         self.recovery_time = np.zeros_like(self.next_hp_check_timestamp)
         self.last_locked_tx_timestamp = np.zeros_like(self.next_hp_check_timestamp)
 

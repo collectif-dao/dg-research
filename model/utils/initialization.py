@@ -6,6 +6,7 @@ import numpy as np
 
 from model.actors.actors import Actors
 from model.parts.actors import actor_update_health
+from model.sys_params import CustomDelays
 from model.types.actors import ActorType
 from model.types.governance_participation import GovernanceParticipation
 from model.types.proposal_type import ProposalGeneration, ProposalType
@@ -44,6 +45,7 @@ def generate_initial_state(
     attacker_funds: int = 0,
     determining_factor: int = 0,
     save_data_enabled: bool = True,
+    custom_delays: CustomDelays = None,
 ) -> Any:
     initialize_seed(seed)
 
@@ -59,6 +61,7 @@ def generate_initial_state(
         institutional_threshold,
         attacker_funds,
         determining_factor,
+        custom_delays,
     )
 
     time_manager = TimeManager(current_time=simulation_starting_time, simulation_start_time=simulation_starting_time)
@@ -171,6 +174,7 @@ def generate_actors(
     institutional_threshold: int = 0,
     attacker_funds: int = 0,
     determining_factor: int = 0,
+    custom_delays: CustomDelays = None,
 ) -> Actors:
     from model.utils.seed import get_rng
 
@@ -287,6 +291,7 @@ def generate_actors(
         health=actor_health,
         reaction_time=actor_reaction_time,
         governance_participation=actor_participation,
+        custom_delays=custom_delays,
     )
 
     return actors
@@ -333,7 +338,7 @@ def generate_initial_proposals(
             and determining_factor > 0
         ):
             quick_normal_mask = np.isin(actors.reaction_time, [ReactionTime.Normal.value, ReactionTime.Quick.value])
-            bribing_actors = get_attack_targets_by_percentage(
+            bribing_actors = get_attack_targets_by_determining_factor(
                 actor_addresses=actors.address,
                 reaction_mask=quick_normal_mask,
                 determining_factor=determining_factor,
@@ -362,6 +367,24 @@ def get_attack_targets_by_percentage(
     eligible_indices = np.where(reaction_mask)[0]
 
     num_targets = int(len(eligible_indices) * (determining_factor / 100))
+
+    target_indices = rng.choice(eligible_indices, size=num_targets, replace=False)
+    target_addresses = set(actor_addresses[target_indices])
+
+    return target_addresses
+
+
+def get_attack_targets_by_determining_factor(
+    actor_addresses: np.ndarray,
+    reaction_mask: np.ndarray,
+    determining_factor: int = 0,
+) -> set[str]:
+    from model.utils.seed import get_rng
+
+    rng = get_rng()
+
+    eligible_indices = np.where(reaction_mask)[0]
+    num_targets = min(len(eligible_indices), determining_factor)
 
     target_indices = rng.choice(eligible_indices, size=num_targets, replace=False)
     target_addresses = set(actor_addresses[target_indices])

@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.stats
 
-from model.sys_params import normal_actor_max_delay, quick_actor_max_delay, slow_actor_max_delay
+from model.sys_params import CustomDelays, normal_actor_max_delay, quick_actor_max_delay, slow_actor_max_delay
 from model.types.governance_participation import GovernanceParticipation
 from model.types.reaction_time import ModeledReactions, ReactionTime
 from model.utils.seed import get_rng
@@ -211,21 +211,24 @@ reaction_delay_random_variables = {
 }
 
 
-def generate_initial_reaction_time_vector(reaction_time: np.ndarray):
+def generate_initial_reaction_time_vector(reaction_time: np.ndarray, custom_delays: CustomDelays = None):
     rng = get_rng()
-    reaction_time_vector = np.zeros(len(reaction_time), dtype=np.int64)
-    reaction_time_vector[reaction_time == ReactionTime.NoReaction.value] = 2**32 - 1
-    mask_slow = reaction_time == ReactionTime.Slow.value
-    reaction_time_vector[mask_slow] = scipy.stats.uniform.rvs(
-        0, slow_actor_max_delay, size=sum(mask_slow), random_state=rng
-    )
-    mask_normal = reaction_time == ReactionTime.Normal.value
-    reaction_time_vector[mask_normal] = scipy.stats.uniform.rvs(
-        0, normal_actor_max_delay, size=sum(mask_normal), random_state=rng
-    )
-    mask_quick = reaction_time == ReactionTime.Quick.value
-    reaction_time_vector[mask_quick] = scipy.stats.uniform.rvs(
-        0, quick_actor_max_delay, size=sum(mask_quick), random_state=rng
-    )
+    size = len(reaction_time)
+    reaction_time_vector = np.zeros(size, dtype=np.int64)
+
+    no_reaction_mask = reaction_time == ReactionTime.NoReaction.value
+    reaction_time_vector[no_reaction_mask] = 2**32 - 1
+
+    delays = {
+        ReactionTime.Slow.value: custom_delays.slow_max_delay if custom_delays else slow_actor_max_delay,
+        ReactionTime.Normal.value: custom_delays.normal_max_delay if custom_delays else normal_actor_max_delay,
+        ReactionTime.Quick.value: custom_delays.quick_max_delay if custom_delays else quick_actor_max_delay,
+    }
+
+    for reaction_type, max_delay in delays.items():
+        mask = reaction_time == reaction_type
+
+        if np.any(mask):
+            reaction_time_vector[mask] = scipy.stats.uniform.rvs(0, max_delay, size=np.sum(mask), random_state=rng)
 
     return reaction_time_vector

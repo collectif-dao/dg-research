@@ -1,14 +1,13 @@
-import numpy as np
-
 from experiments.simulation_configuration import SIMULATION_TIME, get_path
 from experiments.utils import DualGovernanceParameters, setup_simulation
-from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
-                                       ProposalType)
-from model.types.proposals import Proposal, ProposalsEffect
+from model.sys_params import CustomDelays
+from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
+from model.types.proposals import Proposal
+from model.types.reaction_time import ModeledReactions
 from model.types.scenario import Scenario
 
-MONTE_CARLO_RUNS = 1
-SEED = 141
+MONTE_CARLO_RUNS = 1000
+SEED = 241
 SCENARIO = Scenario.SingleAttack
 TIMESTEPS = 450
 
@@ -22,22 +21,27 @@ proposals = [
         proposal_type=ProposalType.Danger,
         sub_type=ProposalSubType.FundsStealing,
         proposer=list(attackers)[0],
-        cancelable=False
+        cancelable=False,
     )
 ]
 
 first_thresholds = [1]
 second_thresholds = [10]
-after_schedule_delay_list = [100]
+custom_delays = [
+    CustomDelays(slow_max_delay=3600 * 24 * 15),
+    CustomDelays(slow_max_delay=3600 * 24 * 30),
+    CustomDelays(slow_max_delay=3600 * 24 * 45),
+    CustomDelays(slow_max_delay=3600 * 24 * 60),
+]
 dual_governance_params = [
     DualGovernanceParameters(
         first_rage_quit_support=thresh1,
         second_rage_quit_support=thresh2,
-        after_schedule_delay=delay,
+        custom_delays=custom_delay,
     )
+    for custom_delay in custom_delays
     for thresh1 in first_thresholds
     for thresh2 in second_thresholds
-    for delay in after_schedule_delay_list
 ]
 
 
@@ -51,6 +55,7 @@ def create_experiment(simulation_name: str = "withdrawal_queue_replacement", ret
         "proposal_types": ProposalType.Danger,
         "proposal_subtypes": ProposalSubType.FundsStealing,
         "proposals_generation": ProposalGeneration.NoGeneration,
+        "modeled_reactions": ModeledReactions.Normal,
         "proposals": proposals,
         "attackers": attackers,
         "defenders": defenders,

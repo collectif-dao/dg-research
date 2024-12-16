@@ -93,6 +93,7 @@ def setup_simulation_batch(
                 determining_factor=params.determining_factor,
                 after_schedule_delay=params.after_schedule_delay,
                 save_data_enabled=save_files,
+                custom_delays=params.custom_delays,
             )
 
             state_data = construct_state_data(

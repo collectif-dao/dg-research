@@ -8,20 +8,17 @@ from model.types.scenario import Scenario
 MONTE_CARLO_RUNS = 1000
 SEED = 2
 SCENARIO = Scenario.CoordinatedAttack
-TIMESTEPS = 2
+TIMESTEPS = 75
 
 attackers = {"0x91bef2fd282aaa7612c593c4d83c0efaf6200954"}
 
-attacker_funds_list = [1000]
-determining_factors = [10]
+determining_factors = [10, 60, 110, 160, 210, 260, 310]
 dual_governance_params = [
     DualGovernanceParameters(
         first_rage_quit_support=1,
         second_rage_quit_support=10,
-        attacker_funds=funds,
         determining_factor=determining_factor,
     )
-    for funds in attacker_funds_list
     for determining_factor in determining_factors
 ]
 
@@ -53,7 +50,7 @@ def create_experiment(simulation_name: str = "bribed_withdrawal_queue_replacemen
         "proposal_types": ProposalType.Danger,
         "proposal_subtypes": ProposalSubType.Bribing,
         "proposals_generation": ProposalGeneration.NoGeneration,
-        "modeled_reactions": ModeledReactions.Accelerated,
+        "modeled_reactions": ModeledReactions.Normal,
         "proposals": proposals,
         "attackers": attackers,
         "seed": SEED,

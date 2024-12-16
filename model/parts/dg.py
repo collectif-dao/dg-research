@@ -134,10 +134,20 @@ def update_dg_time_manager(params, substep, state_history, prev_state, policy_in
                     lido.balance_of(escrow.address),
                 )
 
-                if len(requested_amounts) > escrow.max_withdrawal_batch_size:
-                    escrow.request_next_withdrawals_batch(escrow.max_withdrawal_batch_size)
-                elif len(requested_amounts) > 0:
-                    escrow.request_next_withdrawals_batch(len(requested_amounts))
+                total_requests = len(requested_amounts)
+
+                # if total_requests == 0:
+                #     return ("dual_governance", dual_governance)
+
+                if total_requests > escrow.max_withdrawal_batch_size:
+                    remaining_requests = total_requests - escrow.max_withdrawal_batch_size
+                    if remaining_requests < escrow.min_withdrawal_batch_size:
+                        first_batch_size = total_requests - escrow.min_withdrawal_batch_size
+                        escrow.request_next_withdrawals_batch(first_batch_size)
+                    else:
+                        escrow.request_next_withdrawals_batch(escrow.max_withdrawal_batch_size)
+                elif total_requests > 0:
+                    escrow.request_next_withdrawals_batch(total_requests)
 
                 unstETH_ids = escrow.withdrawal_queue.get_withdrawal_requests(escrow.address)
 
