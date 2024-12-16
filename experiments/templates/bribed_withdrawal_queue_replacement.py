@@ -2,17 +2,18 @@ from experiments.simulation_configuration import SIMULATION_TIME, get_path
 from experiments.utils import DualGovernanceParameters, setup_simulation
 from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
 from model.types.proposals import Proposal
+from model.types.reaction_time import ModeledReactions
 from model.types.scenario import Scenario
 
 MONTE_CARLO_RUNS = 1000
-SEED = 4121
+SEED = 2
 SCENARIO = Scenario.CoordinatedAttack
 TIMESTEPS = 2
 
 attackers = {"0x91bef2fd282aaa7612c593c4d83c0efaf6200954"}
 
 attacker_funds_list = [1000]
-determining_factors = [10, 20, 30, 40, 50]
+determining_factors = [10]
 dual_governance_params = [
     DualGovernanceParameters(
         first_rage_quit_support=1,
@@ -52,6 +53,7 @@ def create_experiment(simulation_name: str = "bribed_withdrawal_queue_replacemen
         "proposal_types": ProposalType.Danger,
         "proposal_subtypes": ProposalSubType.Bribing,
         "proposals_generation": ProposalGeneration.NoGeneration,
+        "modeled_reactions": ModeledReactions.Accelerated,
         "proposals": proposals,
         "attackers": attackers,
         "seed": SEED,
