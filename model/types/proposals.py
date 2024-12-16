@@ -111,8 +111,13 @@ class Proposal:
 
         if np.any(attackers_mask):
             num_attackers = np.sum(attackers_mask)
-            attacker_share_stETH = (total_stolen_stETH // 2) // num_attackers
-            attacker_share_wstETH = (total_stolen_wstETH // 2) // num_attackers
+
+            if num_attackers > 1:
+                attacker_share_stETH = (total_stolen_stETH // 2) // num_attackers
+                attacker_share_wstETH = (total_stolen_wstETH // 2) // num_attackers
+            else:
+                attacker_share_stETH = total_stolen_stETH // 2
+                attacker_share_wstETH = total_stolen_wstETH // 2
 
             self.stETH_changes[attackers_mask] = attacker_share_stETH
             self.wstETH_changes[attackers_mask] = attacker_share_wstETH

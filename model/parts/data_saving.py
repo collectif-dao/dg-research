@@ -199,6 +199,7 @@ def extract_actor_data(state):
 
 def extract_common_data(params, state):
     actors: Actors = state["actors"]
+    dual_governance: DualGovernance = state["dual_governance"]
 
     common_data = {
         key: state[key]
@@ -213,9 +214,32 @@ def extract_common_data(params, state):
     }
     common_data["n_actors"] = actors.amount
 
-    quick_normal_mask_without_attackers = np.isin(
-        actors.reaction_time, [ReactionTime.Normal.value, ReactionTime.Quick.value]
-    ) & ~np.isin(actors.actor_type, [ActorType.SingleAttacker.value, ActorType.CoordinatedAttacker.value])
+    first_proposal_time = None
+    if len(dual_governance.timelock.proposals.state.proposals) > 0:
+        first_proposal = dual_governance.timelock.proposals.state.proposals[0]
+        first_proposal_time = first_proposal.submittedAt
+        five_days_after_submission = (
+            first_proposal_time.to_seconds()
+            + dual_governance.timelock.after_submit_delay
+            + dual_governance.timelock.after_schedule_delay
+        )
+
+    quick_normal_mask = np.isin(actors.reaction_time, [ReactionTime.Normal.value, ReactionTime.Quick.value])
+    quick_normal_mask_without_attackers = quick_normal_mask & ~np.isin(
+        actors.actor_type, [ActorType.SingleAttacker.value, ActorType.CoordinatedAttacker.value]
+    )
+
+    if first_proposal_time is not None:
+        quick_normal_early_responders = quick_normal_mask_without_attackers & (
+            actors.next_hp_check_timestamp <= five_days_after_submission
+        )
+        common_data["quick_and_normal_early_responders_count"] = np.count_nonzero(quick_normal_early_responders)
+        common_data["quick_and_normal_early_responders_stETH_funds"] = (
+            np.sum(actors.stETH[quick_normal_early_responders]) / ether_base
+        )
+        common_data["quick_and_normal_early_responders_wstETH_funds"] = (
+            np.sum(actors.wstETH[quick_normal_early_responders]) / ether_base
+        )
 
     common_data["quick_and_normal_honest_actors_stETH_funds"] = (
         np.sum(actors.stETH[quick_normal_mask_without_attackers]) / ether_base
