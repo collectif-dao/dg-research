@@ -5,12 +5,13 @@ from typing import List, Tuple
 import numpy as np
 
 from model import sys_params
-from model.actors.errors import NotEnoughActorStETHBalance, NotEnoughActorWstETHBalance
+from model.actors.errors import (NotEnoughActorStETHBalance,
+                                 NotEnoughActorWstETHBalance)
 from model.types.actors import ActorReaction, ActorType
 from model.types.proposal_type import ProposalSubType, ProposalType
 from model.types.proposals import Proposal
 from model.types.scenario import Scenario
-from model.utils.reactions import generate_initial_reaction_time_vector, generate_reaction_delay_vector
+from model.utils.reactions import ReactionDelayGenerator
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.proposals import ProposalStatus
 from specs.dual_governance.state import State
@@ -72,7 +73,8 @@ class Actors:
         self.reaction_time = reaction_time
         self.governance_participation = governance_participation
 
-        self.next_hp_check_timestamp = generate_initial_reaction_time_vector(self.reaction_time, custom_delays)
+        self.reaction_delay_generator = ReactionDelayGenerator(custom_delays)
+        self.next_hp_check_timestamp = self.reaction_delay_generator.generate_initial_reaction_time_vector(self.reaction_time)
         self.recovery_time = np.zeros_like(self.next_hp_check_timestamp)
         self.last_locked_tx_timestamp = np.zeros_like(self.next_hp_check_timestamp)
 
@@ -369,7 +371,7 @@ class Actors:
             reactions[mask1] = ActorReaction.NoAction.value
 
     def update_next_hp_check_timestamp(self, current_timestamp: int, mask: np.ndarray = None):
-        self.next_hp_check_timestamp[mask] = current_timestamp + generate_reaction_delay_vector(
+        self.next_hp_check_timestamp[mask] = current_timestamp + self.reaction_delay_generator.generate_reaction_delay_vector(
             self.reaction_time[mask]
         )
 

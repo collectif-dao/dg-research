@@ -213,6 +213,9 @@ def extract_common_data(params, state):
         ]
     }
     common_data["n_actors"] = actors.amount
+    common_data["slow_actor_max_delay"] = params["slow_actor_max_delay"]
+    common_data["normal_actor_max_delay"] = params["normal_actor_max_delay"]
+    common_data["quick_actor_max_delay"] = params["quick_actor_max_delay"]
 
     first_proposal_time = None
     if len(dual_governance.timelock.proposals.state.proposals) > 0:

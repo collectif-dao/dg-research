@@ -1,7 +1,8 @@
 import numpy as np
 import scipy.stats
 
-from model.sys_params import CustomDelays, normal_actor_max_delay, quick_actor_max_delay, slow_actor_max_delay
+from model.sys_params import (CustomDelays, normal_actor_max_delay,
+                              quick_actor_max_delay, slow_actor_max_delay)
 from model.types.governance_participation import GovernanceParticipation
 from model.types.reaction_time import ModeledReactions, ReactionTime
 from model.utils.seed import get_rng
@@ -82,34 +83,47 @@ def get_reaction_delay_random_variable(min_time, max_time, p=0.99, median_parame
     rv = scipy.stats.lognorm(s=sigma, loc=shift, scale=median)
     return rv
 
+class ReactionDelayGenerator:
+    def __init__(self, custom_delays: CustomDelays = None):
+        self.custom_delays = custom_delays
+        self.reaction_delay_random_variables = {
+            ReactionTime.NoReaction.value: ConstantRandomVariable(2**32 - 1),  # 4
+            ReactionTime.Slow.value: get_reaction_delay_random_variable(normal_actor_max_delay, slow_actor_max_delay),  # 3
+            ReactionTime.Normal.value: get_reaction_delay_random_variable(quick_actor_max_delay, normal_actor_max_delay),  # 1
+            ReactionTime.Quick.value: get_reaction_delay_random_variable(0, quick_actor_max_delay),  # 2
+        }
+    
+    def generate_reaction_delay_vector(self, reaction_time: np.ndarray):
+        rng = get_rng()
+        reaction_delay = np.zeros(len(reaction_time), dtype="int64")
 
-def generate_reaction_delay(reaction_time: int) -> int:
-    rng = get_rng()
-    # match reaction:
-    #     case 2:
-    #         left_bound, right_bound = 0, quick_actor_max_delay
-    #     case 1:
-    #         left_bound, right_bound = quick_actor_max_delay, normal_actor_max_delay
-    #     case 3:
-    #         left_bound, right_bound = normal_actor_max_delay, slow_actor_max_delay
-    #     case 4:
-    #         return Timestamp.MAX_VALUE
-    # reaction_delay_random_variable = get_reaction_delay_random_variable(left_bound, right_bound)
-    reaction_delay_random_variable = reaction_delay_random_variables[reaction_time]
-    reaction_delay = reaction_delay_random_variable.rvs(random_state=rng)
-    return reaction_delay
+        for reaction_time_key, random_variable in self.reaction_delay_random_variables.items():
+            mask = reaction_time == reaction_time_key
+            size = np.sum(mask)
+            reaction_delay[mask] = np.ceil(random_variable.rvs(random_state=rng, size=size)).astype("int64")
+        return reaction_delay
 
+    def generate_initial_reaction_time_vector(self, reaction_time: np.ndarray):
+        rng = get_rng()
+        size = len(reaction_time)
+        reaction_time_vector = np.zeros(size, dtype=np.int64)
 
-def generate_reaction_delay_vector(reaction_time: np.ndarray):
-    rng = get_rng()
-    reaction_delay = np.zeros(len(reaction_time), dtype="int64")
+        no_reaction_mask = reaction_time == ReactionTime.NoReaction.value
+        reaction_time_vector[no_reaction_mask] = 2**32 - 1
 
-    for reaction_time_key, random_variable in reaction_delay_random_variables.items():
-        mask = reaction_time == reaction_time_key
-        size = np.sum(mask)
-        reaction_delay[mask] = np.ceil(random_variable.rvs(random_state=rng, size=size)).astype("int64")
+        delays = {
+            ReactionTime.Slow.value: self.custom_delays.slow_max_delay if self.custom_delays else slow_actor_max_delay,
+            ReactionTime.Normal.value: self.custom_delays.normal_max_delay if self.custom_delays else normal_actor_max_delay,
+            ReactionTime.Quick.value: self.custom_delays.quick_max_delay if self.custom_delays else quick_actor_max_delay,
+        }
 
-    return reaction_delay
+        for reaction_type, max_delay in delays.items():
+            mask = reaction_time == reaction_type
+
+            if np.any(mask):
+                reaction_time_vector[mask] = scipy.stats.uniform.rvs(0, max_delay, size=np.sum(mask), random_state=rng)
+
+        return reaction_time_vector
 
 
 def determine_reaction_time(reactions: ModeledReactions) -> ReactionTime:
@@ -201,34 +215,3 @@ class ConstantRandomVariable:
         if size is None:
             return self.value
         return np.repeat(self.value, size)
-
-
-reaction_delay_random_variables = {
-    ReactionTime.NoReaction.value: ConstantRandomVariable(2**32 - 1),  # 4
-    ReactionTime.Slow.value: get_reaction_delay_random_variable(normal_actor_max_delay, slow_actor_max_delay),  # 3
-    ReactionTime.Normal.value: get_reaction_delay_random_variable(quick_actor_max_delay, normal_actor_max_delay),  # 1
-    ReactionTime.Quick.value: get_reaction_delay_random_variable(0, quick_actor_max_delay),  # 2
-}
-
-
-def generate_initial_reaction_time_vector(reaction_time: np.ndarray, custom_delays: CustomDelays = None):
-    rng = get_rng()
-    size = len(reaction_time)
-    reaction_time_vector = np.zeros(size, dtype=np.int64)
-
-    no_reaction_mask = reaction_time == ReactionTime.NoReaction.value
-    reaction_time_vector[no_reaction_mask] = 2**32 - 1
-
-    delays = {
-        ReactionTime.Slow.value: custom_delays.slow_max_delay if custom_delays else slow_actor_max_delay,
-        ReactionTime.Normal.value: custom_delays.normal_max_delay if custom_delays else normal_actor_max_delay,
-        ReactionTime.Quick.value: custom_delays.quick_max_delay if custom_delays else quick_actor_max_delay,
-    }
-
-    for reaction_type, max_delay in delays.items():
-        mask = reaction_time == reaction_type
-
-        if np.any(mask):
-            reaction_time_vector[mask] = scipy.stats.uniform.rvs(0, max_delay, size=np.sum(mask), random_state=rng)
-
-    return reaction_time_vector
