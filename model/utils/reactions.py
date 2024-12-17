@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.stats
 
-from model.sys_params import CustomDelays, normal_actor_max_delay, quick_actor_max_delay, slow_actor_max_delay
+from model.sys_params import CustomDelays
 from model.types.governance_participation import GovernanceParticipation
 from model.types.reaction_time import ModeledReactions, ReactionTime
 from model.utils.seed import get_rng
@@ -85,16 +85,20 @@ def get_reaction_delay_random_variable(min_time, max_time, p=0.99, median_parame
 
 class ReactionDelayGenerator:
     def __init__(self, custom_delays: CustomDelays = None):
-        self.custom_delays = custom_delays
+        if custom_delays is None:
+            self.custom_delays = CustomDelays()
+        else:
+            self.custom_delays = custom_delays
+
         self.reaction_delay_random_variables = {
             ReactionTime.NoReaction.value: ConstantRandomVariable(2**32 - 1),  # 4
             ReactionTime.Slow.value: get_reaction_delay_random_variable(
-                normal_actor_max_delay, slow_actor_max_delay
+                self.custom_delays.normal_max_delay, self.custom_delays.slow_max_delay
             ),  # 3
             ReactionTime.Normal.value: get_reaction_delay_random_variable(
-                quick_actor_max_delay, normal_actor_max_delay
+                self.custom_delays.quick_max_delay, self.custom_delays.normal_max_delay
             ),  # 1
-            ReactionTime.Quick.value: get_reaction_delay_random_variable(0, quick_actor_max_delay),  # 2
+            ReactionTime.Quick.value: get_reaction_delay_random_variable(0, self.custom_delays.quick_max_delay),  # 2
         }
 
     def generate_reaction_delay_vector(self, reaction_time: np.ndarray):
@@ -116,13 +120,9 @@ class ReactionDelayGenerator:
         reaction_time_vector[no_reaction_mask] = 2**32 - 1
 
         delays = {
-            ReactionTime.Slow.value: self.custom_delays.slow_max_delay if self.custom_delays else slow_actor_max_delay,
-            ReactionTime.Normal.value: self.custom_delays.normal_max_delay
-            if self.custom_delays
-            else normal_actor_max_delay,
-            ReactionTime.Quick.value: self.custom_delays.quick_max_delay
-            if self.custom_delays
-            else quick_actor_max_delay,
+            ReactionTime.Slow.value: self.custom_delays.slow_max_delay,
+            ReactionTime.Normal.value: self.custom_delays.normal_max_delay,
+            ReactionTime.Quick.value: self.custom_delays.quick_max_delay,
         }
 
         for reaction_type, max_delay in delays.items():
