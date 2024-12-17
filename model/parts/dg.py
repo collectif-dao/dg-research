@@ -127,7 +127,7 @@ def update_dg_time_manager(params, substep, state_history, prev_state, policy_in
             escrow = dual_governance.state.rage_quit_escrow
             lido: Lido = prev_state["lido"]
 
-            if lido.balance_of(escrow.address) > 0:
+            if lido.balance_of(escrow.address) > 0 and not escrow.batches_queue.is_closed():
                 requested_amounts = escrow.batches_queue.calc_request_amounts(
                     escrow.min_withdrawal_request_amount,
                     escrow.max_withdrawal_request_amount,
@@ -136,8 +136,8 @@ def update_dg_time_manager(params, substep, state_history, prev_state, policy_in
 
                 total_requests = len(requested_amounts)
 
-                # if total_requests == 0:
-                #     return ("dual_governance", dual_governance)
+                if total_requests == 0:
+                    return ("dual_governance", dual_governance)
 
                 if total_requests > escrow.max_withdrawal_batch_size:
                     remaining_requests = total_requests - escrow.max_withdrawal_batch_size
@@ -147,7 +147,10 @@ def update_dg_time_manager(params, substep, state_history, prev_state, policy_in
                     else:
                         escrow.request_next_withdrawals_batch(escrow.max_withdrawal_batch_size)
                 elif total_requests > 0:
-                    escrow.request_next_withdrawals_batch(total_requests)
+                    if total_requests >= escrow.min_withdrawal_batch_size:
+                        escrow.request_next_withdrawals_batch(total_requests)
+                    else:
+                        return ("dual_governance", dual_governance)
 
                 unstETH_ids = escrow.withdrawal_queue.get_withdrawal_requests(escrow.address)
 
