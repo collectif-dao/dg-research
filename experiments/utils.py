@@ -33,7 +33,7 @@ class DualGovernanceParameters:
     after_schedule_delay: int = 0
     attacker_funds: int = 0
     determining_factor: int = 0
-    custom_delays: CustomDelays = None
+    custom_delays: CustomDelays = CustomDelays()
 
 
 def get_simulation_hash(initial_state=None, state_update_blocks=None, params=None, timesteps=None):
@@ -118,6 +118,8 @@ def setup_simulation(
                 custom_delays=params.custom_delays,
             )
 
+            state_custom_delays = state["reaction_delay_generator"].custom_delays
+
             state_data = construct_state_data(
                 actors=state["actors"],
                 scenario=state["scenario"],
@@ -132,7 +134,10 @@ def setup_simulation(
                 simulation_starting_time=state["simulation_starting_time"],
                 first_seal_rage_quit_support=state["first_seal_rage_quit_support"],
                 second_seal_rage_quit_support=state["second_seal_rage_quit_support"],
+                modeled_reactions=state["modeled_reactions"],
                 attacker_funds=state["attacker_funds"],
+                determining_factor=state["determining_factor"],
+                custom_delays=state_custom_delays,
             )
 
             simulation_hash = get_simulation_hash(
@@ -412,6 +417,8 @@ def save_execution_result(
         start_idx = run + (run * timesteps * substeps)
         end_idx = start_idx + timesteps * substeps + 1
 
+        state_custom_delays = simulations[run].model.initial_state["reaction_delay_generator"].custom_delays
+
         state_data = construct_state_data(
             actors=simulations[run].model.initial_state["actors"],
             scenario=simulations[run].model.initial_state["scenario"],
@@ -426,6 +433,10 @@ def save_execution_result(
             simulation_starting_time=simulations[run].model.initial_state["simulation_starting_time"],
             first_seal_rage_quit_support=simulations[run].model.initial_state["first_seal_rage_quit_support"],
             second_seal_rage_quit_support=simulations[run].model.initial_state["second_seal_rage_quit_support"],
+            modeled_reactions=simulations[run].model.initial_state["modeled_reactions"],
+            attacker_funds=simulations[run].model.initial_state["attacker_funds"],
+            determining_factor=simulations[run].model.initial_state["determining_factor"],
+            custom_delays=state_custom_delays,
         )
 
         simulation_hash = get_simulation_hash(

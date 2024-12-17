@@ -7,6 +7,7 @@ from model.types.actors import ActorReaction, ActorType
 from model.types.proposal_type import ProposalSubType
 from model.types.proposals import Proposal, get_proposal_by_id
 from model.types.scenario import Scenario
+from model.utils.reactions import ReactionDelayGenerator
 from specs.dual_governance import DualGovernance
 from specs.time_manager import TimeManager
 
@@ -68,8 +69,9 @@ def actor_submit_proposals(params, substep, state_history, prev_state, policy_in
     attackers: Set[str] = prev_state["attackers"]
     scenario: Scenario = prev_state["scenario"]
     dual_governance: DualGovernance = prev_state["dual_governance"]
+    reaction_delay_generator: ReactionDelayGenerator = prev_state["reaction_delay_generator"]
 
-    actors = actor_update_health(dual_governance, scenario, proposals, actors, attackers)
+    actors = actor_update_health(dual_governance, scenario, proposals, actors, attackers, reaction_delay_generator)
 
     return "actors", actors
 
@@ -80,6 +82,7 @@ def actor_update_health(
     proposals: List[Proposal],
     actors: Actors,
     attackers: Set[str],
+    reaction_delay_generator: ReactionDelayGenerator,
 ):
     for proposal in proposals:
         if scenario in [
@@ -93,13 +96,17 @@ def actor_update_health(
             )
 
             actors.simulate_proposal_effect(proposal, mask)
-            actors.apply_proposal_damage(dual_governance.time_manager.get_current_timestamp(), proposal, mask)
+            actors.apply_proposal_damage(
+                reaction_delay_generator, dual_governance.time_manager.get_current_timestamp(), proposal, mask
+            )
 
             ## Update reaction delay for attackers in veto signalling loop attacks
             mask2 = (
                 scenario in [Scenario.VetoSignallingLoop, Scenario.ConstantVetoSignallingLoop, Scenario.RageQuitLoop]
             ) * np.isin(actors.address, list(attackers))
-            actors.update_next_hp_check_timestamp(dual_governance.time_manager.get_current_timestamp(), mask2)
+            actors.update_next_hp_check_timestamp(
+                reaction_delay_generator, dual_governance.time_manager.get_current_timestamp(), mask2
+            )
 
         elif scenario in (Scenario.SingleAttack, Scenario.CoordinatedAttack):
             victims_mask = proposal.get_victims_mask(actors, include_contracts=True)
@@ -128,7 +135,9 @@ def actor_update_health(
                 + np.isin(actors.actor_type, [ActorType.SingleDefender.value, ActorType.CoordinatedDefender.value])
             ) & ~attackers_mask
 
-            actors.apply_proposal_damage(dual_governance.time_manager.get_current_timestamp(), proposal, damage_mask)
+            actors.apply_proposal_damage(
+                reaction_delay_generator, dual_governance.time_manager.get_current_timestamp(), proposal, damage_mask
+            )
 
     return actors
 
@@ -146,6 +155,7 @@ def actor_cancel_proposals(params, substep, state_history, prev_state, policy_in
     actors: Actors = prev_state["actors"]
     proposals: List[Proposal] = prev_state["proposals"]
     time_manager: TimeManager = prev_state["time_manager"]
+    reaction_delay_generator: ReactionDelayGenerator = prev_state["reaction_delay_generator"]
 
     for proposal_id in cancel_proposal_ids:
         proposal = get_proposal_by_id(proposals, proposal_id)
@@ -153,7 +163,7 @@ def actor_cancel_proposals(params, substep, state_history, prev_state, policy_in
             continue
 
         if proposal.is_active:
-            actors.remove_proposal_damage(time_manager.get_current_timestamp(), proposal)
+            actors.remove_proposal_damage(reaction_delay_generator, time_manager.get_current_timestamp(), proposal)
 
             if proposal.sub_type in [ProposalSubType.FundsStealing, ProposalSubType.Bribing]:
                 actors.reset_proposal_effect(proposal)

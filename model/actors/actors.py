@@ -5,8 +5,7 @@ from typing import List, Tuple
 import numpy as np
 
 from model import sys_params
-from model.actors.errors import (NotEnoughActorStETHBalance,
-                                 NotEnoughActorWstETHBalance)
+from model.actors.errors import NotEnoughActorStETHBalance, NotEnoughActorWstETHBalance
 from model.types.actors import ActorReaction, ActorType
 from model.types.proposal_type import ProposalSubType, ProposalType
 from model.types.proposals import Proposal
@@ -33,7 +32,7 @@ class Actors:
         actor_type: np.ndarray,
         reaction_time: np.ndarray,
         governance_participation: np.ndarray,
-        custom_delays: sys_params.CustomDelays = None,
+        reaction_delay_generator: ReactionDelayGenerator,
     ):
         n = len(address)
         if (
@@ -73,8 +72,9 @@ class Actors:
         self.reaction_time = reaction_time
         self.governance_participation = governance_participation
 
-        self.reaction_delay_generator = ReactionDelayGenerator(custom_delays)
-        self.next_hp_check_timestamp = self.reaction_delay_generator.generate_initial_reaction_time_vector(self.reaction_time)
+        self.next_hp_check_timestamp = reaction_delay_generator.generate_initial_reaction_time_vector(
+            self.reaction_time
+        )
         self.recovery_time = np.zeros_like(self.next_hp_check_timestamp)
         self.last_locked_tx_timestamp = np.zeros_like(self.next_hp_check_timestamp)
 
@@ -225,7 +225,13 @@ class Actors:
     ## Proposal damage section
     ## ---
 
-    def apply_proposal_damage(self, current_timestamp: int, proposal: Proposal, mask: np.ndarray = None):
+    def apply_proposal_damage(
+        self,
+        reaction_delay_generator: ReactionDelayGenerator,
+        current_timestamp: int,
+        proposal: Proposal,
+        mask: np.ndarray = None,
+    ):
         if mask is None:
             mask = np.repeat(True, self.amount)
 
@@ -265,11 +271,13 @@ class Actors:
             self.total_damage[damage_mask & damage_is_positive] += np.abs(damage[damage_mask & damage_is_positive])
             self.total_healing[damage_mask & ~damage_is_positive] += np.abs(damage[damage_mask & ~damage_is_positive])
 
-        self.update_next_hp_check_timestamp(current_timestamp, damage_mask)
+        self.update_next_hp_check_timestamp(reaction_delay_generator, current_timestamp, damage_mask)
 
         return damage_mask
 
-    def remove_proposal_damage(self, current_timestamp: int, proposal: Proposal):
+    def remove_proposal_damage(
+        self, reaction_delay_generator: ReactionDelayGenerator, current_timestamp: int, proposal: Proposal
+    ):
         if not proposal.is_active or proposal.damage_amounts is None:
             return
 
@@ -288,7 +296,9 @@ class Actors:
                 self.total_recovery[recovery_mask] += np.abs(health_change[recovery_mask])
                 self.recovery_time[recovery_mask] = current_timestamp
 
-        self.update_next_hp_check_timestamp(current_timestamp, damage_mask & (health_change != 0))
+        self.update_next_hp_check_timestamp(
+            reaction_delay_generator, current_timestamp, damage_mask & (health_change != 0)
+        )
         proposal.clear_damage_effect()
 
     def finalize_proposal_damage(self, proposal: Proposal):
@@ -370,9 +380,14 @@ class Actors:
             mask1 = mask * ((reactions == ActorReaction.Unlock.value) + (reactions == ActorReaction.Quit.value))
             reactions[mask1] = ActorReaction.NoAction.value
 
-    def update_next_hp_check_timestamp(self, current_timestamp: int, mask: np.ndarray = None):
-        self.next_hp_check_timestamp[mask] = current_timestamp + self.reaction_delay_generator.generate_reaction_delay_vector(
-            self.reaction_time[mask]
+    def update_next_hp_check_timestamp(
+        self,
+        reaction_delay_generator: ReactionDelayGenerator,
+        current_timestamp: int,
+        mask: np.ndarray = None,
+    ):
+        self.next_hp_check_timestamp[mask] = (
+            current_timestamp + reaction_delay_generator.generate_reaction_delay_vector(self.reaction_time[mask])
         )
 
     def quit(self, mask: np.ndarray):

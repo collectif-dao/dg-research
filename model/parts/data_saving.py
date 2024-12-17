@@ -13,6 +13,7 @@ from model.types.actors import ActorType
 from model.types.proposal_type import ProposalSubType
 from model.types.proposals import Proposal, get_proposal_by_id
 from model.types.reaction_time import ReactionTime
+from model.utils.reactions import ReactionDelayGenerator
 from specs.dual_governance import DualGovernance
 from specs.time_manager import TimeManager
 from specs.types.timestamp import Timestamp
@@ -200,6 +201,7 @@ def extract_actor_data(state):
 def extract_common_data(params, state):
     actors: Actors = state["actors"]
     dual_governance: DualGovernance = state["dual_governance"]
+    reaction_delay_generator: ReactionDelayGenerator = state["reaction_delay_generator"]
 
     common_data = {
         key: state[key]
@@ -213,9 +215,11 @@ def extract_common_data(params, state):
         ]
     }
     common_data["n_actors"] = actors.amount
-    common_data["slow_actor_max_delay"] = params["slow_actor_max_delay"]
-    common_data["normal_actor_max_delay"] = params["normal_actor_max_delay"]
-    common_data["quick_actor_max_delay"] = params["quick_actor_max_delay"]
+    common_data["slow_actor_max_delay"] = reaction_delay_generator.custom_delays.slow_max_delay
+    common_data["normal_actor_max_delay"] = reaction_delay_generator.custom_delays.normal_max_delay
+    common_data["quick_actor_max_delay"] = reaction_delay_generator.custom_delays.quick_max_delay
+    common_data["modeled_reactions"] = state["modeled_reactions"].name
+    common_data["modeled_reactions_value"] = state["modeled_reactions"].value
 
     first_proposal_time = None
     if len(dual_governance.timelock.proposals.state.proposals) > 0:

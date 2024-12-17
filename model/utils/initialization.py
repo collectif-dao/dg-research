@@ -14,7 +14,11 @@ from model.types.proposals import Proposal, ProposalSubType
 from model.types.reaction_time import ModeledReactions, ReactionTime
 from model.types.scenario import Scenario
 from model.utils.proposals_queue import ProposalQueueManager
-from model.utils.reactions import determine_governance_participation_vector, determine_reaction_time_vector
+from model.utils.reactions import (
+    ReactionDelayGenerator,
+    determine_governance_participation_vector,
+    determine_reaction_time_vector,
+)
 from model.utils.seed import initialize_seed
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.proposals import ExecutorCall
@@ -51,17 +55,18 @@ def generate_initial_state(
 
     proposals: List[Proposal] = []
     non_initialized_proposals: List[Proposal] = []
+    reaction_delay_generator = ReactionDelayGenerator(custom_delays)
     actors = generate_actors(
-        scenario,
-        reactions,
-        max_actors,
-        attackers,
-        defenders,
-        labeled_addresses,
-        institutional_threshold,
-        attacker_funds,
-        determining_factor,
-        custom_delays,
+        reaction_delay_generator=reaction_delay_generator,
+        scenario=scenario,
+        reactions=reactions,
+        max_actors=max_actors,
+        attackers=attackers,
+        defenders=defenders,
+        labeled_addresses=labeled_addresses,
+        institutional_threshold=institutional_threshold,
+        attacker_funds=attacker_funds,
+        determining_factor=determining_factor,
     )
 
     time_manager = TimeManager(current_time=simulation_starting_time, simulation_start_time=simulation_starting_time)
@@ -135,9 +140,11 @@ def generate_initial_state(
         "lido": lido,
         "dual_governance": dual_governance,
         "proposals": proposals,
+        "reaction_delay_generator": reaction_delay_generator,
         "non_initialized_proposals": non_initialized_proposals,
         "time_manager": time_manager,
         "scenario": scenario,
+        "modeled_reactions": reactions,
         "attackers": attackers_actors,
         "defenders": defenders_actors,
         "proposal_types": proposal_types,
@@ -165,6 +172,7 @@ def parse_token_amount(token_amount_str):
 
 
 def generate_actors(
+    reaction_delay_generator: ReactionDelayGenerator,
     scenario: Scenario,
     reactions: ModeledReactions,
     max_actors: int,
@@ -174,7 +182,6 @@ def generate_actors(
     institutional_threshold: int = 0,
     attacker_funds: int = 0,
     determining_factor: int = 0,
-    custom_delays: CustomDelays = None,
 ) -> Actors:
     from model.utils.seed import get_rng
 
@@ -291,7 +298,7 @@ def generate_actors(
         health=actor_health,
         reaction_time=actor_reaction_time,
         governance_participation=actor_participation,
-        custom_delays=custom_delays,
+        reaction_delay_generator=reaction_delay_generator,
     )
 
     return actors
