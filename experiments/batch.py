@@ -94,6 +94,8 @@ def setup_simulation_batch(
                 after_schedule_delay=params.after_schedule_delay,
                 save_data_enabled=save_files,
                 custom_delays=params.custom_delays,
+                lido_exit_share=params.lido_exit_share,
+                churn_rate=params.churn_rate,
             )
 
             custom_delays = state["reaction_delay_generator"].custom_delays

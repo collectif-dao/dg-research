@@ -34,6 +34,8 @@ class DualGovernanceParameters:
     attacker_funds: int = 0
     determining_factor: int = 0
     custom_delays: CustomDelays = CustomDelays()
+    lido_exit_share: int = 0.3
+    churn_rate: int = 14
 
 
 def get_simulation_hash(initial_state=None, state_update_blocks=None, params=None, timesteps=None):
@@ -116,6 +118,8 @@ def setup_simulation(
                 attacker_funds=params.attacker_funds,
                 determining_factor=params.determining_factor,
                 custom_delays=params.custom_delays,
+                lido_exit_share=params.lido_exit_share,
+                churn_rate=params.churn_rate,
             )
 
             state_custom_delays = state["reaction_delay_generator"].custom_delays

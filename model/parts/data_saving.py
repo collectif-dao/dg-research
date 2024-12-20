@@ -212,12 +212,16 @@ def extract_common_data(params, state):
             "attacker_funds",
             "simulation_hash",
             "determining_factor",
+            "lido_exit_share",
+            "churn_rate",
+            "timedelta_tick",
         ]
     }
     common_data["n_actors"] = actors.amount
     common_data["slow_actor_max_delay"] = reaction_delay_generator.custom_delays.slow_max_delay
     common_data["normal_actor_max_delay"] = reaction_delay_generator.custom_delays.normal_max_delay
     common_data["quick_actor_max_delay"] = reaction_delay_generator.custom_delays.quick_max_delay
+    common_data["last_withdrawal_day"] = str(state["last_withdrawal_day"])
     common_data["modeled_reactions"] = state["modeled_reactions"].name
     common_data["modeled_reactions_value"] = state["modeled_reactions"].value
 

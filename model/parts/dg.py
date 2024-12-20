@@ -1,8 +1,10 @@
+from datetime import date
 from typing import List
 
 import numpy as np
 
 from model.parts.actors import ActorReaction
+from model.utils.numbers import max_withdrawal_per_day
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.state import State
 from specs.lido import Lido
@@ -88,7 +90,7 @@ def update_escrow(params, substep, state_history, prev_state, policy_input):
     return ("dual_governance", dual_governance)
 
 
-def update_dg_time_manager(params, substep, state_history, prev_state, policy_input):
+def update_dual_governance_state(params, substep, state_history, prev_state, policy_input):
     delta = policy_input["timedelta_tick"]
     time_manager: TimeManager = prev_state["time_manager"]
     dual_governance: DualGovernance = prev_state["dual_governance"]
@@ -136,46 +138,109 @@ def update_dg_time_manager(params, substep, state_history, prev_state, policy_in
 
                 total_requests = len(requested_amounts)
 
-                if total_requests == 0:
-                    return ("dual_governance", dual_governance)
-
-                if total_requests > escrow.max_withdrawal_batch_size:
-                    remaining_requests = total_requests - escrow.max_withdrawal_batch_size
-                    if remaining_requests < escrow.min_withdrawal_batch_size:
-                        first_batch_size = total_requests - escrow.min_withdrawal_batch_size
-                        escrow.request_next_withdrawals_batch(first_batch_size)
-                    else:
-                        escrow.request_next_withdrawals_batch(escrow.max_withdrawal_batch_size)
-                elif total_requests > 0:
-                    if total_requests >= escrow.min_withdrawal_batch_size:
+                if total_requests > 0:
+                    if total_requests > escrow.max_withdrawal_batch_size:
+                        remaining_requests = total_requests - escrow.max_withdrawal_batch_size
+                        if remaining_requests < escrow.min_withdrawal_batch_size:
+                            first_batch_size = total_requests - escrow.min_withdrawal_batch_size
+                            escrow.request_next_withdrawals_batch(first_batch_size)
+                        else:
+                            escrow.request_next_withdrawals_batch(escrow.max_withdrawal_batch_size)
+                    elif total_requests >= escrow.min_withdrawal_batch_size:
                         escrow.request_next_withdrawals_batch(total_requests)
-                    else:
-                        return ("dual_governance", dual_governance)
 
-                unstETH_ids = escrow.withdrawal_queue.get_withdrawal_requests(escrow.address)
+    return ("dual_governance", dual_governance)
 
-                last_finalized_request = escrow.withdrawal_queue.queue[
-                    escrow.withdrawal_queue.last_finalized_request_id
-                ]
-                request_to_finalize = escrow.withdrawal_queue.queue[unstETH_ids[-1]]
 
-                steth_to_finalize = request_to_finalize.cumulative_stETH - last_finalized_request.cumulative_stETH
+def calculate_withdrawal_amounts(params, substep, state_history, prev_state):
+    dual_governance: DualGovernance = prev_state["dual_governance"]
+    lido_exit_share: int = prev_state["lido_exit_share"]
+    last_withdrawal_day: date = prev_state["last_withdrawal_day"]
+    churn_rate: int = prev_state["churn_rate"]
+    time_manager: TimeManager = prev_state["time_manager"]
 
-                escrow.withdrawal_queue.finalize(unstETH_ids[-1], steth_to_finalize, 1 * 10**27)
-                escrow.claim_next_withdrawals_batch(len(unstETH_ids))
+    if dual_governance.state.rage_quit_escrow is None or dual_governance.get_current_state() != State.RageQuit:
+        return {"withdrawal_data": None}
 
-                buffered_ether = lido.get_buffered_ether()
-                new_buffered_ether = buffered_ether - steth_to_finalize
+    escrow = dual_governance.state.rage_quit_escrow
 
-                lido.set_buffered_ether(new_buffered_ether)
-                lido._burn_shares(escrow.withdrawal_queue.address, steth_to_finalize)
+    if len(escrow.withdrawal_queue.requests_by_owner) == 0:
+        return {"withdrawal_data": None}
 
-                if (
-                    len(requested_amounts) > 0
-                    and len(requested_amounts) < escrow.max_withdrawal_batch_size
-                    and escrow.batches_queue.is_all_unstETH_claimed()
-                ):
-                    escrow.batches_queue.close()
-                    escrow.start_rage_quit_extension_delay()
+    unstETH_ids = escrow.withdrawal_queue.get_withdrawal_requests(escrow.address)
+    if not unstETH_ids:
+        return {"withdrawal_data": None}
+
+    current_day = time_manager.get_current_time().date()
+
+    if last_withdrawal_day == current_day:
+        return {"withdrawal_data": None}
+
+    daily_withdrawal_limit = max_withdrawal_per_day(churn_rate, lido_exit_share)
+    last_finalized_request = escrow.withdrawal_queue.queue[escrow.withdrawal_queue.last_finalized_request_id]
+
+    withdrawals_to_process = []
+    total_to_finalize = 0
+
+    for unstETH_id in unstETH_ids:
+        if unstETH_id <= escrow.withdrawal_queue.last_finalized_request_id:
+            continue
+
+        if total_to_finalize >= daily_withdrawal_limit:
+            break
+
+        request_to_finalize = escrow.withdrawal_queue.queue[unstETH_id]
+        request_amount = request_to_finalize.cumulative_stETH - last_finalized_request.cumulative_stETH
+
+        if request_amount + total_to_finalize > daily_withdrawal_limit:
+            break
+
+        withdrawals_to_process.append({"unstETH_id": unstETH_id, "amount": request_amount})
+        total_to_finalize += request_amount
+        last_finalized_request = request_to_finalize
+
+    return {
+        "withdrawal_data": {
+            "withdrawals": withdrawals_to_process,
+            "total_amount": total_to_finalize,
+            "current_day": current_day,
+        }
+    }
+
+
+def update_last_withdrawal_day(params, substep, state_history, prev_state, policy_input):
+    withdrawal_data = policy_input["withdrawal_data"]
+
+    if withdrawal_data is None or len(withdrawal_data["withdrawals"]) == 0:
+        return ("last_withdrawal_day", prev_state["last_withdrawal_day"])
+
+    return ("last_withdrawal_day", withdrawal_data["current_day"])
+
+
+def process_withdrawals(params, substep, state_history, prev_state, policy_input):
+    dual_governance: DualGovernance = prev_state["dual_governance"]
+    lido: Lido = prev_state["lido"]
+    withdrawal_data = policy_input["withdrawal_data"]
+
+    if withdrawal_data is None or len(withdrawal_data["withdrawals"]) == 0:
+        return ("dual_governance", dual_governance)
+
+    escrow = dual_governance.state.rage_quit_escrow
+
+    escrow.withdrawal_queue.finalize(
+        withdrawal_data["withdrawals"][-1]["unstETH_id"], withdrawal_data["total_amount"], 1 * 10**27
+    )
+
+    escrow.claim_next_withdrawals_batch(len(withdrawal_data["withdrawals"]))
+
+    if withdrawal_data["total_amount"] > 0:
+        buffered_ether = lido.get_buffered_ether()
+        new_buffered_ether = buffered_ether - withdrawal_data["total_amount"]
+        lido.set_buffered_ether(new_buffered_ether)
+        lido._burn_shares(escrow.withdrawal_queue.address, withdrawal_data["total_amount"])
+
+    if escrow.batches_queue.is_all_unstETH_claimed():
+        escrow.batches_queue.close()
+        escrow.start_rage_quit_extension_delay()
 
     return ("dual_governance", dual_governance)

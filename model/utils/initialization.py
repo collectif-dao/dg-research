@@ -1,9 +1,10 @@
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Callable, List, Set, Tuple, Union
 
 import numpy as np
 
+from experiments.simulation_configuration import DELTA_TIME
 from model.actors.actors import Actors
 from model.parts.actors import actor_update_health
 from model.sys_params import CustomDelays
@@ -13,6 +14,7 @@ from model.types.proposal_type import ProposalGeneration, ProposalType
 from model.types.proposals import Proposal, ProposalSubType
 from model.types.reaction_time import ModeledReactions, ReactionTime
 from model.types.scenario import Scenario
+from model.utils.numbers import calculate_time_to_prepare_funds_deposit
 from model.utils.proposals_queue import ProposalQueueManager
 from model.utils.reactions import (
     ReactionDelayGenerator,
@@ -50,6 +52,9 @@ def generate_initial_state(
     determining_factor: int = 0,
     save_data_enabled: bool = True,
     custom_delays: CustomDelays = None,
+    lido_exit_share: int = 0.3,
+    churn_rate: int = 14,
+    timedelta_tick: timedelta = DELTA_TIME,
 ) -> Any:
     initialize_seed(seed)
 
@@ -160,6 +165,10 @@ def generate_initial_state(
         "timestep_data": {},
         "determining_factor": determining_factor,
         "save_data_enabled": save_data_enabled,
+        "lido_exit_share": lido_exit_share,
+        "churn_rate": churn_rate,
+        "timedelta_tick": timedelta_tick,
+        "last_withdrawal_day": simulation_starting_time.date(),
     }
 
 
@@ -229,9 +238,19 @@ def generate_actors(
             actor_types[attacker_indices] = attacker_type
 
             total_funds = actor_stETH[attacker_indices] + actor_wstETH[attacker_indices]
-            funds_needed = attacker_funds * ether_base - total_funds
+            funds_needed = (attacker_funds * ether_base) - total_funds
+            deposit_timeline = calculate_time_to_prepare_funds_deposit(np.sum(funds_needed))
+            print(
+                f"Attackers would need {np.sum(funds_needed) / ether_base} ETH and it would take {np.max(deposit_timeline)} days to prepare for an attack"
+            )
+
             actor_stETH[attacker_indices] += np.maximum(funds_needed, 0)
         else:
+            deposit_timeline = calculate_time_to_prepare_funds_deposit(attacker_funds * ether_base)
+            print(
+                f"Attackers would need {attacker_funds} ETH and it would take {deposit_timeline} days to prepare for an attack"
+            )
+
             actor_addresses = np.append(actor_addresses, "0xAttacker")
             actor_stETH = np.append(actor_stETH, attacker_funds * ether_base)
             actor_wstETH = np.append(actor_wstETH, 0)

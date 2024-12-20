@@ -7,7 +7,7 @@ from model.types.scenario import Scenario
 MONTE_CARLO_RUNS = 1
 SEED = 1888
 SCENARIO = Scenario.RageQuitLoop
-TIMESTEPS = calculate_timesteps(6)
+TIMESTEPS = calculate_timesteps(simulation_months=12)
 
 proposals = [
     Proposal(
@@ -26,9 +26,13 @@ attackers = {
 defenders = {}
 
 attacker_funds_list = [2_000_000]
+lido_exit_share_list = [0.3, 0.5, 0.7]
 dual_governance_params = [
-    DualGovernanceParameters(first_rage_quit_support=1, second_rage_quit_support=10, attacker_funds=funds)
+    DualGovernanceParameters(
+        first_rage_quit_support=1, second_rage_quit_support=10, attacker_funds=funds, lido_exit_share=share
+    )
     for funds in attacker_funds_list
+    for share in lido_exit_share_list
 ]
 
 

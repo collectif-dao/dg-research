@@ -10,6 +10,7 @@ def setup_seed(params, substep, state_history, prev_state):
         initialize_seed(prev_state["seed"])
     return {}
 
+
 state_update_blocks = [
     {
         "label": "Seed Initialization",
@@ -36,16 +37,16 @@ state_update_blocks = [
         "variables": {
             "dual_governance": proposals.cancel_proposals,
             "is_active_attack": proposals.deactivate_attack,
-            "actors": actors.actor_cancel_proposals
-        }
+            "actors": actors.actor_cancel_proposals,
+        },
     },
     {
         "label": "Proposal Scheduling and Execution",
         "policies": {"get_proposals_to_schedule_and_execute": proposals.get_proposals_to_schedule_and_execute},
         "variables": {
             "dual_governance": proposals.schedule_and_execute_proposals,
-            "actors": actors.actor_execute_proposals
-        }
+            "actors": actors.actor_execute_proposals,
+        },
     },
     {
         # agents.py, dg.py
@@ -58,7 +59,15 @@ state_update_blocks = [
         "label": "Spec Timestep",
         "policies": {"add_deltatime_to_dg": dg.add_deltatime_to_dg},
         "variables": {
-            "dual_governance": dg.update_dg_time_manager,
+            "dual_governance": dg.update_dual_governance_state,
+        },
+    },
+    {
+        "label": "Process Withdrawals",
+        "policies": {"calculate_withdrawal_amounts": dg.calculate_withdrawal_amounts},
+        "variables": {
+            "dual_governance": dg.process_withdrawals,
+            "last_withdrawal_day": dg.update_last_withdrawal_day,
         },
     },
     {
