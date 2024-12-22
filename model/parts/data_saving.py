@@ -224,6 +224,7 @@ def extract_common_data(params, state):
     common_data["last_withdrawal_day"] = str(state["last_withdrawal_day"])
     common_data["modeled_reactions"] = state["modeled_reactions"].name
     common_data["modeled_reactions_value"] = state["modeled_reactions"].value
+    common_data["wallet_csv_name"] = params["wallet_csv_name"]
 
     first_proposal_time = None
     if len(dual_governance.timelock.proposals.state.proposals) > 0:

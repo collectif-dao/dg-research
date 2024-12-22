@@ -5,33 +5,33 @@ import time
 
 from experiments.batch import run_simulation_batches
 from experiments.simulation_configuration import get_path
-from experiments.templates.actors_labelling import create_experiment as actors_labelling
-from experiments.templates.bribed_withdrawal_queue_replacement import (
-    create_experiment as bribed_withdrawal_queue_replacement,
-)
-from experiments.templates.constant_veto_signalling_loop import create_experiment as constant_veto_signalling_loop
-from experiments.templates.model_validation import create_experiment as model_validation_experiment
-from experiments.templates.rage_quit_loop import create_experiment as rage_quit_loop
-from experiments.templates.rage_quit_scenario import create_experiment as rage_quit_experiment
-from experiments.templates.signalling_thresholds_sweep_under_proposal_with_attack import (
-    create_experiment as signalling_thresholds_sweep_under_proposal_with_attack,
-)
-from experiments.templates.single_attack_sweep_first_threshold import (
-    create_experiment as single_attack_sweep_first_threshold,
-)
-from experiments.templates.single_attack_sweep_second_threshold import (
-    create_experiment as single_attack_sweep_second_threshold,
-)
-from experiments.templates.veto_signalling_loop import create_experiment as veto_signalling_loop
-from experiments.templates.withdrawal_queue_replacement import create_experiment as withdrawal_queue_experiment
-from experiments.templates.withdrawal_queue_replacement_institutional import (
-    create_experiment as withdrawal_queue_replacement_institutional,
-)
-from experiments.utils import (
-    merge_simulation_results,
-    save_combined_actors_simulation_result,
-    save_postprocessing_result,
-)
+from experiments.templates.actors_labelling import \
+    create_experiment as actors_labelling
+from experiments.templates.bribed_withdrawal_queue_replacement import \
+    create_experiment as bribed_withdrawal_queue_replacement
+from experiments.templates.constant_veto_signalling_loop import \
+    create_experiment as constant_veto_signalling_loop
+from experiments.templates.model_validation import \
+    create_experiment as model_validation_experiment
+from experiments.templates.rage_quit_loop import \
+    create_experiment as rage_quit_loop
+from experiments.templates.rage_quit_scenario import \
+    create_experiment as rage_quit_experiment
+from experiments.templates.signalling_thresholds_sweep_under_proposal_with_attack import \
+    create_experiment as signalling_thresholds_sweep_under_proposal_with_attack
+from experiments.templates.single_attack_sweep_first_threshold import \
+    create_experiment as single_attack_sweep_first_threshold
+from experiments.templates.single_attack_sweep_second_threshold import \
+    create_experiment as single_attack_sweep_second_threshold
+from experiments.templates.veto_signalling_loop import \
+    create_experiment as veto_signalling_loop
+from experiments.templates.withdrawal_queue_replacement import \
+    create_experiment as withdrawal_queue_experiment
+from experiments.templates.withdrawal_queue_replacement_institutional import \
+    create_experiment as withdrawal_queue_replacement_institutional
+from experiments.utils import (merge_simulation_results,
+                               save_combined_actors_simulation_result,
+                               save_postprocessing_result)
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)

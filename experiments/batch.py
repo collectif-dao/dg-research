@@ -5,10 +5,12 @@ from typing import Callable, Union
 
 from radcad import Backend, Engine, Experiment, Model, Simulation
 
-from experiments.utils import DualGovernanceParameters, construct_state_data, get_batch_hash, get_simulation_hash
+from experiments.utils import (DualGovernanceParameters, construct_state_data,
+                               get_batch_hash, get_simulation_hash)
 from model.state_update_blocks import state_update_blocks
 from model.sys_params import sys_params
-from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
+from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
+                                       ProposalType)
 from model.types.proposals import Proposal
 from model.types.reaction_time import ModeledReactions
 from model.types.scenario import Scenario
@@ -42,6 +44,7 @@ def setup_simulation_batch(
     save_files: bool = True,
     skip_existing_batches: bool = False,
     modeled_reactions: ModeledReactions = ModeledReactions.Normal,
+    wallet_csv_name: str = "stETH token distribution  - stETH+wstETH holders.csv",
 ):
     """Set up a single batch of simulations"""
     if dual_governance_params is None:
@@ -96,6 +99,7 @@ def setup_simulation_batch(
                 custom_delays=params.custom_delays,
                 lido_exit_share=params.lido_exit_share,
                 churn_rate=params.churn_rate,
+                wallet_csv_name=wallet_csv_name,
             )
 
             custom_delays = state["reaction_delay_generator"].custom_delays
@@ -120,6 +124,7 @@ def setup_simulation_batch(
                 custom_delays=custom_delays,
             )
 
+            sys_params["wallet_csv_name"] = wallet_csv_name
             simulation_hash = get_simulation_hash(
                 initial_state=state_data,
                 state_update_blocks=state_update_blocks,
@@ -194,6 +199,7 @@ def run_simulation_batches(
     skip_existing_batches: bool = False,
     execute_simulations: bool = False,
     modeled_reactions: ModeledReactions = ModeledReactions.Normal,
+    wallet_csv_name: str = "stETH token distribution  - stETH+wstETH holders.csv",
 ):
     """Run simulations in batches"""
     dual_governance_params = dual_governance_params or [DualGovernanceParameters()]
@@ -235,6 +241,7 @@ def run_simulation_batches(
             save_files=save_files,
             skip_existing_batches=skip_existing_batches,
             modeled_reactions=modeled_reactions,
+            wallet_csv_name=wallet_csv_name,
         )
 
         if experiment is None:

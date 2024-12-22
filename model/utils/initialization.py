@@ -1,5 +1,6 @@
 import csv
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Any, Callable, List, Set, Tuple, Union
 
 import numpy as np
@@ -16,11 +17,9 @@ from model.types.reaction_time import ModeledReactions, ReactionTime
 from model.types.scenario import Scenario
 from model.utils.numbers import calculate_time_to_prepare_funds_deposit
 from model.utils.proposals_queue import ProposalQueueManager
-from model.utils.reactions import (
-    ReactionDelayGenerator,
-    determine_governance_participation_vector,
-    determine_reaction_time_vector,
-)
+from model.utils.reactions import (ReactionDelayGenerator,
+                                   determine_governance_participation_vector,
+                                   determine_reaction_time_vector)
 from model.utils.seed import initialize_seed
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.proposals import ExecutorCall
@@ -55,6 +54,7 @@ def generate_initial_state(
     lido_exit_share: int = 0.3,
     churn_rate: int = 14,
     timedelta_tick: timedelta = DELTA_TIME,
+    wallet_csv_name: str = "stETH token distribution  - stETH+wstETH holders.csv",
 ) -> Any:
     initialize_seed(seed)
 
@@ -72,6 +72,7 @@ def generate_initial_state(
         institutional_threshold=institutional_threshold,
         attacker_funds=attacker_funds,
         determining_factor=determining_factor,
+        wallet_csv_name=wallet_csv_name,
     )
 
     time_manager = TimeManager(current_time=simulation_starting_time, simulation_start_time=simulation_starting_time)
@@ -191,6 +192,7 @@ def generate_actors(
     institutional_threshold: int = 0,
     attacker_funds: int = 0,
     determining_factor: int = 0,
+    wallet_csv_name: str = "stETH token distribution  - stETH+wstETH holders.csv",
 ) -> Actors:
     from model.utils.seed import get_rng
 
@@ -202,7 +204,7 @@ def generate_actors(
     actor_typestr = []
     actor_label = []
 
-    with open("data/stETH token distribution  - stETH+wstETH holders.csv", mode="r") as csv_file:
+    with open(Path("data").joinpath(wallet_csv_name), mode="r") as csv_file:
         csv_reader = csv.DictReader(csv_file, delimiter=",")
         for line_id, row in enumerate(csv_reader):
             if 0 < max_actors < line_id + 1:
@@ -305,7 +307,10 @@ def generate_actors(
         actor_label = np.array(
             [labeled_addresses.get(addr, label) for addr, label in zip(actor_addresses, actor_label)]
         )
-
+    # debug wallet_csv_name
+    mask = (actor_reaction_time == ReactionTime.Normal.value) | (actor_reaction_time == ReactionTime.Quick.value)
+    print((actor_stETH[mask] + actor_wstETH[mask]).sum() / (actor_stETH.sum() + actor_wstETH.sum()))
+    
     actors = Actors(
         address=actor_addresses,
         ldo=actor_ldo,
