@@ -7,7 +7,7 @@ from specs.utils import ether_base
 path_to_simulations = Path("experiments/results/simulations/")
 
 
-def read_directory(path: Path, drop_duplicates: bool = False) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def read_directory(path: Path, drop_duplicates: bool = False, pass_directory_name: bool = False) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     proposal_df_list, start_data_df_list, timestep_data_df_list = [], [], []
     for i, p_to_tables in enumerate(path.iterdir()):
         proposals_p = p_to_tables.joinpath("proposals_data.parquet")
@@ -16,11 +16,17 @@ def read_directory(path: Path, drop_duplicates: bool = False) -> tuple[pd.DataFr
         if not proposals_p.exists() or not start_data_p.exists() or not timestep_data_p.exists():
             # print(p_to_tables)
             continue
-        proposals_df = pd.read_parquet(proposals_p)
-        proposal_df_list.append(proposals_df)
         start_data_df = pd.read_parquet(start_data_p)
-        start_data_df_list.append(start_data_df)
+        proposals_df = pd.read_parquet(proposals_p)
         timestep_data_df = pd.read_parquet(timestep_data_p)
+
+        if pass_directory_name:
+            start_data_df["directory_name"] = p_to_tables.name
+            timestep_data_df["directory_name"] = p_to_tables.name
+            proposals_df["directory_name"] = p_to_tables.name
+
+        start_data_df_list.append(start_data_df)
+        proposal_df_list.append(proposals_df)
         timestep_data_df_list.append(timestep_data_df)
 
     proposal_df_full = pd.concat(proposal_df_list)

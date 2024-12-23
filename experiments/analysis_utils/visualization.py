@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import cm
+from matplotlib.ticker import PercentFormatter
 
 from experiments.analysis_utils.metrics import (
     calculate_pre_first_veto_states, calculate_state_counts,
@@ -309,11 +310,12 @@ def plot_state_distribution(timestep_data_df: pd.DataFrame, in_timesteps: bool =
         # Restore original parameters
         plt.rcParams.update(original_params)
 
-def plot_attack_success_rate(timestep_data_df_full, start_data_df_full):
+def plot_attack_success_rate(timestep_data_df_full, start_data_df_full, final_share: bool = True, hue: str = None):
     """
     Plot attack success rate vs attacker share with confidence intervals
     using individual run data.
     """
+
     from experiments.analysis_utils.metrics import calculate_time_to_first_veto
 
     sns.set_context('talk')
@@ -322,14 +324,30 @@ def plot_attack_success_rate(timestep_data_df_full, start_data_df_full):
     veto_times = calculate_time_to_first_veto(timestep_data_df_full)
     
     # Merge with start data to get attacker share
+    merge_cols = ['run_id', 'attacker_share']
+    if hue is not None:
+        merge_cols.append(hue)
     analysis_df = veto_times.merge(
-        start_data_df_full[['run_id', 'attacker_share']], 
+        start_data_df_full[merge_cols], 
         on='run_id'
     )
     
     # Mark runs as successful (no veto) or failed (veto occurred)
     analysis_df['attack_succeeded'] = analysis_df['time_to_first_veto'].isna()
     analysis_df['attack_success_binary'] = analysis_df['attack_succeeded'].astype(int) * 100
+
+    if not final_share:
+        analysis_df['added_pool_share'] = analysis_df['attacker_share'] / (1 - analysis_df['attacker_share'])
+        x_name = 'added_pool_share'
+        x_big_name = 'Added Pool Share'
+    else:
+        x_name = 'attacker_share'
+        x_big_name = 'Attacker Share'
+
+    if hue is not None:
+        kwargs = {'hue': hue}
+    else:
+        kwargs = {}
     
     # Create the plot
     ratio = 6 / 10
@@ -337,24 +355,25 @@ def plot_attack_success_rate(timestep_data_df_full, start_data_df_full):
     plt.figure(figsize=(base_size, base_size * ratio))
     sns.lineplot(
         data=analysis_df,
-        x='attacker_share',
+        x=x_name,
         y='attack_success_binary',
         errorbar=('ci', 95),  # 95% confidence interval
-        marker='o'
+        marker='o',
+        **kwargs
     )
     
-    plt.title('Attack Success Rate vs Attacker Share')
-    plt.xlabel('Attacker Share')
+    plt.title(f'Attack Success Rate vs {x_big_name}')
+    plt.xlabel(x_big_name)
     plt.ylabel('Attack Success Rate')
     
     # Format x-axis as percentage
     current_values = plt.gca().get_xticks()
-    plt.gca().set_xticklabels([f'{x:.0%}' for x in current_values])
+    plt.gca().xaxis.set_major_formatter(PercentFormatter(1.0))
     current_values = plt.gca().get_yticks()
-    plt.gca().set_yticklabels([f'{x:.0f}%' for x in current_values])
+    plt.gca().yaxis.set_major_formatter(PercentFormatter(100))
     
     plt.grid(True)
-    plt.show()
+    return plt.gcf()
 
 def plot_veto_success_rate_by_column(timestep_data_df_full, start_data_df_full, column: str, xlabel:str = None):
     """
@@ -397,12 +416,12 @@ def plot_veto_success_rate_by_column(timestep_data_df_full, start_data_df_full, 
     
     # Format x-axis as percentage
     current_values = plt.gca().get_xticks()
-    plt.gca().set_xticklabels([f'{x:.0f}%' for x in current_values])
+    plt.gca().xaxis.set_major_formatter(PercentFormatter(1.0))
     current_values = plt.gca().get_yticks()
-    plt.gca().set_yticklabels([f'{x:.0f}%' for x in current_values])
+    plt.gca().yaxis.set_major_formatter(PercentFormatter(1.0))
     
     plt.grid(True)
-    plt.show()
+    return plt.gcf()
 
 def plot_expected_attacker_gains(timestep_data_df_full, start_data_df_full):
     """

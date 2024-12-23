@@ -307,9 +307,6 @@ def generate_actors(
         actor_label = np.array(
             [labeled_addresses.get(addr, label) for addr, label in zip(actor_addresses, actor_label)]
         )
-    # debug wallet_csv_name
-    mask = (actor_reaction_time == ReactionTime.Normal.value) | (actor_reaction_time == ReactionTime.Quick.value)
-    print((actor_stETH[mask] + actor_wstETH[mask]).sum() / (actor_stETH.sum() + actor_wstETH.sum()))
     
     actors = Actors(
         address=actor_addresses,
