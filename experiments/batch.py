@@ -122,6 +122,8 @@ def setup_simulation_batch(
                 attacker_funds=state["attacker_funds"],
                 determining_factor=state["determining_factor"],
                 custom_delays=custom_delays,
+                lido_exit_share=state["lido_exit_share"],
+                churn_rate=state["churn_rate"],
             )
 
             sys_params["wallet_csv_name"] = wallet_csv_name
