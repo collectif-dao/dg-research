@@ -4,10 +4,11 @@ from model.types.proposal_type import ProposalGeneration, ProposalSubType, Propo
 from model.types.proposals import Proposal
 from model.types.scenario import Scenario
 
-MONTE_CARLO_RUNS = 1
+MONTE_CARLO_RUNS = 100
 SEED = 1888
 SCENARIO = Scenario.RageQuitLoop
-TIMESTEPS = calculate_timesteps(simulation_months=12)
+TIMESTEPS = calculate_timesteps(simulation_months=24)
+# TIMESTEPS = 1800
 
 proposals = [
     Proposal(
@@ -21,18 +22,25 @@ proposals = [
 
 attackers = {
     "0x5eea56d346aa5bc5aea1786169e1f4b8699e882d",
-    "0x5313b39bf226ced2332c81eb97bb28c6fd50d1a3",
+    # "0x5313b39bf226ced2332c81eb97bb28c6fd50d1a3",
 }
 defenders = {}
 
 attacker_funds_list = [2_000_000]
-lido_exit_share_list = [0.3, 0.5, 0.7]
+lido_exit_share_list = [0.3]
+deposit_caps = [300_000]
 dual_governance_params = [
     DualGovernanceParameters(
-        first_rage_quit_support=1, second_rage_quit_support=10, attacker_funds=funds, lido_exit_share=share
+        first_rage_quit_support=1,
+        second_rage_quit_support=10,
+        attacker_funds=funds,
+        lido_exit_share=share,
+        deposit_cap=cap,
+        process_deposits=True,
     )
     for funds in attacker_funds_list
     for share in lido_exit_share_list
+    for cap in deposit_caps
 ]
 
 

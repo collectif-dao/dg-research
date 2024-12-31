@@ -71,6 +71,7 @@ class Actors:
         self.actor_type = actor_type
         self.reaction_time = reaction_time
         self.governance_participation = governance_participation
+        self.eth_balance = np.zeros_like(self.stETH)
 
         self.next_hp_check_timestamp = reaction_delay_generator.generate_initial_reaction_time_vector(
             self.reaction_time
@@ -596,3 +597,12 @@ class Actors:
         needed_funds = (needed_support * total_supply) // 10**18
         if attacker_funds >= needed_funds:
             reactions[mask] = ActorReaction.Lock.value
+
+    def register_eth_withdrawals(self, eth_amounts: np.ndarray, withdrawal_mask: np.ndarray):
+        """Register ETH withdrawals for multiple actors in a single operation"""
+        self.eth_balance[withdrawal_mask] += eth_amounts[withdrawal_mask]
+
+    def process_deposits(self, deposit_amounts: np.ndarray, deposit_mask: np.ndarray):
+        """Process deposits for multiple actors in a single operation"""
+        self.eth_balance[deposit_mask] -= deposit_amounts[deposit_mask]
+        self.stETH[deposit_mask] += deposit_amounts[deposit_mask]

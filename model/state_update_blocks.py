@@ -2,6 +2,7 @@ import model.parts.actors as actors
 import model.parts.data_saving as data_saving
 import model.parts.dg as dg
 import model.parts.proposals as proposals
+from model.parts import deposits, withdrawals
 from model.utils.seed import initialize_seed
 
 
@@ -63,11 +64,31 @@ state_update_blocks = [
         },
     },
     {
-        "label": "Process Withdrawals",
-        "policies": {"calculate_withdrawal_amounts": dg.calculate_withdrawal_amounts},
+        "label": "Process Withdrawals from Withdrawal Queue",
+        "policies": {"calculate_withdrawal_amounts": dg.calculate_withdrawal_amounts_for_finalization_and_claims},
         "variables": {
-            "dual_governance": dg.process_withdrawals,
+            "dual_governance": dg.process_finalization_and_claims,
             "last_withdrawal_day": dg.update_last_withdrawal_day,
+        },
+    },
+    {
+        "label": "Track Rage Quit Escrows",
+        "policies": {},
+        "variables": {"rage_quit_escrows": withdrawals.track_rage_quit_escrow},
+    },
+    {
+        "label": "Process ETH Withdrawals by Actors",
+        "policies": {"eth_withdrawal_data": withdrawals.calculate_eth_withdrawals},
+        "variables": {
+            "actors": withdrawals.process_eth_withdrawals,
+        },
+    },
+    {
+        "label": "Process Deposits",
+        "policies": {"calculate_deposit_amounts": deposits.calculate_deposit_amounts},
+        "variables": {
+            "dual_governance": deposits.process_deposits,
+            "last_deposit_day": deposits.update_last_deposit_day,
         },
     },
     {

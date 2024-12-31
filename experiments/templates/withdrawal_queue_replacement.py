@@ -9,7 +9,7 @@ from model.types.scenario import Scenario
 MONTE_CARLO_RUNS = 1000
 SEED = 241
 SCENARIO = Scenario.SingleAttack
-TIMESTEPS = 450
+TIMESTEPS = 1500
 
 attackers = {"0x91bef2fd282aaa7612c593c4d83c0efaf6200954"}
 defenders = {}
@@ -38,10 +38,12 @@ dual_governance_params = [
         first_rage_quit_support=thresh1,
         second_rage_quit_support=thresh2,
         custom_delays=custom_delay,
+        modeled_reactions=modeled_reactions,
     )
     for custom_delay in custom_delays
     for thresh1 in first_thresholds
     for thresh2 in second_thresholds
+    for modeled_reactions in [ModeledReactions.Normal, ModeledReactions.Slowed, ModeledReactions.Accelerated]
 ]
 
 
@@ -55,7 +57,6 @@ def create_experiment(simulation_name: str = "withdrawal_queue_replacement", ret
         "proposal_types": ProposalType.Danger,
         "proposal_subtypes": ProposalSubType.FundsStealing,
         "proposals_generation": ProposalGeneration.NoGeneration,
-        "modeled_reactions": ModeledReactions.Normal,
         "proposals": proposals,
         "attackers": attackers,
         "defenders": defenders,

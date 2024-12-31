@@ -17,9 +17,11 @@ from model.types.reaction_time import ModeledReactions, ReactionTime
 from model.types.scenario import Scenario
 from model.utils.numbers import calculate_time_to_prepare_funds_deposit
 from model.utils.proposals_queue import ProposalQueueManager
-from model.utils.reactions import (ReactionDelayGenerator,
-                                   determine_governance_participation_vector,
-                                   determine_reaction_time_vector)
+from model.utils.reactions import (
+    ReactionDelayGenerator,
+    determine_governance_participation_vector,
+    determine_reaction_time_vector,
+)
 from model.utils.seed import initialize_seed
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.proposals import ExecutorCall
@@ -55,6 +57,8 @@ def generate_initial_state(
     churn_rate: int = 14,
     timedelta_tick: timedelta = DELTA_TIME,
     wallet_csv_name: str = "stETH token distribution  - stETH+wstETH holders.csv",
+    deposit_cap: int = 300_000,
+    process_deposits: bool = False,
 ) -> Any:
     initialize_seed(seed)
 
@@ -91,7 +95,7 @@ def generate_initial_state(
 
     dual_governance = DualGovernance()
     dual_governance.initialize(
-        escrow_address=Address.test_escrow_address,
+        escrow_address="",
         time_manager=time_manager,
         lido=lido,
         activation_committee="",
@@ -170,6 +174,10 @@ def generate_initial_state(
         "churn_rate": churn_rate,
         "timedelta_tick": timedelta_tick,
         "last_withdrawal_day": simulation_starting_time.date(),
+        "deposit_cap": deposit_cap * ether_base,
+        "last_deposit_day": simulation_starting_time.date(),
+        "rage_quit_escrows": [],
+        "process_deposits": process_deposits,
     }
 
 
@@ -307,7 +315,7 @@ def generate_actors(
         actor_label = np.array(
             [labeled_addresses.get(addr, label) for addr, label in zip(actor_addresses, actor_label)]
         )
-    
+
     actors = Actors(
         address=actor_addresses,
         ldo=actor_ldo,

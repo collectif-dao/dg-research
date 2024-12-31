@@ -10,7 +10,7 @@ system_parameters = {
     "veto_cooldown_duration": 5,
     "rage_quit_extension_delay": 7,
     "rage_quit_eth_withdrawals_min_timelock": 60,
-    "rage_quit_eth_withdrawals_timelock_growth_start_seq_number": 2,
-    "rage_quit_eth_withdrawals_timelock_growth_coeffs": [0, 0, 0],
+    "rage_quit_eth_withdrawals_max_timelock": 180,
+    "rage_quit_eth_withdrawals_delay_growth": 15,
     "tie_break_activation_timeout": 365,
 }

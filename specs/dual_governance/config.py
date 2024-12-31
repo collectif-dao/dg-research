@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import timedelta
 
 from specs.parameters import system_parameters
@@ -35,12 +35,13 @@ class DualGovernanceConfig:
     rage_quit_eth_withdrawals_min_timelock: Timestamp = default(
         Timestamp(int(timedelta(days=system_parameters["rage_quit_eth_withdrawals_min_timelock"]).total_seconds()))
     )
-    rage_quit_eth_withdrawals_timelock_growth_start_seq_number: int = default(
-        system_parameters["rage_quit_eth_withdrawals_timelock_growth_start_seq_number"]
+
+    rage_quit_eth_withdrawals_max_timelock: Timestamp = default(
+        Timestamp(int(timedelta(days=system_parameters["rage_quit_eth_withdrawals_max_timelock"]).total_seconds()))
     )
 
-    rage_quit_eth_withdrawals_timelock_growth_coeffs: list = field(
-        default_factory=lambda: system_parameters["rage_quit_eth_withdrawals_timelock_growth_coeffs"]
+    rage_quit_eth_withdrawals_delay_growth: Timestamp = default(
+        Timestamp(int(timedelta(days=system_parameters["rage_quit_eth_withdrawals_delay_growth"]).total_seconds()))
     )
 
     tie_break_activation_timeout: Timestamp = default(

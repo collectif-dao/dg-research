@@ -36,6 +36,9 @@ class DualGovernanceParameters:
     custom_delays: CustomDelays = CustomDelays()
     lido_exit_share: int = 0.3
     churn_rate: int = 14
+    modeled_reactions: ModeledReactions = ModeledReactions.Normal
+    deposit_cap: int = 300_000
+    process_deposits: bool = False
 
 
 def get_simulation_hash(initial_state=None, state_update_blocks=None, params=None, timesteps=None):
@@ -78,7 +81,6 @@ def setup_simulation(
     time_profiling: bool = False,
     save_files: bool = True,
     batch_size: int = 100,
-    modeled_reactions: ModeledReactions = ModeledReactions.Normal,
 ):
     simulations: list[Simulation] = []
     simulation_hashes: list[str] = []
@@ -101,7 +103,7 @@ def setup_simulation(
 
             state = generate_initial_state(
                 scenario,
-                modeled_reactions,
+                params.modeled_reactions,
                 proposal_types,
                 proposal_subtypes,
                 proposals_generation,
@@ -120,6 +122,7 @@ def setup_simulation(
                 custom_delays=params.custom_delays,
                 lido_exit_share=params.lido_exit_share,
                 churn_rate=params.churn_rate,
+                process_deposits=params.process_deposits,
             )
 
             state_custom_delays = state["reaction_delay_generator"].custom_delays
@@ -142,6 +145,7 @@ def setup_simulation(
                 attacker_funds=state["attacker_funds"],
                 determining_factor=state["determining_factor"],
                 custom_delays=state_custom_delays,
+                process_deposits=state["process_deposits"],
             )
 
             simulation_hash = get_simulation_hash(

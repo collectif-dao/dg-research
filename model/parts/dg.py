@@ -42,46 +42,68 @@ def update_escrow(params, substep, state_history, prev_state, policy_input):
 
         if stETH_amount < 0 and wstETH_amount == 0:
             lock_time = int(dual_governance.state.signalling_escrow.signaling_escrow_min_lock_time.total_seconds())
-            assetsUnlockAllowedAfter = dual_governance.state.signalling_escrow.accounting.state.assets[
-                actor_address
-            ].lastAssetsLockTimestamp + Timestamp.from_uint256(lock_time)
+            if actor_address in dual_governance.state.signalling_escrow.accounting.state.assets:
+                assetsUnlockAllowedAfter = dual_governance.state.signalling_escrow.accounting.state.assets[
+                    actor_address
+                ].lastAssetsLockTimestamp + Timestamp.from_uint256(lock_time)
 
-            if (
-                dual_governance.state.signalling_escrow.time_manager.get_current_timestamp_value()
-                <= assetsUnlockAllowedAfter
-            ):
-                continue
-            else:
-                dual_governance.state.signalling_escrow.unlock_stETH(actor_address)
+                if (
+                    dual_governance.state.signalling_escrow.time_manager.get_current_timestamp_value()
+                    <= assetsUnlockAllowedAfter
+                ):
+                    continue
+                else:
+                    withdraw_amount = stETH_amount * -1
+                    escrow_balance = dual_governance.state.signalling_escrow.lido.balance_of(
+                        dual_governance.state.signalling_escrow.address
+                    )
+
+                    if escrow_balance >= withdraw_amount:
+                        dual_governance.state.signalling_escrow.unlock_stETH(actor_address)
 
         if wstETH_amount < 0 and stETH_amount == 0:
             lock_time = int(dual_governance.state.signalling_escrow.signaling_escrow_min_lock_time.total_seconds())
 
-            assetsUnlockAllowedAfter = dual_governance.state.signalling_escrow.accounting.state.assets[
-                actor_address
-            ].lastAssetsLockTimestamp + Timestamp.from_uint256(lock_time)
+            if actor_address in dual_governance.state.signalling_escrow.accounting.state.assets:
+                assetsUnlockAllowedAfter = dual_governance.state.signalling_escrow.accounting.state.assets[
+                    actor_address
+                ].lastAssetsLockTimestamp + Timestamp.from_uint256(lock_time)
 
-            if (
-                dual_governance.state.signalling_escrow.time_manager.get_current_timestamp_value()
-                <= assetsUnlockAllowedAfter
-            ):
-                continue
-            else:
-                dual_governance.state.signalling_escrow.unlock_wstETH(actor_address)
+                if (
+                    dual_governance.state.signalling_escrow.time_manager.get_current_timestamp_value()
+                    <= assetsUnlockAllowedAfter
+                ):
+                    continue
+                else:
+                    withdraw_amount = wstETH_amount * -1
+                    escrow_balance = dual_governance.state.signalling_escrow.lido.balance_of(
+                        dual_governance.state.signalling_escrow.address
+                    )
+
+                    if escrow_balance >= withdraw_amount:
+                        dual_governance.state.signalling_escrow.unlock_wstETH(actor_address)
 
         if wstETH_amount < 0 and stETH_amount < 0:
             lock_time = int(dual_governance.state.signalling_escrow.signaling_escrow_min_lock_time.total_seconds())
-            assetsUnlockAllowedAfter = dual_governance.state.signalling_escrow.accounting.state.assets[
-                actor_address
-            ].lastAssetsLockTimestamp + Timestamp.from_uint256(lock_time)
 
-            if (
-                dual_governance.state.signalling_escrow.time_manager.get_current_timestamp_value()
-                <= assetsUnlockAllowedAfter
-            ):
-                continue
-            else:
-                dual_governance.state.signalling_escrow.unlock_stETH(actor_address)
+            if actor_address in dual_governance.state.signalling_escrow.accounting.state.assets:
+                assetsUnlockAllowedAfter = dual_governance.state.signalling_escrow.accounting.state.assets[
+                    actor_address
+                ].lastAssetsLockTimestamp + Timestamp.from_uint256(lock_time)
+
+                if (
+                    dual_governance.state.signalling_escrow.time_manager.get_current_timestamp_value()
+                    <= assetsUnlockAllowedAfter
+                ):
+                    continue
+                else:
+                    withdraw_amount = (wstETH_amount * -1) + (stETH_amount * -1)
+                    escrow_balance = dual_governance.state.signalling_escrow.lido.balance_of(
+                        dual_governance.state.signalling_escrow.address
+                    )
+
+                    if escrow_balance >= withdraw_amount:
+                        dual_governance.state.signalling_escrow.unlock_stETH(actor_address)
 
         if reaction == ActorReaction.Quit.value:
             ## TODO: implement
@@ -152,7 +174,7 @@ def update_dual_governance_state(params, substep, state_history, prev_state, pol
     return ("dual_governance", dual_governance)
 
 
-def calculate_withdrawal_amounts(params, substep, state_history, prev_state):
+def calculate_withdrawal_amounts_for_finalization_and_claims(params, substep, state_history, prev_state):
     dual_governance: DualGovernance = prev_state["dual_governance"]
     lido_exit_share: int = prev_state["lido_exit_share"]
     last_withdrawal_day: date = prev_state["last_withdrawal_day"]
@@ -217,7 +239,7 @@ def update_last_withdrawal_day(params, substep, state_history, prev_state, polic
     return ("last_withdrawal_day", withdrawal_data["current_day"])
 
 
-def process_withdrawals(params, substep, state_history, prev_state, policy_input):
+def process_finalization_and_claims(params, substep, state_history, prev_state, policy_input):
     dual_governance: DualGovernance = prev_state["dual_governance"]
     lido: Lido = prev_state["lido"]
     withdrawal_data = policy_input["withdrawal_data"]

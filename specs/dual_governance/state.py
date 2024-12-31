@@ -6,7 +6,7 @@ from specs.escrow.escrow import Escrow
 from specs.lido import Lido
 from specs.time_manager import TimeManager
 from specs.types.timestamp import Timestamp
-from specs.utils import ether_base
+from specs.utils import generate_address
 
 from .config import DualGovernanceConfig
 from .errors import Errors
@@ -237,26 +237,19 @@ class DualGovernanceState:
         return self.time_manager.get_current_timestamp_value() > self.config.veto_cooldown_duration + self.entered_at
 
     def _deploy_new_signalling_escrow(self, escrow_master_copy, time_manager: TimeManager, lido: Lido):
-        clone = Escrow(escrow_master_copy)
-        clone.initialize(escrow_master_copy, lido, self, time_manager)
+        address = generate_address() if not escrow_master_copy or escrow_master_copy == "" else escrow_master_copy
+
+        clone = Escrow(address)
+        clone.initialize(address, lido, self, time_manager)
         self.signalling_escrow = clone
 
-    def _calc_rage_quit_withdrawals_timelock(self, rage_quit_round):
-        if rage_quit_round < self.config.rage_quit_eth_withdrawals_timelock_growth_start_seq_number:
-            return self.config.rage_quit_eth_withdrawals_min_timelock
-
-        time = int(
-            timedelta(
-                seconds=(
-                    self.config.rage_quit_eth_withdrawals_timelock_growth_coeffs[0] * rage_quit_round * rage_quit_round
-                    + self.config.rage_quit_eth_withdrawals_timelock_growth_coeffs[1] * rage_quit_round
-                    + self.config.rage_quit_eth_withdrawals_timelock_growth_coeffs[2]
-                )
-                / ether_base
-            ).total_seconds()
+    def _calc_rage_quit_withdrawals_timelock(self, rage_quit_round) -> Timestamp:
+        left = self.config.rage_quit_eth_withdrawals_min_timelock + Timestamp.from_uint256(
+            (rage_quit_round * self.config.rage_quit_eth_withdrawals_delay_growth.to_seconds())
         )
+        right = self.config.rage_quit_eth_withdrawals_max_timelock
 
-        return self.config.rage_quit_eth_withdrawals_min_timelock + Timestamp.from_uint256(time)
+        return min(left, right)
 
     def _calc_dynamic_timelock_duration(self, rage_quit_support) -> Timestamp:
         first_seal_rage_quit_support = self.config.first_seal_rage_quit_support

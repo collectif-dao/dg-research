@@ -18,8 +18,10 @@ dual_governance_params = [
         first_rage_quit_support=1,
         second_rage_quit_support=10,
         determining_factor=determining_factor,
+        modeled_reactions=modeled_reaction,
     )
     for determining_factor in determining_factors
+    for modeled_reaction in [ModeledReactions.Normal]
 ]
 
 proposals = [
@@ -50,7 +52,6 @@ def create_experiment(simulation_name: str = "bribed_withdrawal_queue_replacemen
         "proposal_types": ProposalType.Danger,
         "proposal_subtypes": ProposalSubType.Bribing,
         "proposals_generation": ProposalGeneration.NoGeneration,
-        "modeled_reactions": ModeledReactions.Normal,
         "proposals": proposals,
         "attackers": attackers,
         "seed": SEED,

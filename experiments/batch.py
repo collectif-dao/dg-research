@@ -5,14 +5,11 @@ from typing import Callable, Union
 
 from radcad import Backend, Engine, Experiment, Model, Simulation
 
-from experiments.utils import (DualGovernanceParameters, construct_state_data,
-                               get_batch_hash, get_simulation_hash)
+from experiments.utils import DualGovernanceParameters, construct_state_data, get_batch_hash, get_simulation_hash
 from model.state_update_blocks import state_update_blocks
 from model.sys_params import sys_params
-from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
-                                       ProposalType)
+from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
 from model.types.proposals import Proposal
-from model.types.reaction_time import ModeledReactions
 from model.types.scenario import Scenario
 from model.utils.initialization import generate_initial_state
 from specs.utils import percent_base
@@ -43,7 +40,6 @@ def setup_simulation_batch(
     time_profiling: bool = False,
     save_files: bool = True,
     skip_existing_batches: bool = False,
-    modeled_reactions: ModeledReactions = ModeledReactions.Normal,
     wallet_csv_name: str = "stETH token distribution  - stETH+wstETH holders.csv",
 ):
     """Set up a single batch of simulations"""
@@ -78,7 +74,7 @@ def setup_simulation_batch(
 
             state = generate_initial_state(
                 scenario,
-                modeled_reactions,
+                params.modeled_reactions,
                 proposal_types,
                 proposal_subtypes,
                 proposals_generation,
@@ -100,6 +96,8 @@ def setup_simulation_batch(
                 lido_exit_share=params.lido_exit_share,
                 churn_rate=params.churn_rate,
                 wallet_csv_name=wallet_csv_name,
+                deposit_cap=params.deposit_cap,
+                process_deposits=params.process_deposits,
             )
 
             custom_delays = state["reaction_delay_generator"].custom_delays
@@ -124,6 +122,8 @@ def setup_simulation_batch(
                 custom_delays=custom_delays,
                 lido_exit_share=state["lido_exit_share"],
                 churn_rate=state["churn_rate"],
+                deposit_cap=state["deposit_cap"],
+                process_deposits=state["process_deposits"],
             )
 
             sys_params["wallet_csv_name"] = wallet_csv_name
@@ -200,7 +200,6 @@ def run_simulation_batches(
     batch_size: int = 100,
     skip_existing_batches: bool = False,
     execute_simulations: bool = False,
-    modeled_reactions: ModeledReactions = ModeledReactions.Normal,
     wallet_csv_name: str = "stETH token distribution  - stETH+wstETH holders.csv",
 ):
     """Run simulations in batches"""
@@ -242,7 +241,6 @@ def run_simulation_batches(
             time_profiling=time_profiling,
             save_files=save_files,
             skip_existing_batches=skip_existing_batches,
-            modeled_reactions=modeled_reactions,
             wallet_csv_name=wallet_csv_name,
         )
 
