@@ -5,10 +5,12 @@ from typing import Callable, Union
 
 from radcad import Backend, Engine, Experiment, Model, Simulation
 
-from experiments.utils import DualGovernanceParameters, construct_state_data, get_batch_hash, get_simulation_hash
+from experiments.utils import (DualGovernanceParameters, construct_state_data,
+                               get_batch_hash, get_simulation_hash)
 from model.state_update_blocks import state_update_blocks
 from model.sys_params import sys_params
-from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
+from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
+                                       ProposalType)
 from model.types.proposals import Proposal
 from model.types.scenario import Scenario
 from model.utils.initialization import generate_initial_state
@@ -41,6 +43,7 @@ def setup_simulation_batch(
     save_files: bool = True,
     skip_existing_batches: bool = False,
     wallet_csv_name: str = "stETH token distribution  - stETH+wstETH holders.csv",
+    normalize_funds: int = 0,
 ):
     """Set up a single batch of simulations"""
     if dual_governance_params is None:
@@ -98,6 +101,7 @@ def setup_simulation_batch(
                 wallet_csv_name=wallet_csv_name,
                 deposit_cap=params.deposit_cap,
                 process_deposits=params.process_deposits,
+                normalize_funds=normalize_funds,
             )
 
             custom_delays = state["reaction_delay_generator"].custom_delays
@@ -124,6 +128,7 @@ def setup_simulation_batch(
                 churn_rate=state["churn_rate"],
                 deposit_cap=state["deposit_cap"],
                 process_deposits=state["process_deposits"],
+                normalize_funds=state["normalize_funds"],
             )
 
             sys_params["wallet_csv_name"] = wallet_csv_name
@@ -201,6 +206,7 @@ def run_simulation_batches(
     skip_existing_batches: bool = False,
     execute_simulations: bool = False,
     wallet_csv_name: str = "stETH token distribution  - stETH+wstETH holders.csv",
+    normalize_funds: int = 0
 ):
     """Run simulations in batches"""
     dual_governance_params = dual_governance_params or [DualGovernanceParameters()]
@@ -242,6 +248,7 @@ def run_simulation_batches(
             save_files=save_files,
             skip_existing_batches=skip_existing_batches,
             wallet_csv_name=wallet_csv_name,
+            normalize_funds=normalize_funds,
         )
 
         if experiment is None:

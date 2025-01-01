@@ -1,13 +1,18 @@
-from experiments.simulation_configuration import SIMULATION_TIME, calculate_timesteps, get_path
+import numpy as np
+
+from experiments.simulation_configuration import (SIMULATION_TIME,
+                                                  calculate_timesteps,
+                                                  get_path)
 from experiments.utils import DualGovernanceParameters, setup_simulation
-from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
+from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
+                                       ProposalType)
 from model.types.proposals import Proposal
 from model.types.scenario import Scenario
 
-MONTE_CARLO_RUNS = 100
+MONTE_CARLO_RUNS = 1
 SEED = 1888
 SCENARIO = Scenario.RageQuitLoop
-TIMESTEPS = calculate_timesteps(simulation_months=24)
+TIMESTEPS = calculate_timesteps(simulation_months=48)
 # TIMESTEPS = 1800
 
 proposals = [
@@ -26,7 +31,15 @@ attackers = {
 }
 defenders = {}
 
-attacker_funds_list = [2_000_000]
+total_balance = 9000000
+
+def get_share(k):
+    return k / (1 - k)
+
+shares = np.array([0.1, 0.19, 0.271, 0.344]) + 0.0001
+# shares = np.array([0.1, 0.2, 0.3, 0.4]) + 0.03
+attacker_funds_list = [int(np.round(total_balance * get_share(share))) for share in shares]
+print(attacker_funds_list)
 lido_exit_share_list = [0.3]
 deposit_caps = [300_000]
 dual_governance_params = [
@@ -60,6 +73,7 @@ def create_experiment(simulation_name: str = "rage_quit_loop", return_template: 
         "seed": SEED,
         "simulation_starting_time": SIMULATION_TIME,
         "dual_governance_params": dual_governance_params,
+        "normalize_funds": total_balance // 2,
     }
 
     if return_template:
