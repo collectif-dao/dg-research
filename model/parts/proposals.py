@@ -107,6 +107,27 @@ def generate_proposal(params, substep, state_history, prev_state):
                             prev_state["proposal_subtypes"],
                         )
 
+    elif prev_state["is_active_attack"] and scenario == Scenario.VetoSignallingLoop:
+        match proposal_generation:
+            case ProposalGeneration.Loop:
+                attackers: Set[str] = prev_state["attackers"]
+                active_attackers = len(attackers)
+
+                if active_attackers > 0:
+                    rng = get_rng()
+                    attacker = rng.choice(tuple(attackers))
+
+                    if queue.count() == 0:
+                        proposal = new_proposal(
+                            prev_state["timestep"],
+                            new_proposal_id,
+                            attacker,
+                            scenario,
+                            prev_state["proposal_types"],
+                            prev_state["proposal_subtypes"],
+                            cancelable=False,
+                        )
+
     if proposal is not None:
         queue.append_proposal(proposal)
     proposals = queue.pop_proposals_for_registration(timestep)

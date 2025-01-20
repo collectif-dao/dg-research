@@ -59,6 +59,7 @@ class DualGovernanceState:
             self._handle_state_transition_side_effects(old_state, new_state)
 
     def check_proposals_creation_allowed(self):
+        ## TODO: Add additional checks from the actual specification
         if not self.is_proposals_creation_allowed():
             raise Errors.ProposalsCreationSuspended
 

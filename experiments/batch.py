@@ -5,12 +5,10 @@ from typing import Callable, Union
 
 from radcad import Backend, Engine, Experiment, Model, Simulation
 
-from experiments.utils import (DualGovernanceParameters, construct_state_data,
-                               get_batch_hash, get_simulation_hash)
+from experiments.utils import DualGovernanceParameters, construct_state_data, get_batch_hash, get_simulation_hash
 from model.state_update_blocks import state_update_blocks
 from model.sys_params import sys_params
-from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
-                                       ProposalType)
+from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
 from model.types.proposals import Proposal
 from model.types.scenario import Scenario
 from model.utils.initialization import generate_initial_state
@@ -206,7 +204,7 @@ def run_simulation_batches(
     skip_existing_batches: bool = False,
     execute_simulations: bool = False,
     wallet_csv_name: str = "stETH token distribution  - stETH+wstETH holders.csv",
-    normalize_funds: int = 0
+    normalize_funds: int = 0,
 ):
     """Run simulations in batches"""
     dual_governance_params = dual_governance_params or [DualGovernanceParameters()]

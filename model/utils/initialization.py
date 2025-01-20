@@ -17,9 +17,11 @@ from model.types.reaction_time import ModeledReactions, ReactionTime
 from model.types.scenario import Scenario
 from model.utils.numbers import calculate_time_to_prepare_funds_deposit
 from model.utils.proposals_queue import ProposalQueueManager
-from model.utils.reactions import (ReactionDelayGenerator,
-                                   determine_governance_participation_vector,
-                                   determine_reaction_time_vector)
+from model.utils.reactions import (
+    ReactionDelayGenerator,
+    determine_governance_participation_vector,
+    determine_reaction_time_vector,
+)
 from model.utils.seed import initialize_seed
 from specs.dual_governance import DualGovernance
 from specs.dual_governance.proposals import ExecutorCall
@@ -78,14 +80,14 @@ def generate_initial_state(
         wallet_csv_name=wallet_csv_name,
         normalize_funds=normalize_funds,
     )
-    if attackers:
-        attacker_mask = np.isin(actors.address, list(attackers))
-    else:
-        attacker_mask = actors.label == 'Attacker'
-    attacker_funds_float = actors.stETH[attacker_mask].sum() + actors.wstETH[attacker_mask].sum()
-    print('attacker_count', attacker_mask.sum())
-    print('attacker_funds', attacker_funds_float)
-    print('attacker_share', attacker_funds_float / (actors.stETH.sum() + actors.wstETH.sum()))
+    # if attackers:
+    #     attacker_mask = np.isin(actors.address, list(attackers))
+    # else:
+    #     attacker_mask = actors.label == "Attacker"
+    # attacker_funds_float = actors.stETH[attacker_mask].sum() + actors.wstETH[attacker_mask].sum()
+    # print("attacker_count", attacker_mask.sum())
+    # print("attacker_funds", attacker_funds_float)
+    # print("attacker_share", attacker_funds_float / (actors.stETH.sum() + actors.wstETH.sum()))
 
     time_manager = TimeManager(current_time=simulation_starting_time, simulation_start_time=simulation_starting_time)
 
@@ -282,9 +284,9 @@ def generate_actors(
     else:
         random_attackers = rng.normal(loc=0, scale=1, size=len(actor_addresses)) >= 3
         actor_types[random_attackers] = attacker_type
-    print('before normalization')
-    print(actor_stETH.dtype, actor_wstETH.dtype)
-    print(actor_stETH.sum() / ether_base, actor_wstETH.sum() / ether_base, (actor_stETH.sum() + actor_wstETH.sum()) / ether_base)
+    # print('before normalization')
+    # print(actor_stETH.dtype, actor_wstETH.dtype)
+    # print(actor_stETH.sum() / ether_base, actor_wstETH.sum() / ether_base, (actor_stETH.sum() + actor_wstETH.sum()) / ether_base)
 
     if normalize_funds > 0:
         total_stETH = np.sum(actor_stETH)
@@ -295,9 +297,9 @@ def generate_actors(
         new_wstETH_float = actor_wstETH.astype(float) * coef
         actor_stETH = np.array([int(val) for val in np.floor(new_stETH_float)])
         actor_wstETH = np.array([int(val) for val in np.floor(new_wstETH_float)])
-    print('after normalization')
-    print(actor_stETH.dtype, actor_wstETH.dtype)
-    print(actor_stETH.sum() / ether_base, actor_wstETH.sum() / ether_base, (actor_stETH.sum() + actor_wstETH.sum()) / ether_base)
+    # print('after normalization')
+    # print(actor_stETH.dtype, actor_wstETH.dtype)
+    # print(actor_stETH.sum() / ether_base, actor_wstETH.sum() / ether_base, (actor_stETH.sum() + actor_wstETH.sum()) / ether_base)
 
     defender_mask = np.isin(actor_addresses, list(defenders))
     actor_types[defender_mask] = ActorType.SingleDefender.value

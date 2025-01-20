@@ -1,17 +1,15 @@
 import numpy as np
 
-from experiments.simulation_configuration import (SIMULATION_TIME,
-                                                  calculate_timesteps,
-                                                  get_path)
+from experiments.simulation_configuration import SIMULATION_TIME, calculate_timesteps, get_path
 from experiments.utils import DualGovernanceParameters, setup_simulation
-from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
-                                       ProposalType)
+from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
 from model.types.proposals import Proposal
 from model.types.scenario import Scenario
 
 
 def get_attacker_funds_from_share(total_balance, share):
     return total_balance * share / (1 - share)
+
 
 MONTE_CARLO_RUNS = 1
 SEED = 1888
@@ -25,7 +23,7 @@ proposals = [
         proposal_type=ProposalType.Positive,
         sub_type=ProposalSubType.NoEffect,
         proposer="0x6625c6332c9f91f2d27c304e729b86db87a3f504",
-        cancelable=False
+        cancelable=False,
     ),
 ]
 
@@ -55,7 +53,7 @@ def create_experiment(simulation_name: str = "veto_signalling_loop", return_temp
         "scenario": SCENARIO,
         "proposal_types": ProposalType.Positive,
         "proposal_subtypes": ProposalSubType.NoEffect,
-        "proposals_generation": ProposalGeneration.Random,
+        "proposals_generation": ProposalGeneration.Loop,
         "proposals": proposals,
         "attackers": attackers,
         "defenders": defenders,

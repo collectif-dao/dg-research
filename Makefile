@@ -51,7 +51,7 @@ actors_labelling:
 	@./run_simulation.sh actors_labelling --execute --save_files
 
 .PHONY: rage_quit_loop
-rage_quit:
+rage_quit_loop:
 	@echo "Running rage_quit_loop simulation"
 	@./run_simulation.sh rage_quit_loop --execute --save_files
 
