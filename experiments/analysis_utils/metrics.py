@@ -160,7 +160,7 @@ def timesteps_to_hours(timesteps: float) -> float:
     timedelta_tick: timedelta = sys_params['timedelta_tick']
     return timesteps * timedelta_tick.total_seconds() / 3600
 
-def calculate_time_to_first_veto(timestep_data_df: pd.DataFrame) -> pd.DataFrame:
+def calculate_time_to_first_veto(timestep_data_df: pd.DataFrame, proposal_submission_timestep: int = 0) -> pd.DataFrame:
     """
     Calculate the time to first veto for each run using state transitions
     
@@ -176,6 +176,7 @@ def calculate_time_to_first_veto(timestep_data_df: pd.DataFrame) -> pd.DataFrame
                   .groupby('run_id')
                   .agg({'timestep': 'min'})
                   .rename(columns={'timestep': 'time_to_first_veto'}))
+    veto_starts['time_to_first_veto'] -= proposal_submission_timestep
     
     # Add runs that had no vetoes (with NaN time_to_first_veto)
     all_runs = pd.DataFrame(index=timestep_data_df['run_id'].unique())
@@ -189,7 +190,7 @@ def calculate_time_to_first_veto(timestep_data_df: pd.DataFrame) -> pd.DataFrame
     
     return result
 
-def analyze_veto_timing_by_seals(timestep_data_df: pd.DataFrame, start_data_df: pd.DataFrame, additional_columns: tuple[str] = ('attacker_share')) -> pd.DataFrame:
+def analyze_veto_timing_by_seals(timestep_data_df: pd.DataFrame, start_data_df: pd.DataFrame,  proposal_submission_timestep: int = 0, additional_columns: tuple[str] = ('attacker_share')) -> pd.DataFrame:
     """
     Analyze how seal parameters affect time to first veto
     
@@ -207,7 +208,7 @@ def analyze_veto_timing_by_seals(timestep_data_df: pd.DataFrame, start_data_df: 
         - total_runs: Number of runs with this seal combination
     """
     # Get veto timing data
-    veto_times = calculate_time_to_first_veto(timestep_data_df)
+    veto_times = calculate_time_to_first_veto(timestep_data_df, proposal_submission_timestep)
     
     # Merge with seal parameters
     veto_times_with_params = veto_times.merge(

@@ -1,8 +1,11 @@
 import numpy as np
 
-from experiments.simulation_configuration import SIMULATION_TIME, calculate_timesteps, get_path
+from experiments.simulation_configuration import (SIMULATION_TIME,
+                                                  calculate_timesteps,
+                                                  get_path)
 from experiments.utils import DualGovernanceParameters, setup_simulation
-from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
+from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
+                                       ProposalType)
 from model.types.proposals import Proposal
 from model.types.scenario import Scenario
 

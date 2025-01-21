@@ -1,12 +1,13 @@
 from experiments.simulation_configuration import SIMULATION_TIME, get_path
 from experiments.utils import DualGovernanceParameters, setup_simulation
 from model.sys_params import CustomDelays
-from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
+from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
+                                       ProposalType)
 from model.types.proposals import Proposal
 from model.types.reaction_time import ModeledReactions
 from model.types.scenario import Scenario
 
-MONTE_CARLO_RUNS = 1000
+MONTE_CARLO_RUNS = 100
 SEED = 241
 SCENARIO = Scenario.SingleAttack
 TIMESTEPS = 1500
@@ -27,20 +28,21 @@ proposals = [
 
 first_thresholds = [1]
 second_thresholds = [10]
-custom_delays = [
-    CustomDelays(slow_max_delay=3600 * 24 * 15),
-    CustomDelays(slow_max_delay=3600 * 24 * 30),
-    CustomDelays(slow_max_delay=3600 * 24 * 45),
-    CustomDelays(slow_max_delay=3600 * 24 * 60),
-]
+# custom_delays = [
+#     CustomDelays(slow_max_delay=3600 * 24 * 15),
+#     CustomDelays(slow_max_delay=3600 * 24 * 30),
+#     CustomDelays(slow_max_delay=3600 * 24 * 45),
+#     CustomDelays(slow_max_delay=3600 * 24 * 60),
+# ]
 dual_governance_params = [
     DualGovernanceParameters(
         first_rage_quit_support=thresh1,
         second_rage_quit_support=thresh2,
-        custom_delays=custom_delay,
+        # custom_delays=custom_delay,
         modeled_reactions=modeled_reactions,
+        after_schedule_delay=1000000
     )
-    for custom_delay in custom_delays
+    # for custom_delay in custom_delays
     for thresh1 in first_thresholds
     for thresh2 in second_thresholds
     for modeled_reactions in [ModeledReactions.Normal, ModeledReactions.Slowed, ModeledReactions.Accelerated]
@@ -64,6 +66,7 @@ def create_experiment(simulation_name: str = "withdrawal_queue_replacement", ret
         "simulation_starting_time": SIMULATION_TIME,
         "dual_governance_params": dual_governance_params,
         "institutional_threshold": 3000,
+        "wallet_csv_name": "decentralized_wallet_distribution.csv",
     }
 
     if return_template:
