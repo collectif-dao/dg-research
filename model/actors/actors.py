@@ -421,14 +421,17 @@ class Actors:
                 & (reactions == ActorReaction.Lock.value)
                 & (self.actor_type == ActorType.CoordinatedAttacker.value)
             )
-            if np.any(coordinated_attacker_mask) and dual_governance.state.state != State.RageQuit:
+            if np.any(coordinated_attacker_mask):
                 current_support = dual_governance.state.signalling_escrow.get_rage_quit_support()
-                second_seal_threshold = dual_governance.state.config.second_seal_rage_quit_support
-                needed_support = second_seal_threshold - current_support
                 total_supply = dual_governance.state.signalling_escrow.lido.get_total_supply()
+                needed_support = 0
+
+                if dual_governance.state.state != State.RageQuit:
+                    needed_support = dual_governance.state.config.second_seal_rage_quit_support - current_support
+                elif dual_governance.state.state == State.RageQuit:
+                    needed_support = dual_governance.state.config.first_seal_rage_quit_support - current_support
 
                 needed_funds = (needed_support * total_supply) // 10**18
-
                 actor_indices = np.where(coordinated_attacker_mask)[0]
 
                 remaining_needed = needed_funds
@@ -577,6 +580,23 @@ class Actors:
 
         current_state = dual_governance.get_current_state()
         if current_state == State.RageQuit:
+            current_support = dual_governance.state.signalling_escrow.get_rage_quit_support()
+            first_seal_threshold = dual_governance.state.config.first_seal_rage_quit_support
+
+            if current_support >= first_seal_threshold:
+                return
+
+            attacker_stETH = np.sum(self.stETH[mask])
+            attacker_wstETH = np.sum(self.wstETH[mask])
+            attacker_funds = attacker_stETH + attacker_wstETH
+
+            total_supply = dual_governance.state.signalling_escrow.lido.get_total_supply()
+            needed_support = first_seal_threshold - current_support
+            needed_funds = (needed_support * total_supply) // 10**18
+
+            if attacker_funds >= needed_funds:
+                reactions[mask] = ActorReaction.Lock.value
+
             return
 
         if current_state == State.VetoSignalling:
