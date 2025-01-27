@@ -363,3 +363,65 @@ def analyze_ragequit_timing_by_seals(timestep_data_df: pd.DataFrame, start_data_
     
     return stats
     
+def count_ragequit_episodes(timestep_data_df: pd.DataFrame) -> pd.DataFrame:
+    # Initialize a list to store the results
+    results = []
+
+    # Group by 'run_id'
+    for run_id, group in timestep_data_df.groupby("run_id"):
+        # Reset index for the group
+        group = group.reset_index(drop=True)
+
+        # Initialize variables to track episodes
+        in_episode = False
+        episode_count = 0
+
+        # Iterate over the rows in the group
+        for index, row in group.iterrows():
+            if row["dg_state_name"] == "RageQuit":
+                if not in_episode:
+                    # Start of a new episode
+                    in_episode = True
+                    episode_count += 1
+            else:
+                # End of an episode
+                in_episode = False
+
+        # Append the result for this run_id
+        results.append({"run_id": run_id, "ragequit_episodes": episode_count})
+
+    # Convert results to a DataFrame
+    return pd.DataFrame(results)
+
+def calculate_state_durations(timestep_data_df: pd.DataFrame) -> pd.DataFrame:
+    # Initialize a list to store the results
+    state_durations_df = []
+
+    # Group by 'run_id'
+    for run_id, group in timestep_data_df.groupby("run_id"):
+        # Reset index for the group
+        group = group.reset_index(drop=True)
+
+        # Initialize variables to track state durations
+        current_state = None
+        state_duration = 0
+
+        # Iterate over the rows in the group
+        for index, row in group.iterrows():
+            if row["dg_state_name"] == current_state:
+                # Continue the current state
+                state_duration += 1
+            else:
+                # If a state change occurs, record the previous state duration
+                if current_state is not None:
+                    state_durations_df.append({"run_id": run_id, "state": current_state, "duration": state_duration})
+                # Start a new state
+                current_state = row["dg_state_name"]
+                state_duration = 1
+
+        # Append the last state duration for the group
+        if current_state is not None:
+            state_durations_df.append({"run_id": run_id, "state": current_state, "duration": state_duration})
+
+    # Convert results to a DataFrame
+    return pd.DataFrame(state_durations_df)

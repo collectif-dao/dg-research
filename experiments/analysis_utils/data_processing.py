@@ -102,3 +102,40 @@ def add_attacker_share(timestep_data_df: pd.DataFrame, start_data_df: pd.DataFra
     start_data_df["attacker_share"] = start_data_df["attacker_funds"] / start_data_df["initial_total_balance"]
 
     return start_data_df
+
+def clean_timesteps_ragequit_loop(timestep_data_df: pd.DataFrame) -> pd.DataFrame:
+    # Initialize a list to store the cleaned data
+    cleaned_data = []
+
+    # Group by 'run_id'
+    for run_id, group in timestep_data_df.groupby("run_id"):
+        # Reset index for the group
+        group = group.reset_index(drop=True)
+
+        # Initialize variables to track state
+        current_state = None
+        normal_episode_count = 0
+        cooldown_episode_count = 0
+        cleaned_group = []
+
+        # Iterate over the rows in the group
+        for index, row in group.iterrows():
+            if row["dg_state_name"] != current_state:
+                # State change detected
+                current_state = row["dg_state_name"]
+                if current_state == "VetoCooldown":
+                    cooldown_episode_count += 1
+                if current_state == "Normal":
+                    normal_episode_count += 1
+                if (cooldown_episode_count >= 1) or (normal_episode_count >= 2):
+                    # Stop processing after the second Normal episode
+                    break
+
+            # Append the row to cleaned data
+            cleaned_group.append(row)
+
+        # Extend the cleaned data with the current group
+        cleaned_data.extend(cleaned_group)
+
+    # Convert cleaned data to a DataFrame
+    return pd.DataFrame(cleaned_data)
