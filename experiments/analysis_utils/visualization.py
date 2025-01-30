@@ -416,9 +416,9 @@ def plot_veto_success_rate_by_column(timestep_data_df_full, start_data_df_full, 
     
     # Format x-axis as percentage
     current_values = plt.gca().get_xticks()
-    plt.gca().xaxis.set_major_formatter(PercentFormatter(1.0))
+    plt.gca().xaxis.set_major_formatter(PercentFormatter(100, decimals=0))
     current_values = plt.gca().get_yticks()
-    plt.gca().yaxis.set_major_formatter(PercentFormatter(1.0))
+    plt.gca().yaxis.set_major_formatter(PercentFormatter(100, decimals=0))
     
     plt.grid(True)
     return plt.gcf()
