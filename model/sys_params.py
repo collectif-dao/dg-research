@@ -24,7 +24,9 @@ class CustomDelays:
         quick_max_delay: int = quick_actor_max_delay,
         normal_max_delay: int = normal_actor_max_delay,
         slow_max_delay: int = slow_actor_max_delay,
+        slow_precompute_params: tuple[float, float, float] = None,
     ):
         self.quick_max_delay = quick_max_delay
         self.normal_max_delay = normal_max_delay
         self.slow_max_delay = slow_max_delay
+        self.slow_precompute_params = slow_precompute_params

@@ -27,25 +27,28 @@ proposals = [
 ]
 
 first_thresholds = [1]
-second_thresholds = [10]
-# custom_delays = [
-#     CustomDelays(slow_max_delay=3600 * 24 * 15),
-#     CustomDelays(slow_max_delay=3600 * 24 * 30),
-#     CustomDelays(slow_max_delay=3600 * 24 * 45),
-#     CustomDelays(slow_max_delay=3600 * 24 * 60),
-# ]
+second_thresholds = [12, 15]
+
+custom_delays = [
+    CustomDelays(slow_max_delay=3600 * 24 * 15, slow_precompute_params=(0.1742925521297363, 0, 864000.0)),
+    CustomDelays(slow_max_delay=3600 * 24 * 30, slow_precompute_params=(0.2316921328693872, 0, 1512000.0)),
+    CustomDelays(slow_max_delay=3600 * 24 * 35, slow_precompute_params=(0.2316921328693872, 0, 1512000.0)),
+    CustomDelays(slow_max_delay=3600 * 24 * 40, slow_precompute_params=(0.25266499110519525, 0, 2160000.0)),
+    CustomDelays(slow_max_delay=3600 * 24 * 45, slow_precompute_params=(0.25266499110519525, 0, 2160000.0)),
+]
 dual_governance_params = [
     DualGovernanceParameters(
         first_rage_quit_support=thresh1,
         second_rage_quit_support=thresh2,
-        # custom_delays=custom_delay,
-        modeled_reactions=modeled_reactions,
-        after_schedule_delay=1000000
+        custom_delays=custom_delay,
+        modeled_reactions=ModeledReactions.Normal,
+        # modeled_reactions=modeled_reactions,
+        # after_schedule_delay=1000000
     )
-    # for custom_delay in custom_delays
+    for custom_delay in custom_delays
     for thresh1 in first_thresholds
     for thresh2 in second_thresholds
-    for modeled_reactions in [ModeledReactions.Normal, ModeledReactions.Slowed, ModeledReactions.Accelerated]
+    # for modeled_reactions in [ModeledReactions.Normal, ModeledReactions.Slowed, ModeledReactions.Accelerated]
 ]
 
 
@@ -66,7 +69,7 @@ def create_experiment(simulation_name: str = "withdrawal_queue_replacement", ret
         "simulation_starting_time": SIMULATION_TIME,
         "dual_governance_params": dual_governance_params,
         "institutional_threshold": 3000,
-        "wallet_csv_name": "decentralized_wallet_distribution.csv",
+        "wallet_csv_name": "stETH token distribution  - stETH+wstETH holders.csv",
     }
 
     if return_template:

@@ -89,10 +89,10 @@ class ReactionDelayGenerator:
             self.custom_delays = CustomDelays()
         else:
             self.custom_delays = custom_delays
-
-        self.reaction_delay_random_variables = {
-            ReactionTime.NoReaction.value: ConstantRandomVariable(2**32 - 1),  # 4
-            ReactionTime.Slow.value: get_reaction_delay_random_variable(
+        if self.custom_delays.slow_precompute_params is None:
+            self.reaction_delay_random_variables = {
+                ReactionTime.NoReaction.value: ConstantRandomVariable(2**32 - 1),  # 4
+                ReactionTime.Slow.value: get_reaction_delay_random_variable(
                 self.custom_delays.normal_max_delay, self.custom_delays.slow_max_delay
             ),  # 3
             ReactionTime.Normal.value: get_reaction_delay_random_variable(
@@ -100,6 +100,14 @@ class ReactionDelayGenerator:
             ),  # 1
             ReactionTime.Quick.value: get_reaction_delay_random_variable(0, self.custom_delays.quick_max_delay),  # 2
         }
+        else:
+            sigma, shift, median = self.custom_delays.slow_precompute_params
+            self.reaction_delay_random_variables = {
+                ReactionTime.NoReaction.value: ConstantRandomVariable(2**32 - 1),  # 4
+                ReactionTime.Slow.value: scipy.stats.lognorm(s=sigma, loc=shift, scale=median),  # 3
+                ReactionTime.Normal.value: ConstantRandomVariable(10),  # 1
+                ReactionTime.Quick.value: ConstantRandomVariable(10)
+            }
 
     def generate_reaction_delay_vector(self, reaction_time: np.ndarray):
         rng = get_rng()
