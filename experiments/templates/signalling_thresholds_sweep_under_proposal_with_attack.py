@@ -1,5 +1,5 @@
 from experiments.simulation_configuration import SIMULATION_TIME, calculate_timesteps, get_path
-from experiments.utils import DualGovernanceParameters, save_execution_result, setup_simulation
+from experiments.utils import DualGovernanceParameters, setup_simulation
 from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
 from model.types.proposals import Proposal
 from model.types.scenario import Scenario
@@ -34,33 +34,38 @@ second_thresholds = [5, 10, 15]
 dual_governance_params = [
     DualGovernanceParameters(first_rage_quit_support=thresh1, second_rage_quit_support=thresh2)
     for thresh1 in first_thresholds
-    for thresh2 in second_thresholds]
+    for thresh2 in second_thresholds
+]
 # dual_governance_params = [
 #     DualGovernanceParameters(first_rage_quit_support=1, second_rage_quit_support=10),
 #     DualGovernanceParameters(first_rage_quit_support=2, second_rage_quit_support=12),
 # ]
 
-def create_experiment(simulation_name: str = "signalling_thresholds_sweep_under_proposal_with_attack"):
+
+def create_experiment(
+    simulation_name: str = "signalling_thresholds_sweep_under_proposal_with_attack", return_template: bool = False
+):
     out_path = get_path()
 
-    experiment, simulation_hashes = setup_simulation(
-        timesteps=TIMESTEPS,
-        monte_carlo_runs=MONTE_CARLO_RUNS,
-        scenario=SCENARIO,
-        proposal_types=ProposalType.Danger,
-        proposal_subtypes=ProposalSubType.FundsStealing,
-        proposals_generation=ProposalGeneration.NoGeneration,
-        proposals=proposals,
-        attackers=attackers,
-        defenders=defenders,
-        seed=SEED,
-        simulation_starting_time=SIMULATION_TIME,
-        out_dir=out_path.joinpath(simulation_name),
-        dual_governance_params=dual_governance_params,
-    )
+    template_params = {
+        "timesteps": TIMESTEPS,
+        "monte_carlo_runs": MONTE_CARLO_RUNS,
+        "scenario": SCENARIO,
+        "proposal_types": ProposalType.Danger,
+        "proposal_subtypes": ProposalSubType.FundsStealing,
+        "proposals_generation": ProposalGeneration.NoGeneration,
+        "proposals": proposals,
+        "attackers": attackers,
+        "defenders": defenders,
+        "seed": SEED,
+        "simulation_starting_time": SIMULATION_TIME,
+        "dual_governance_params": dual_governance_params,
+    }
 
-    experiment.after_experiment = lambda experiment=None: save_execution_result(
-        experiment, simulation_name, TIMESTEPS, out_path, create_actors_df=False
-    )
+    if return_template:
+        return None, template_params
+
+    experiment, simulation_hashes = setup_simulation(**template_params, out_dir=out_path.joinpath(simulation_name))
+    experiment.after_experiment = None
 
     return experiment, simulation_hashes

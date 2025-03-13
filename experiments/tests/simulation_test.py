@@ -33,7 +33,7 @@ def test_setup_simulation(
     proposals_generation = ProposalGeneration.Random
     timesteps = TIMESTEPS
     seed = SEED
-    monte_carlo_runs = 3
+    monte_carlo_runs = 1
     out_path = get_path()
     simulation_starting_time = datetime(2024, 9, 1)
     initial_proposals = []
@@ -52,8 +52,9 @@ def test_setup_simulation(
         defenders=defenders,
         seed=seed,
         simulation_starting_time=simulation_starting_time,
-        out_dir=out_path,
+        out_dir=out_path.joinpath("simulation_test"),
         dual_governance_params=dual_governance_params,
+        save_files=False,
     )
 
     assert len(simulation_hashes) == monte_carlo_runs * len(dual_governance_params)

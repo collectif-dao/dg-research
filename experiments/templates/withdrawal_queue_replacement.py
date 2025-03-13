@@ -1,13 +1,19 @@
-from experiments.simulation_configuration import SIMULATION_TIME, calculate_timesteps, get_path
-from experiments.utils import DualGovernanceParameters, save_execution_result, setup_simulation
-from model.types.proposal_type import ProposalGeneration, ProposalSubType, ProposalType
+from experiments.simulation_configuration import SIMULATION_TIME, get_path
+from experiments.utils import DualGovernanceParameters, setup_simulation
+from model.sys_params import CustomDelays
+from model.types.proposal_type import (ProposalGeneration, ProposalSubType,
+                                       ProposalType)
 from model.types.proposals import Proposal
+from model.types.reaction_time import ModeledReactions
 from model.types.scenario import Scenario
 
-MONTE_CARLO_RUNS = 1
-SEED = 141
+MONTE_CARLO_RUNS = 100
+SEED = 241
 SCENARIO = Scenario.SingleAttack
-TIMESTEPS = calculate_timesteps(1)
+TIMESTEPS = 1500
+
+attackers = {"0x91bef2fd282aaa7612c593c4d83c0efaf6200954"}
+defenders = {}
 
 proposals = [
     Proposal(
@@ -15,45 +21,61 @@ proposals = [
         damage=100,
         proposal_type=ProposalType.Danger,
         sub_type=ProposalSubType.FundsStealing,
-        proposer="0xc329400492c6ff2438472d4651ad17389fcb843a",
-        attack_targets={
-            "0xb671e841a8e6db528358ed385983892552ef422f",
-            "0x4b4eec1ddc9420a5cc35a25f5899dc5993f9e586",
-            "0x47176b2af9885dc6c4575d4efd63895f7aaa4790",
-        },
-    ),
+        proposer=list(attackers)[0],
+        cancelable=False,
+    )
 ]
 
-attackers = {"0xc329400492c6ff2438472d4651ad17389fcb843a"}
-defenders = {}
+first_thresholds = [1]
+second_thresholds = [12, 15]
 
+custom_delays = [
+    CustomDelays(slow_max_delay=3600 * 24 * 15, slow_precompute_params=(0.1742925521297363, 0, 864000.0)),
+    CustomDelays(slow_max_delay=3600 * 24 * 30, slow_precompute_params=(0.2316921328693872, 0, 1512000.0)),
+    CustomDelays(slow_max_delay=3600 * 24 * 35, slow_precompute_params=(0.2316921328693872, 0, 1512000.0)),
+    CustomDelays(slow_max_delay=3600 * 24 * 40, slow_precompute_params=(0.25266499110519525, 0, 2160000.0)),
+    CustomDelays(slow_max_delay=3600 * 24 * 45, slow_precompute_params=(0.25266499110519525, 0, 2160000.0)),
+]
 dual_governance_params = [
-    DualGovernanceParameters(first_rage_quit_support=1, second_rage_quit_support=10),
-    DualGovernanceParameters(first_rage_quit_support=2, second_rage_quit_support=12),
+    DualGovernanceParameters(
+        first_rage_quit_support=thresh1,
+        second_rage_quit_support=thresh2,
+        custom_delays=custom_delay,
+        modeled_reactions=ModeledReactions.Normal,
+        # modeled_reactions=modeled_reactions,
+        # after_schedule_delay=1000000
+    )
+    for custom_delay in custom_delays
+    for thresh1 in first_thresholds
+    for thresh2 in second_thresholds
+    # for modeled_reactions in [ModeledReactions.Normal, ModeledReactions.Slowed, ModeledReactions.Accelerated]
 ]
 
 
-def create_experiment(simulation_name: str = "withdrawal_queue_replacement"):
+def create_experiment(simulation_name: str = "withdrawal_queue_replacement", return_template: bool = False):
     out_path = get_path()
 
-    experiment, simulation_hashes = setup_simulation(
-        timesteps=TIMESTEPS,
-        monte_carlo_runs=MONTE_CARLO_RUNS,
-        scenario=SCENARIO,
-        proposal_types=ProposalType.Danger,
-        proposal_subtypes=ProposalSubType.FundsStealing,
-        proposals_generation=ProposalGeneration.Random,
-        proposals=proposals,
-        attackers=attackers,
-        defenders=defenders,
-        seed=SEED,
-        simulation_starting_time=SIMULATION_TIME,
-        out_dir=out_path.joinpath(simulation_name),
-        dual_governance_params=dual_governance_params,
-    )
+    template_params = {
+        "timesteps": TIMESTEPS,
+        "monte_carlo_runs": MONTE_CARLO_RUNS,
+        "scenario": SCENARIO,
+        "proposal_types": ProposalType.Danger,
+        "proposal_subtypes": ProposalSubType.FundsStealing,
+        "proposals_generation": ProposalGeneration.NoGeneration,
+        "proposals": proposals,
+        "attackers": attackers,
+        "defenders": defenders,
+        "seed": SEED,
+        "simulation_starting_time": SIMULATION_TIME,
+        "dual_governance_params": dual_governance_params,
+        "institutional_threshold": 3000,
+        "wallet_csv_name": "stETH token distribution  - stETH+wstETH holders.csv",
+    }
 
-    experiment.after_experiment = lambda experiment=None: save_execution_result(
-        experiment, simulation_name, TIMESTEPS, out_path
-    )
+    if return_template:
+        return None, template_params
+
+    experiment, simulation_hashes = setup_simulation(**template_params, out_dir=out_path.joinpath(simulation_name))
+    experiment.after_experiment = None
 
     return experiment, simulation_hashes

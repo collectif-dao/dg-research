@@ -58,6 +58,7 @@ def test_generate_initial_state(
         simulation_starting_time=simulation_starting_time,
         first_rage_quit_support=first_rage_quit_threshold,
         second_rage_quit_support=second_rage_quit_threshold,
+        save_data_enabled=False,
     )
 
     assert isinstance(result, dict)
@@ -70,7 +71,7 @@ def test_generate_initial_state(
     assert result["non_initialized_proposals"] == []
     assert result["scenario"] == scenario
     assert len(result["attackers"]) >= len(attackers)
-    assert result["defenders"] == defenders
+    assert result["defenders"].size == 0
     assert result["proposal_types"] == proposal_types
     assert result["proposal_subtypes"] == proposal_subtypes
     assert result["is_active_attack"] is not True

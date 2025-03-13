@@ -6,10 +6,8 @@ Model parameters.
 
 
 sys_params = {
-    "timedelta_tick": [timedelta(hours=3)],
-    "slow_actor_max_delay": 604800,
-    "normal_actor_max_delay": 86400,
-    "quick_actor_max_delay": 7200,
+    "timedelta_tick": timedelta(hours=3),
+    "max_damage": 100_000,
 }
 
 slow_actor_max_delay = 3600 * 24 * 15
@@ -18,3 +16,17 @@ quick_actor_max_delay = 3600 * 24  ## it should start from the proposal submissi
 
 sample_actor_delay = 3600
 cancellation_delay_days = 2
+
+
+class CustomDelays:
+    def __init__(
+        self,
+        quick_max_delay: int = quick_actor_max_delay,
+        normal_max_delay: int = normal_actor_max_delay,
+        slow_max_delay: int = slow_actor_max_delay,
+        slow_precompute_params: tuple[float, float, float] = None,
+    ):
+        self.quick_max_delay = quick_max_delay
+        self.normal_max_delay = normal_max_delay
+        self.slow_max_delay = slow_max_delay
+        self.slow_precompute_params = slow_precompute_params

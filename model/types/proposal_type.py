@@ -21,3 +21,4 @@ class ProposalGeneration(Enum):
     Random = 1
     TargetedAttack = 2
     NoGeneration = 3
+    Loop = 4

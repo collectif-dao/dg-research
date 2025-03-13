@@ -9,3 +9,13 @@ class ActorType(Enum):
     Hacker = 5
     SingleDefender = 6
     CoordinatedDefender = 7
+
+def get_attacker_types() -> list[ActorType]:
+    return [ActorType.SingleAttacker, ActorType.CoordinatedAttacker, ActorType.Hacker]
+
+class ActorReaction(Enum):
+    NoReaction = 0
+    NoAction = 1
+    Lock = 2
+    Unlock = 3
+    Quit = 4

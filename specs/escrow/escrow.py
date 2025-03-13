@@ -277,7 +277,7 @@ class Escrow:
         left = self.lido.get_pooled_eth_by_shares(unfinalized_shares.value) + finalized_ETH.value
         right = self.lido.get_total_supply() + finalized_ETH.value
 
-        return int(ether_base * left / right)
+        return int(left / right * ether_base)
 
     def get_locked_assets_totals(self) -> LockedAssetsTotal:
         stETH_totals = self.accounting.state.stETHTotals
@@ -341,7 +341,7 @@ class Escrow:
         return (
             (self.state == EscrowState.RageQuitEscrow)
             and self.batches_queue.is_closed()
-            and (self.rage_quit_timelock_started_at == Timestamps.ZERO)
+            and (self.rage_quit_timelock_started_at != Timestamps.ZERO)
             and (
                 self.time_manager.get_current_timestamp_value()
                 > (self.rage_quit_extension_delay + self.rage_quit_timelock_started_at)
